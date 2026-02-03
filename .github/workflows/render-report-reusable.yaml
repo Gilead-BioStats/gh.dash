@@ -58,7 +58,6 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GH_DASH_REPOS_TOKEN || github.token }}
       GH_QUAL_REGISTRY_TOKEN: ${{ secrets.GH_QUAL_REGISTRY_TOKEN }}
-      PACKAGE_LIST: ${{ inputs.package-list }}
       OUTPUT_SUBDIR: ${{ inputs.output-subdir }}
       PR_NUMBER: ${{ inputs.pr-number }}
     steps:
@@ -83,16 +82,6 @@ jobs:
             any::htmltools
             any::gh
             local::.
-
-      - name: Build package list
-        id: package-list
-        shell: bash
-        run: |
-          set -euo pipefail
-          count=$(Rscript -e 'list_env <- Sys.getenv("PACKAGE_LIST", ""); repos <- if (nzchar(list_env)) eval(parse(text = list_env)) else character(0); repos <- as.character(repos); repos <- trimws(repos); repos <- repos[nzchar(repos)]; cat(length(repos))')
-          echo "package_list_count=$count" >> "$GITHUB_OUTPUT"
-          echo "PACKAGE_LIST_COUNT=$count" >> "$GITHUB_ENV"
-          echo "Package list count: $count"
 
       - name: Fetch qualification registry (sparse checkout)
         if: ${{ env.GH_QUAL_REGISTRY_TOKEN != '' }}
@@ -144,14 +133,7 @@ jobs:
             output_file = "index.html",
             params = list(
               token = Sys.getenv("GITHUB_PAT"),
-              packageList = tryCatch({
-                list_env <- Sys.getenv("PACKAGE_LIST", unset = "")
-                repos <- if (nzchar(list_env)) eval(parse(text = list_env)) else character(0)
-                repos <- as.character(repos)
-                repos <- trimws(repos)
-                repos <- repos[nzchar(repos)]
-                repos
-              }, error = function(...) character(0)),
+              packageList = read.csv(system.file("extdata", "package-list.csv", package = "gh.dash")),
               qualification_registry_url = Sys.getenv("GH_DASH_QUAL_REGISTRY_URL", unset = "")
             )
           )
