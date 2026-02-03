@@ -78,6 +78,22 @@ jobs:
             any::gh
             local::.
 
+      - name: Build package list
+        id: package-list
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_list=$(Rscript -e "path <- file.path('inst', 'extdata', 'package-list.csv'); if (!file.exists(path)) path <- system.file('extdata','package-list.csv', package='gh.dash'); df <- utils::read.csv(path, stringsAsFactors = FALSE); repos <- if ('repo' %in% names(df)) df$repo else df[[1]]; repos <- as.character(repos); repos <- repos[nzchar(repos)]; cat(repos, sep = '\n')")
+          count=$(printf "%s\n" "$package_list" | grep -c . || true)
+          echo "package_list_count=$count" >> "$GITHUB_OUTPUT"
+          echo "PACKAGE_LIST_COUNT=$count" >> "$GITHUB_ENV"
+          {
+            echo "PACKAGE_LIST<<'EOF'"
+            echo "$package_list"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+          echo "Package list count: $count"
+
       - name: Fetch qualification registry (sparse checkout)
         if: ${{ env.GH_QUAL_REGISTRY_TOKEN != '' }}
         id: registry-sparse
@@ -128,10 +144,23 @@ jobs:
             output_file = "index.html",
             params = list(
               token = Sys.getenv("GITHUB_PAT"),
-              packageList = tryCatch(
-                utils::read.csv("inst/extdata/package-list.csv", stringsAsFactors = FALSE)$repo,
-                error = function(...) NULL
-              ),
+              packageList = tryCatch({
+                list_env <- Sys.getenv("PACKAGE_LIST", unset = "")
+                if (nzchar(list_env)) {
+                  repos <- unlist(strsplit(list_env, "\\n", fixed = TRUE), use.names = FALSE)
+                  repos <- repos[nzchar(repos)]
+                  return(repos)
+                }
+                path <- file.path("inst", "extdata", "package-list.csv")
+                if (!file.exists(path)) {
+                  path <- system.file("extdata", "package-list.csv", package = "gh.dash")
+                }
+                df <- utils::read.csv(path, stringsAsFactors = FALSE)
+                repos <- if ("repo" %in% names(df)) df$repo else df[[1]]
+                repos <- as.character(repos)
+                repos <- repos[nzchar(repos)]
+                repos
+              }, error = function(...) NULL),
               qualification_registry_url = Sys.getenv("GH_DASH_QUAL_REGISTRY_URL", unset = "")
             )
           )
