@@ -133,7 +133,7 @@ jobs:
             output_file = "index.html",
             params = list(
               token = Sys.getenv("GITHUB_PAT"),
-              packageList = read.csv(system.file("extdata", "package-list.csv", package = "gh.dash")),
+              packageList = read.csv(system.file("extdata", "package-list.csv", package = "gh.dash"))%>%pull("repo"),
               qualification_registry_url = Sys.getenv("GH_DASH_QUAL_REGISTRY_URL", unset = "")
             )
           )
