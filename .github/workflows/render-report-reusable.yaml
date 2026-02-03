@@ -88,9 +88,9 @@ jobs:
           echo "package_list_count=$count" >> "$GITHUB_OUTPUT"
           echo "PACKAGE_LIST_COUNT=$count" >> "$GITHUB_ENV"
           {
-            echo "PACKAGE_LIST<<'EOF'"
+            echo "PACKAGE_LIST<<PKGLIST_EOF"
             echo "$package_list"
-            echo "EOF"
+            echo "PKGLIST_EOF"
           } >> "$GITHUB_ENV"
           echo "Package list count: $count"
 
