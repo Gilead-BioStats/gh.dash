@@ -83,7 +83,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          package_list=$(Rscript -e "path <- file.path('inst', 'extdata', 'package-list.csv'); if (!file.exists(path)) path <- system.file('extdata','package-list.csv', package='gh.dash'); df <- utils::read.csv(path, stringsAsFactors = FALSE); repos <- if ('repo' %in% names(df)) df$repo else df[[1]]; repos <- as.character(repos); repos <- repos[nzchar(repos)]; cat(repos, sep = '\n')")
+          package_list=$(Rscript -e 'path <- file.path("inst", "extdata", "package-list.csv"); if (!file.exists(path)) path <- system.file("extdata", "package-list.csv", package = "gh.dash"); df <- utils::read.csv(path, stringsAsFactors = FALSE); repos <- if ("repo" %in% names(df)) df$repo else df[[1]]; repos <- as.character(repos); repos <- repos[nzchar(repos)]; cat(repos, sep = "\n")')
           count=$(printf "%s\n" "$package_list" | grep -c . || true)
           echo "package_list_count=$count" >> "$GITHUB_OUTPUT"
           echo "PACKAGE_LIST_COUNT=$count" >> "$GITHUB_ENV"
