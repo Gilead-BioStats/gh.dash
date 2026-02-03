@@ -1,0 +1,36 @@
+name: cleanup-pr-reports
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+          persist-credentials: true
+
+      - name: Remove PR report directory
+        id: remove
+        run: |
+          PR_DIR="pr/${{ github.event.pull_request.number }}"
+          if [ -d "$PR_DIR" ]; then
+            echo "Removing $PR_DIR"
+            rm -rf "$PR_DIR"
+          else
+            echo "Directory $PR_DIR does not exist; skipping removal."
+          fi
+
+      - name: Commit and push removal
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Remove PR report for #${{ github.event.pull_request.number }}
+          branch: gh-pages
+          skip_dirty_check: false

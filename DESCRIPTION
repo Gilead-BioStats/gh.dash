@@ -1,5 +1,5 @@
 Package: gh.dash
-Title: Dashboards for tracking GitHub Releases and Milestones
+Title: Dashboards for tracking GitHub releases and milestones
 Version: 0.1.0
 Authors@R: c(
     person("Jeremy", "Wildfire", , "jwildfire@gmail.com", role = c("aut", "cre")),

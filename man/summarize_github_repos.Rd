@@ -4,12 +4,7 @@
 \alias{summarize_github_repos}
 \title{Summarize GitHub repository status}
 \usage{
-summarize_github_repos(
-  repos,
-  token = NULL,
-  qualification_registry = NULL,
-  qualification_registry_url = default_qualification_registry_url()
-)
+summarize_github_repos(repos, token = NULL, qualification_registry = NULL)
 }
 \arguments{
 \item{repos}{Character vector of repositories in the form \code{owner/repo}.}
@@ -19,13 +14,7 @@ discovered automatically by the gh package when \code{NULL}.}
 
 \item{qualification_registry}{Optional data frame of qualification metadata
 with columns \code{org}, \code{repo}, \code{version}, \code{release.url}, \code{release.date},
-\code{qualification.url}, and \code{qualification.date}. When \code{NULL}, the registry is
-fetched from \code{qualification_registry_url}.}
-
-\item{qualification_registry_url}{Optional URL to the CSV registry. Defaults
-to the published registry in the \code{r-qualification} repository. You can
-override via the \code{gh.dash.qualification_registry_url} option or the
-\code{GH_DASH_QUAL_REGISTRY_URL} environment variable.}
+\code{qualification.url}, and \code{qualification.date}.}
 }
 \value{
 A data frame with columns \code{repo}, \code{latest_release}, \code{upcoming_milestones}, and
