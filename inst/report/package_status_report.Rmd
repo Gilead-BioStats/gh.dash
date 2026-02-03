@@ -1,0 +1,180 @@
+---
+title: "`r params$title` Package Status Report"
+author: "gh.dash"
+date: "`r format(Sys.time(), '%B %d, %Y %H:%M %Z')`"
+output: html_document
+params:
+  token: NULL
+  packageList: NULL
+  title: "Tidyverse"
+---
+
+This report summarizes the current release and milestone status for a selection of `r params$title` packages hosted on GitHub.
+
+```{r setup, message=FALSE, echo=FALSE}
+library(gh.dash)
+
+# Use token from params, fallback to automatic discovery
+github_token <- params$token
+
+repos <- if (is.null(params$packageList)) {
+  warning("No packageList provided; report will be empty.")
+  character(0)
+} else {
+  as.character(params$packageList)
+}
+
+status <- summarize_github_repos(repos, token = github_token)
+```
+
+```{r report_styles, echo = FALSE, results = 'asis'}
+styles <- c(
+  "<style>",
+  ".status-table-wrapper {",
+  "  margin-top: 1.5rem;",
+  "  border: 1px solid #e2e8f0;",
+  "  border-radius: 0.75rem;",
+  "  overflow: hidden;",
+  "}",
+  "",
+  ".status-table {",
+  "  width: 100%;",
+  "  border-collapse: collapse;",
+  "}",
+  "",
+  ".status-table thead {",
+  "  background: #f1f5f9;",
+  "}",
+  "",
+  ".status-table th {",
+  "  text-align: left;",
+  "  padding: 0.75rem 1.25rem;",
+  "  font-size: 1.0rem;",
+  "  font-weight: 600;",
+  "  letter-spacing: 0.08em;",
+  "  text-transform: uppercase;",
+  "  color: #475569;",
+  "}",
+  "",
+  ".status-table td {",
+  "  padding: 1rem 1.25rem;",
+  "  font-size: 1.2rem;",
+  "  line-height: 1.5;",
+  "  color: #1f2937;",
+  "  vertical-align: top;",
+  "}",
+  "",
+  ".status-table tbody tr:nth-child(even) {",
+  "  background: #f8fafc;",
+  "}",
+  "",
+  ".status-table tbody tr + tr td {",
+  "  border-top: 1px solid #e2e8f0;",
+  "}",
+  "",
+  ".status-table__cell--repo {",
+  "  font-weight: 600;",
+  "  color: #0f172a;",
+  "  white-space: nowrap;",
+  "}",
+  "",
+  ".empty-state {",
+  "  margin-top: 1.5rem;",
+  "  border: 1px dashed #cbd5f5;",
+  "  border-radius: 0.75rem;",
+  "  background: #f8fafc;",
+  "  color: #64748b;",
+  "  padding: 1.5rem;",
+  "  text-align: center;",
+  "  font-size: 1rem;",
+  "}",
+  "",
+  ".badge {",
+  "  display: inline-flex;",
+  "  align-items: center;",
+  "  border-radius: 0.375rem;",
+  "  padding: 0.25rem 0.5rem;",
+  "  font-size: 1rem;",
+  "  font-weight: 600;",
+  "  line-height: 1;",
+  "  border: 1px solid transparent;",
+  "}",
+  "",
+  ".badge--sky {",
+  "  background: #38bdf8;",
+  "  color: #0b1120;",
+  "  border-color: rgba(8, 47, 73, 0.2);",
+  "}",
+  "",
+  ".badge--emerald {",
+  "  background: #d1fae5;",
+  "  color: #047857;",
+  "  border-color: rgba(4, 120, 87, 0.2);",
+  "}",
+  "",
+  ".badge--slate {",
+  "  background: #e2e8f0;",
+  "  color: #334155;",
+  "  border-color: rgba(51, 65, 85, 0.2);",
+  "}",
+  "",
+  ".badge--milestone {",
+  "  color: #0c4a6e;",
+  "  border-color: rgba(12, 74, 110, 0.25);",
+  "}",
+  "</style>"
+)
+
+cat(paste(styles, collapse = "\n"))
+```
+
+```{r status_table, echo=FALSE}
+render_status_table <- function(df) {
+  if (!nrow(df)) {
+    return(htmltools::div(class = "empty-state", "No repositories available."))
+  }
+
+  rows <- lapply(seq_len(nrow(df)), function(i) {
+    htmltools::tags$tr(
+      htmltools::tags$td(
+        class = "status-table__cell status-table__cell--repo",
+        htmltools::HTML(df$repo[[i]])
+      ),
+      htmltools::tags$td(
+        class = "status-table__cell",
+        htmltools::HTML(df$latest_release[[i]])
+      ),
+      htmltools::tags$td(
+        class = "status-table__cell",
+        htmltools::HTML(df$upcoming_milestones[[i]])
+      ),
+      htmltools::tags$td(
+        class = "status-table__cell",
+        htmltools::HTML(df$dev_branch_status[[i]])
+      )
+    )
+  })
+
+  tbody <- htmltools::tagAppendChildren(htmltools::tags$tbody(), rows)
+
+  htmltools::browsable(
+    htmltools::div(
+      class = "status-table-wrapper",
+      htmltools::tags$table(
+        class = "status-table",
+        htmltools::tags$thead(
+          htmltools::tags$tr(
+            htmltools::tags$th(scope = "col", "Repository"),
+            htmltools::tags$th(scope = "col", "Latest release"),
+            htmltools::tags$th(scope = "col", "Open milestones"),
+            htmltools::tags$th(scope = "col", "Dev status")
+          )
+        ),
+        tbody
+      )
+    )
+  )
+}
+
+render_status_table(status)
+```
