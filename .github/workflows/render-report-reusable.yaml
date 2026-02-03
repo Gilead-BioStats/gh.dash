@@ -52,6 +52,7 @@ jobs:
       pull-requests: write
     env:
       GITHUB_PAT: ${{ secrets.GH_DASH_REPOS_TOKEN || github.token }}
+      GH_QUAL_REGISTRY_TOKEN: ${{ secrets.GH_QUAL_REGISTRY_TOKEN }}
       OUTPUT_SUBDIR: ${{ inputs.output-subdir }}
       PR_NUMBER: ${{ inputs.pr-number }}
     steps:
@@ -78,19 +79,19 @@ jobs:
             local::.
 
       - name: Fetch qualification registry (sparse checkout)
-        if: ${{ secrets.GH_QUAL_REGISTRY_TOKEN != '' }}
+        if: ${{ env.GH_QUAL_REGISTRY_TOKEN != '' }}
         id: registry-sparse
         uses: actions/checkout@v5
         with:
           repository: Gilead-BioStats/r-qualification
           ref: main
-          token: ${{ secrets.GH_QUAL_REGISTRY_TOKEN }}
+          token: ${{ env.GH_QUAL_REGISTRY_TOKEN }}
           sparse-checkout: |
             qualified-releases.csv
           path: registry
 
       - name: Count registry rows (sparse checkout)
-        if: ${{ secrets.GH_QUAL_REGISTRY_TOKEN != '' }}
+        if: ${{ env.GH_QUAL_REGISTRY_TOKEN != '' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -101,7 +102,7 @@ jobs:
           fi
 
       - name: Export registry path for render
-        if: ${{ secrets.GH_QUAL_REGISTRY_TOKEN != '' }}
+        if: ${{ env.GH_QUAL_REGISTRY_TOKEN != '' }}
         shell: bash
         run: |
           set -euo pipefail
