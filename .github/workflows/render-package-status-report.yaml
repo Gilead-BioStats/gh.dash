@@ -1,0 +1,80 @@
+name: render-package-status-report
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which report to rebuild
+        required: true
+        default: main
+        type: choice
+        options:
+          - main
+          - dev
+
+jobs:
+  build-main:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/render-report-reusable.yaml
+    secrets: inherit
+    with:
+      ref: ${{ github.ref }}
+      output-subdir: ""
+      deploy: true
+      deploy-target: ""
+      deploy-clean: true
+      deploy-clean-exclude: |
+        dev
+        pr
+
+  build-dev:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    uses: ./.github/workflows/render-report-reusable.yaml
+    secrets: inherit
+    with:
+      ref: ${{ github.ref }}
+      output-subdir: dev
+      deploy: true
+      deploy-target: dev
+      deploy-clean: false
+
+  build-main-dispatch:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'main'
+    uses: ./.github/workflows/render-report-reusable.yaml
+    secrets: inherit
+    with:
+      ref: main
+      output-subdir: ""
+      deploy: true
+      deploy-target: ""
+      deploy-clean: true
+      deploy-clean-exclude: |
+        dev
+        pr
+
+  build-dev-dispatch:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'dev'
+    uses: ./.github/workflows/render-report-reusable.yaml
+    secrets: inherit
+    with:
+      ref: dev
+      output-subdir: dev
+      deploy: true
+      deploy-target: dev
+      deploy-clean: false
+
+  build-pr:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/render-report-reusable.yaml
+    secrets: inherit
+    with:
+      ref: ${{ github.sha }}
+      output-subdir: pr/${{ github.event.pull_request.number }}
+      deploy: true
+      deploy-target: pr/${{ github.event.pull_request.number }}
+      deploy-clean: false
+      pr-number: ${{ github.event.pull_request.number }}

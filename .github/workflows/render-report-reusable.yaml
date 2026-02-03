@@ -1,0 +1,195 @@
+name: render-report
+
+on:
+  workflow_call:
+    secrets:
+      GH_DASH_REPOS_TOKEN:
+        description: 'PAT with repo access for fetching private repository data (optional, falls back to github.token)'
+        required: false
+    inputs:
+      ref:
+        description: Git reference or SHA to check out
+        required: true
+        type: string
+      output-subdir:
+        description: Subdirectory under report to place the output
+        required: false
+        type: string
+        default: ""
+      deploy:
+        description: Whether to deploy the rendered report
+        required: false
+        type: boolean
+        default: false
+      deploy-target:
+        description: Target folder on gh-pages
+        required: false
+        type: string
+        default: ""
+      deploy-clean:
+        description: Whether to clean the target folder before deploy
+        required: false
+        type: boolean
+        default: false
+      deploy-clean-exclude:
+        description: Newline-delimited patterns to preserve when cleaning
+        required: false
+        type: string
+        default: ""
+      pr-number:
+        description: Pull request number (if applicable)
+        required: false
+        type: string
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GITHUB_PAT: ${{ secrets.GH_DASH_REPOS_TOKEN || github.token }}
+      OUTPUT_SUBDIR: ${{ inputs.output-subdir }}
+      PR_NUMBER: ${{ inputs.pr-number }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref }}
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::rmarkdown
+            any::cli
+            any::htmltools
+            any::gh
+            local::.
+
+      - name: Ensure registry token is available
+        run: |
+          if [ -z "${{ secrets.GSM_QUAL_REGISTRY_TOKEN }}" ]; then
+            echo "GSM_QUAL_REGISTRY_TOKEN is not set. Provide a PAT with access to Gilead-BioStats/r-qualification (caller must pass the secret via workflow_call)." >&2
+            exit 1
+          fi
+
+      - name: Fetch qualification registry (sparse checkout)
+        id: registry-sparse
+        uses: actions/checkout@v5
+        with:
+          repository: Gilead-BioStats/r-qualification
+          ref: main
+          token: ${{ secrets.GSM_QUAL_REGISTRY_TOKEN }}
+          sparse-checkout: |
+            qualified-releases.csv
+          path: registry
+
+      - name: Count registry rows (sparse checkout)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rows=$(($(wc -l < registry/qualified-releases.csv) - 1))
+          echo "Rows in registry (sparse): $rows"
+          if [ -n "${GITHUB_OUTPUT:-}" ]; then
+            echo "registry_rows_sparse=$rows" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Export registry path for render
+        shell: bash
+        run: |
+          set -euo pipefail
+          registry_path="$(pwd)/registry/qualified-releases.csv"
+          if [ ! -f "$registry_path" ]; then
+            echo "Registry CSV not found at $registry_path" >&2
+            exit 1
+          fi
+          echo "GSM_QUAL_REGISTRY_URL=$registry_path" >> "$GITHUB_ENV"
+
+      - name: Render package status report
+        shell: Rscript {0}
+        run: |
+          output_dir <- if (nzchar(Sys.getenv("OUTPUT_SUBDIR"))) {
+            file.path("report", Sys.getenv("OUTPUT_SUBDIR"))
+          } else {
+            "report"
+          }
+          dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+          rmarkdown::render(
+            input = "inst/report/package_status_report.Rmd",
+            output_dir = output_dir,
+            output_file = "index.html",
+            params = list(token = Sys.getenv("GITHUB_PAT"))
+          )
+
+      - name: Determine deploy folder
+        id: deploy-path
+        run: |
+          if [ -n "$OUTPUT_SUBDIR" ]; then
+            echo "value=report/$OUTPUT_SUBDIR" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=report" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy to gh-pages
+        if: ${{ inputs.deploy }}
+        uses: JamesIves/github-pages-deploy-action@v4.5.0
+        with:
+          branch: gh-pages
+          folder: ${{ steps.deploy-path.outputs.value }}
+          clean: ${{ inputs.deploy-clean }}
+          clean-exclude: ${{ inputs.deploy-clean-exclude }}
+          target-folder: ${{ inputs.deploy-target }}
+
+      - name: Comment with PR site URL 🌐
+        if: ${{ inputs.pr-number != '' }}
+        uses: actions/github-script@v6
+        env:
+          PR_NUMBER: ${{ inputs.pr-number }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const prNumber = process.env.PR_NUMBER;
+            if (!prNumber) {
+              core.info('No PR number provided; skipping comment.');
+              return;
+            }
+
+            const prSiteURL = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr/${prNumber}/`;
+            const timestamp = new Date().toISOString();
+            const commentMarker = '🌐 PR report preview:';
+            const commentBody = `${commentMarker} [${prSiteURL}](${prSiteURL})\n\n_Last updated: ${timestamp}_`;
+
+            const comments = await github.rest.issues.listComments({
+              issue_number: Number(prNumber),
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            const existingComment = comments.data.find(comment =>
+              comment.user?.login === 'github-actions[bot]' &&
+              comment.body?.includes(commentMarker)
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                comment_id: existingComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: Number(prNumber),
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody,
+              });
+            }
