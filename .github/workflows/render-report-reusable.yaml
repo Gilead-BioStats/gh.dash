@@ -6,6 +6,9 @@ on:
       GH_DASH_REPOS_TOKEN:
         description: 'PAT with repo access for fetching private repository data (optional, falls back to github.token)'
         required: false
+      GH_QUAL_REGISTRY_TOKEN:
+        description: 'PAT with access to Gilead-BioStats/r-qualification (optional)'
+        required: false
     inputs:
       ref:
         description: Git reference or SHA to check out
@@ -74,25 +77,20 @@ jobs:
             any::gh
             local::.
 
-      - name: Ensure registry token is available
-        run: |
-          if [ -z "${{ secrets.GSM_QUAL_REGISTRY_TOKEN }}" ]; then
-            echo "GSM_QUAL_REGISTRY_TOKEN is not set. Provide a PAT with access to Gilead-BioStats/r-qualification (caller must pass the secret via workflow_call)." >&2
-            exit 1
-          fi
-
       - name: Fetch qualification registry (sparse checkout)
+        if: ${{ secrets.GH_QUAL_REGISTRY_TOKEN != '' }}
         id: registry-sparse
         uses: actions/checkout@v5
         with:
           repository: Gilead-BioStats/r-qualification
           ref: main
-          token: ${{ secrets.GSM_QUAL_REGISTRY_TOKEN }}
+          token: ${{ secrets.GH_QUAL_REGISTRY_TOKEN }}
           sparse-checkout: |
             qualified-releases.csv
           path: registry
 
       - name: Count registry rows (sparse checkout)
+        if: ${{ secrets.GH_QUAL_REGISTRY_TOKEN != '' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -103,6 +101,7 @@ jobs:
           fi
 
       - name: Export registry path for render
+        if: ${{ secrets.GH_QUAL_REGISTRY_TOKEN != '' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -111,7 +110,7 @@ jobs:
             echo "Registry CSV not found at $registry_path" >&2
             exit 1
           fi
-          echo "GSM_QUAL_REGISTRY_URL=$registry_path" >> "$GITHUB_ENV"
+          echo "GH_DASH_QUAL_REGISTRY_URL=$registry_path" >> "$GITHUB_ENV"
 
       - name: Render package status report
         shell: Rscript {0}
@@ -126,7 +125,10 @@ jobs:
             input = "inst/report/package_status_report.Rmd",
             output_dir = output_dir,
             output_file = "index.html",
-            params = list(token = Sys.getenv("GITHUB_PAT"))
+            params = list(
+              token = Sys.getenv("GITHUB_PAT"),
+              qualification_registry_url = Sys.getenv("GH_DASH_QUAL_REGISTRY_URL", unset = "")
+            )
           )
 
       - name: Determine deploy folder

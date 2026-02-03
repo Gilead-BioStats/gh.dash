@@ -7,6 +7,7 @@ params:
   token: NULL
   packageList: NULL
   title: "Tidyverse"
+  qualification_registry_url: NULL
 ---
 
 This report summarizes the current release and milestone status for a selection of `r params$title` packages hosted on GitHub.
@@ -16,6 +17,14 @@ library(gh.dash)
 
 # Use token from params, fallback to automatic discovery
 github_token <- params$token
+qualification_registry_url <- params$qualification_registry_url
+qualification_registry <- NULL
+
+if (is.null(qualification_registry_url) || !nzchar(qualification_registry_url)) {
+  qualification_registry_url <- NULL
+} else {
+  qualification_registry <- fetch_qualification_registry(qualification_registry_url, github_token)
+}
 
 repos <- if (is.null(params$packageList)) {
   warning("No packageList provided; report will be empty.")
@@ -24,7 +33,11 @@ repos <- if (is.null(params$packageList)) {
   as.character(params$packageList)
 }
 
-status <- summarize_github_repos(repos, token = github_token)
+status <- summarize_github_repos(
+  repos,
+  token = github_token,
+  qualification_registry = qualification_registry
+)
 ```
 
 ```{r report_styles, echo = FALSE, results = 'asis'}

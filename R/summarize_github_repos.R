@@ -7,12 +7,7 @@
 #'   discovered automatically by the gh package when `NULL`.
 #' @param qualification_registry Optional data frame of qualification metadata
 #'   with columns `org`, `repo`, `version`, `release.url`, `release.date`,
-#'   `qualification.url`, and `qualification.date`. When `NULL`, the registry is
-#'   fetched from `qualification_registry_url`.
-#' @param qualification_registry_url Optional URL to the CSV registry. Defaults
-#'   to the published registry in the `r-qualification` repository. You can
-#'   override via the `gh.dash.qualification_registry_url` option or the
-#'   `GH_DASH_QUAL_REGISTRY_URL` environment variable.
+#'   `qualification.url`, and `qualification.date`.
 #'
 #' @return A data frame with columns `repo`, `latest_release`, `upcoming_milestones`, and
 #'   `dev_branch_status`.
@@ -26,16 +21,11 @@
 summarize_github_repos <- function(
   repos,
   token = NULL,
-  qualification_registry = NULL,
-  qualification_registry_url = default_qualification_registry_url()
+  qualification_registry = NULL
 ) {
   validate_repo_vector(repos)
 
   registry <- qualification_registry
-
-  if (is.null(registry)) {
-    registry <- fetch_qualification_registry(qualification_registry_url, token)
-  }
 
   results <- vector("list", length(repos))
 
