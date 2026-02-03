@@ -14,6 +14,11 @@ on:
         description: Git reference or SHA to check out
         required: true
         type: string
+      package-list:
+        description: R vector of repositories (e.g., c("org/repo1", "org/repo2"))
+        required: false
+        type: string
+        default: ""
       output-subdir:
         description: Subdirectory under report to place the output
         required: false
@@ -53,6 +58,7 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GH_DASH_REPOS_TOKEN || github.token }}
       GH_QUAL_REGISTRY_TOKEN: ${{ secrets.GH_QUAL_REGISTRY_TOKEN }}
+      PACKAGE_LIST: ${{ inputs.package-list }}
       OUTPUT_SUBDIR: ${{ inputs.output-subdir }}
       PR_NUMBER: ${{ inputs.pr-number }}
     steps:
@@ -83,15 +89,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          package_list=$(Rscript -e 'path <- file.path("inst", "extdata", "package-list.csv"); if (!file.exists(path)) path <- system.file("extdata", "package-list.csv", package = "gh.dash"); df <- utils::read.csv(path, stringsAsFactors = FALSE); repos <- if ("repo" %in% names(df)) df$repo else df[[1]]; repos <- as.character(repos); repos <- repos[nzchar(repos)]; cat(repos, sep = "\n")')
-          count=$(printf "%s\n" "$package_list" | grep -c . || true)
+          count=$(Rscript -e 'list_env <- Sys.getenv("PACKAGE_LIST", ""); repos <- if (nzchar(list_env)) eval(parse(text = list_env)) else character(0); repos <- as.character(repos); repos <- trimws(repos); repos <- repos[nzchar(repos)]; cat(length(repos))')
           echo "package_list_count=$count" >> "$GITHUB_OUTPUT"
           echo "PACKAGE_LIST_COUNT=$count" >> "$GITHUB_ENV"
-          {
-            echo "PACKAGE_LIST<<PKGLIST_EOF"
-            echo "$package_list"
-            echo "PKGLIST_EOF"
-          } >> "$GITHUB_ENV"
           echo "Package list count: $count"
 
       - name: Fetch qualification registry (sparse checkout)
@@ -146,21 +146,12 @@ jobs:
               token = Sys.getenv("GITHUB_PAT"),
               packageList = tryCatch({
                 list_env <- Sys.getenv("PACKAGE_LIST", unset = "")
-                if (nzchar(list_env)) {
-                  repos <- unlist(strsplit(list_env, "\\n", fixed = TRUE), use.names = FALSE)
-                  repos <- repos[nzchar(repos)]
-                  return(repos)
-                }
-                path <- file.path("inst", "extdata", "package-list.csv")
-                if (!file.exists(path)) {
-                  path <- system.file("extdata", "package-list.csv", package = "gh.dash")
-                }
-                df <- utils::read.csv(path, stringsAsFactors = FALSE)
-                repos <- if ("repo" %in% names(df)) df$repo else df[[1]]
+                repos <- if (nzchar(list_env)) eval(parse(text = list_env)) else character(0)
                 repos <- as.character(repos)
+                repos <- trimws(repos)
                 repos <- repos[nzchar(repos)]
                 repos
-              }, error = function(...) NULL),
+              }, error = function(...) character(0)),
               qualification_registry_url = Sys.getenv("GH_DASH_QUAL_REGISTRY_URL", unset = "")
             )
           )
