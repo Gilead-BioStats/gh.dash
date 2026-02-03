@@ -128,6 +128,10 @@ jobs:
             output_file = "index.html",
             params = list(
               token = Sys.getenv("GITHUB_PAT"),
+              packageList = tryCatch(
+                utils::read.csv("inst/extdata/package-list.csv", stringsAsFactors = FALSE)$repo,
+                error = function(...) NULL
+              ),
               qualification_registry_url = Sys.getenv("GH_DASH_QUAL_REGISTRY_URL", unset = "")
             )
           )

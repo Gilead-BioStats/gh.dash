@@ -33,11 +33,21 @@ repos <- if (is.null(params$packageList)) {
   as.character(params$packageList)
 }
 
-status <- summarize_github_repos(
-  repos,
-  token = github_token,
-  qualification_registry = qualification_registry
-)
+status <- if (length(repos) == 0L) {
+  data.frame(
+    repo = character(0),
+    latest_release = character(0),
+    upcoming_milestones = character(0),
+    dev_branch_status = character(0),
+    stringsAsFactors = FALSE
+  )
+} else {
+  summarize_github_repos(
+    repos,
+    token = github_token,
+    qualification_registry = qualification_registry
+  )
+}
 ```
 
 ```{r report_styles, echo = FALSE, results = 'asis'}
