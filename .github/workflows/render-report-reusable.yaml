@@ -11,8 +11,18 @@ on:
         description: Git reference or SHA to check out
         required: true
         type: string
-      package-list:
-        description: R vector of repositories (e.g., c("org/repo1", "org/repo2"))
+      title:
+        description: Report title
+        required: false
+        type: string
+        default: ""
+      qual-repo:
+        description: Qualification registry repository (e.g., org/repo)
+        required: false
+        type: string
+        default: ""
+      qual-path:
+        description: Path to qualification registry CSV within the repo
         required: false
         type: string
         default: ""
@@ -59,12 +69,6 @@ jobs:
       pull-requests: write
     env:
       GITHUB_PAT: ${{ secrets.GH_DASH_REPOS || github.token }}
-      PACKAGE_LIST: ${{ inputs.package-list }}
-      PKG_LIST_PATH: ${{ vars.PKGLISTPATH || inputs.pkg-list-path }}
-      OUTPUT_SUBDIR: ${{ inputs.output-subdir }}
-      PR_NUMBER: ${{ inputs.pr-number }}
-      QUALREPO: ${{ vars.QUALREPO }}
-      QUALPATH: ${{ vars.QUALPATH }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -102,34 +106,34 @@ jobs:
           remotes::install_github("Gilead-BioStats/gh.dash")
 
       - name: Fetch qualification registry (sparse checkout)
-        if: ${{ env.GITHUB_PAT != '' && env.QUALREPO != '' && env.QUALPATH != '' }}
+        if: ${{ inputs.qual-repo != '' && inputs.qual-path != '' }}
         id: registry-sparse
         uses: actions/checkout@v5
         with:
-          repository: ${{ env.QUALREPO }}
+          repository: ${{ inputs.qual-repo }}
           ref: main
-          token: ${{ env.GITHUB_PAT }}
+          token: ${{ secrets.GH_DASH_REPOS || github.token }}
           sparse-checkout: |
-            ${{ env.QUALPATH }}
+            ${{ inputs.qual-path }}
           path: registry
 
       - name: Count registry rows (sparse checkout)
-        if: ${{ env.GITHUB_PAT != '' && env.QUALREPO != '' && env.QUALPATH != '' }}
+        if: ${{ inputs.qual-repo != '' && inputs.qual-path != '' }}
         shell: bash
         run: |
           set -euo pipefail
-          rows=$(($(wc -l < "registry/${QUALPATH}") - 1))
+          rows=$(($(wc -l < "registry/${{ inputs.qual-path }}") - 1))
           echo "Rows in registry (sparse): $rows"
           if [ -n "${GITHUB_OUTPUT:-}" ]; then
             echo "registry_rows_sparse=$rows" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Export registry path for render
-        if: ${{ env.GITHUB_PAT != '' && env.QUALREPO != '' && env.QUALPATH != '' }}
+        if: ${{ inputs.qual-repo != '' && inputs.qual-path != '' }}
         shell: bash
         run: |
           set -euo pipefail
-          registry_path="$(pwd)/registry/${QUALPATH}"
+          registry_path="$(pwd)/registry/${{ inputs.qual-path }}"
           if [ ! -f "$registry_path" ]; then
             echo "Registry CSV not found at $registry_path" >&2
             exit 1
@@ -139,8 +143,9 @@ jobs:
       - name: Render package status report
         shell: Rscript {0}
         run: |
-          output_dir <- if (nzchar(Sys.getenv("OUTPUT_SUBDIR"))) {
-            file.path("report", Sys.getenv("OUTPUT_SUBDIR"))
+          output_subdir <- "${{ inputs.output-subdir }}"
+          output_dir <- if (nzchar(output_subdir)) {
+            file.path("report", output_subdir)
           } else {
             "report"
           }
@@ -151,22 +156,15 @@ jobs:
             output_file = "index.html",
             params = list(
               token = Sys.getenv("GITHUB_PAT"),
-              title = "BIG",
+              title = "${{ inputs.title }}",
               packageList = {
-                list_env <- Sys.getenv("PACKAGE_LIST", unset = "")
-                pkg_list_path <- Sys.getenv("PKG_LIST_PATH", unset = "")
-                pkg_list_override <- Sys.getenv("PKGLISTPATH", unset = "")
-                if (nzchar(pkg_list_override)) {
-                  pkg_list_path <- pkg_list_override
-                }
+                pkg_list_path <- "${{ inputs.pkg-list-path }}"
                 repos <- if (nzchar(pkg_list_path)) {
                   pkg_file <- file.path(Sys.getenv("GITHUB_WORKSPACE"), pkg_list_path)
                   if (!file.exists(pkg_file)) {
                     stop("Package list CSV not found at ", pkg_file)
                   }
                   read.csv(pkg_file, stringsAsFactors = FALSE)$repo
-                } else if (nzchar(list_env)) {
-                  eval(parse(text = list_env))
                 } else {
                   character(0)
                 }
@@ -182,8 +180,8 @@ jobs:
       - name: Determine deploy folder
         id: deploy-path
         run: |
-          if [ -n "$OUTPUT_SUBDIR" ]; then
-            echo "value=report/$OUTPUT_SUBDIR" >> "$GITHUB_OUTPUT"
+          if [ -n "${{ inputs.output-subdir }}" ]; then
+            echo "value=report/${{ inputs.output-subdir }}" >> "$GITHUB_OUTPUT"
           else
             echo "value=report" >> "$GITHUB_OUTPUT"
           fi
@@ -201,12 +199,10 @@ jobs:
       - name: Comment with PR site URL 🌐
         if: ${{ inputs.pr-number != '' }}
         uses: actions/github-script@v6
-        env:
-          PR_NUMBER: ${{ inputs.pr-number }}
         with:
           github-token: ${{ github.token }}
           script: |
-            const prNumber = process.env.PR_NUMBER;
+            const prNumber = "${{ inputs.pr-number }}";
             if (!prNumber) {
               core.info('No PR number provided; skipping comment.');
               return;

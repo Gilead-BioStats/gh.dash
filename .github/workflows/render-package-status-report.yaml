@@ -23,6 +23,8 @@ jobs:
     secrets: inherit
     with:
       ref: ${{ github.ref }}
+      title: "Tidyverse"
+      pkg-list-path: "inst/extdata/package_list.csv"
       output-subdir: ""
       deploy: true
       deploy-target: ""
@@ -37,35 +39,12 @@ jobs:
     secrets: inherit
     with:
       ref: ${{ github.ref }}
-      output-subdir: dev
+      title: "Tidyverse"
+      pkg-list-path: "inst/extdata/package_list.csv"
       deploy: true
       deploy-target: dev
       deploy-clean: false
 
-  build-main-dispatch:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'main'
-    uses: ./.github/workflows/render-report-reusable.yaml
-    secrets: inherit
-    with:
-      ref: main
-      output-subdir: ""
-      deploy: true
-      deploy-target: ""
-      deploy-clean: true
-      deploy-clean-exclude: |
-        dev
-        pr
-
-  build-dev-dispatch:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'dev'
-    uses: ./.github/workflows/render-report-reusable.yaml
-    secrets: inherit
-    with:
-      ref: dev
-      output-subdir: dev
-      deploy: true
-      deploy-target: dev
-      deploy-clean: false
 
   build-pr:
     if: github.event_name == 'pull_request'
@@ -73,6 +52,8 @@ jobs:
     secrets: inherit
     with:
       ref: ${{ github.sha }}
+      title: "Tidyverse"
+      pkg-list-path: "inst/extdata/package_list.csv"
       output-subdir: pr/${{ github.event.pull_request.number }}
       deploy: true
       deploy-target: pr/${{ github.event.pull_request.number }}

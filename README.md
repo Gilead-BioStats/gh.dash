@@ -34,12 +34,18 @@ render_dash(
 You can set up a repo that will automatically post the gh.dash report to GitHub Pages by following these steps:
 
 1. Create a CSV package list with a `repo` column (recommended: `/pkg_list.csv`).
-2. Set up repository variables and secrets:
-	- Set a repository variable `PKGLISTPATH` pointing to the CSV if it isn't saved as `/pkg_list.csv`.
-	- Set repository variables `QUALREPO` and `QUALPATH` pointing to a CSV with qualification details (optional).
-	- Set a repository (or organization) secret `GH_DASH_REPOS` if you need access to private repositories.
+2. Set a repository (or organization) PAT/secret `GH_DASH_REPOS` if you need access to private repositories. See below for details about fine-grained permissions.  
 3. Enable GitHub Pages (deploys to `gh-pages`) if you want the report to be hosted.
-4. Add a workflow (e.g. `.github/workflows/render-package-status-report.yaml`) using the template below:
+4. Add a workflow (e.g. `.github/workflows/render-package-status-report.yaml`) to run the {gh.dash} action. See below for a template. 
+5. Update the `with:` section of the yaml to match the configuration of your repo. See below for config details. 
+
+
+
+# Technical Details
+
+## GitHub Action template
+
+The following template can be customized to automatically run the {gh.dash} report in different repos. 
 
 ```yaml
 name: render-package-status-report
@@ -64,11 +70,22 @@ jobs:
 			GH_DASH_REPOS: ${{ secrets.GH_DASH_REPOS }}
 ```
 
-# Technical Details
+The following inputs can be customized using the `with:` section. 
 
-## Environment Variables
+- `ref` (required): Git reference or SHA to check out.
+- `title` (optional): Report title displayed in the dashboard.
+- `package-list` (optional): R vector of repositories (e.g. `c("org/repo1", "org/repo2")`).
+- `pkg-list-path` (optional): Path to a CSV file with a `repo` column containing repository slugs (default: `pkg_list.csv`).
+- `qual-repo` (optional): Qualification registry repository slug (e.g. `Gilead-BioStats/r-qualification`). Overrides repo variable `QUALREPO`.
+- `qual-path` (optional): Path to the qualification registry CSV within the repo (e.g. `qualified-releases.csv`). Overrides repo variable `QUALPATH`.
+- `output-subdir` (optional): Subdirectory for output (e.g. `dev`).
+- `deploy` (optional): Whether to deploy the rendered report to `gh-pages` (default: false).
+- `deploy-target` (optional): Target folder on `gh-pages` to deploy into.
+- `deploy-clean` (optional): Whether to clean the target folder before deploy (default: false).
+- `deploy-clean-exclude` (optional): Newline-delimited patterns to preserve when cleaning.
+- `pr-number` (optional): Pull request number (used for PR preview comments).
 
-### PAT for GitHub API
+## PAT for GitHub API
 
 The workflows optionally use the following repository secret:
 
@@ -79,19 +96,6 @@ If you use a fine-grained PAT for `GH_DASH_REPOS`, grant access to the repositor
 - Contents: Read
 - Metadata: Read
 - Issues: Read (for issue/milestone data)
-
-### Package List
-
-Set the `PKGLISTPATH` repository variable when your package list CSV is not saved as `/pkg_list.csv`.
-
-### Qualification List
-
-Set the `QUALREPO` and `QUALPATH` repository variables to enable qualification metadata:
-
-- `QUALREPO`: Repository slug that hosts the CSV (e.g. `Gilead-BioStats/r-qualification`).
-- `QUALPATH`: Path to the CSV within that repository (e.g. `qualified-releases.csv`).
-
-If either variable is missing, qualification data is skipped.
 
 ## GitHub Actions
 
