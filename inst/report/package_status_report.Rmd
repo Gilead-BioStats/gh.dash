@@ -1,12 +1,13 @@
 ---
 title: "`r params$title` Package Status Report"
-author: "gh.dash"
+author: "[`r params$repo`](https://github.com/`r params$repo`)"
 date: "`r format(Sys.time(), '%B %d, %Y %H:%M %Z')`"
 output: html_document
 params:
   token: NULL
   packageList: NULL
   title: "Tidyverse"
+  repo: "gh.dash"
   qualification_registry_url: NULL
 ---
 

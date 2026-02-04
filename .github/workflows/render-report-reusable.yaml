@@ -157,6 +157,7 @@ jobs:
             params = list(
               token = Sys.getenv("GITHUB_PAT"),
               title = "${{ inputs.title }}",
+              repo = "${{ github.repository }}",
               packageList = {
                 pkg_list_path <- "${{ inputs.pkg-list-path }}"
                 repos <- if (nzchar(pkg_list_path)) {
