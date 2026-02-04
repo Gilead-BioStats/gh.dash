@@ -86,6 +86,7 @@ jobs:
             any::cli
             any::htmltools
             any::gh
+            any::remotes
 
       - name: Install gh.dash from local checkout
         if: ${{ github.repository == 'Gilead-BioStats/gh.dash' }}
