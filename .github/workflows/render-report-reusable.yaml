@@ -145,15 +145,35 @@ jobs:
           }
           dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
           rmarkdown::render(
-            input = "inst/report/package_status_report.Rmd",
+            input = system.file("report", "package_status_report.Rmd", package = "gh.dash"),
             output_dir = output_dir,
             output_file = "index.html",
             params = list(
               token = Sys.getenv("GITHUB_PAT"),
-              packageList = read.csv(
-                file.path(Sys.getenv("GITHUB_WORKSPACE"), Sys.getenv("PKG_LIST_PATH")),
-                stringsAsFactors = FALSE
-              )$repo,
+              title = "BIG",
+              packageList = {
+                list_env <- Sys.getenv("PACKAGE_LIST", unset = "")
+                pkg_list_path <- Sys.getenv("PKG_LIST_PATH", unset = "")
+                pkg_list_override <- Sys.getenv("PKGLISTPATH", unset = "")
+                if (nzchar(pkg_list_override)) {
+                  pkg_list_path <- pkg_list_override
+                }
+                repos <- if (nzchar(pkg_list_path)) {
+                  pkg_file <- file.path(Sys.getenv("GITHUB_WORKSPACE"), pkg_list_path)
+                  if (!file.exists(pkg_file)) {
+                    stop("Package list CSV not found at ", pkg_file)
+                  }
+                  read.csv(pkg_file, stringsAsFactors = FALSE)$repo
+                } else if (nzchar(list_env)) {
+                  eval(parse(text = list_env))
+                } else {
+                  character(0)
+                }
+                repos <- as.character(repos)
+                repos <- trimws(repos)
+                repos <- repos[nzchar(repos)]
+                repos
+              },
               qualification_registry_url = Sys.getenv("GH_DASH_QUAL_REGISTRY_URL", unset = "")
             )
           )
