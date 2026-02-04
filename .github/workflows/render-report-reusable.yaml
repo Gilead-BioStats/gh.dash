@@ -40,7 +40,7 @@ on:
         description: Whether to deploy the rendered report
         required: false
         type: boolean
-        default: false
+        default: true
       deploy-target:
         description: Target folder on gh-pages
         required: false
