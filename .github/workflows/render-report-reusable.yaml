@@ -151,7 +151,7 @@ jobs:
             params = list(
               token = Sys.getenv("GITHUB_PAT"),
               packageList = read.csv(
-                Sys.getenv("PKG_LIST_PATH"),
+                file.path(Sys.getenv("GITHUB_WORKSPACE"), Sys.getenv("PKG_LIST_PATH")),
                 stringsAsFactors = FALSE
               )$repo,
               qualification_registry_url = Sys.getenv("GH_DASH_QUAL_REGISTRY_URL", unset = "")
