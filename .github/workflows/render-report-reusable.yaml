@@ -63,6 +63,8 @@ jobs:
       PKG_LIST_PATH: ${{ vars.PKGLISTPATH || inputs.pkg-list-path }}
       OUTPUT_SUBDIR: ${{ inputs.output-subdir }}
       PR_NUMBER: ${{ inputs.pr-number }}
+      QUALREPO: ${{ vars.QUALREPO }}
+      QUALPATH: ${{ vars.QUALPATH }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -99,34 +101,34 @@ jobs:
           remotes::install_github("Gilead-BioStats/gh.dash")
 
       - name: Fetch qualification registry (sparse checkout)
-        if: ${{ env.GITHUB_PAT != '' }}
+        if: ${{ env.GITHUB_PAT != '' && env.QUALREPO != '' && env.QUALPATH != '' }}
         id: registry-sparse
         uses: actions/checkout@v5
         with:
-          repository: Gilead-BioStats/r-qualification
+          repository: ${{ env.QUALREPO }}
           ref: main
           token: ${{ env.GITHUB_PAT }}
           sparse-checkout: |
-            qualified-releases.csv
+            ${{ env.QUALPATH }}
           path: registry
 
       - name: Count registry rows (sparse checkout)
-        if: ${{ env.GITHUB_PAT != '' }}
+        if: ${{ env.GITHUB_PAT != '' && env.QUALREPO != '' && env.QUALPATH != '' }}
         shell: bash
         run: |
           set -euo pipefail
-          rows=$(($(wc -l < registry/qualified-releases.csv) - 1))
+          rows=$(($(wc -l < "registry/${QUALPATH}") - 1))
           echo "Rows in registry (sparse): $rows"
           if [ -n "${GITHUB_OUTPUT:-}" ]; then
             echo "registry_rows_sparse=$rows" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Export registry path for render
-        if: ${{ env.GITHUB_PAT != '' }}
+        if: ${{ env.GITHUB_PAT != '' && env.QUALREPO != '' && env.QUALPATH != '' }}
         shell: bash
         run: |
           set -euo pipefail
-          registry_path="$(pwd)/registry/qualified-releases.csv"
+          registry_path="$(pwd)/registry/${QUALPATH}"
           if [ ! -f "$registry_path" ]; then
             echo "Registry CSV not found at $registry_path" >&2
             exit 1

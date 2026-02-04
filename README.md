@@ -1,10 +1,10 @@
 # gh.dash
 
-{gh.dash} is an R package that creates a simple dashboard that summarizes the development status for Github repos. The user provides a list of pacakges to include and the pacakge does the following: 
+{gh.dash} is an R package that creates a simple dashboard that summarizes the development status for GitHub repos. The user provides a list of packages to include and the package does the following:
 
-- Pulls data about package releases, milestones and, optionally qualification status using the github API
-- Creates a report summarizing the status for each pacakge using R markdown
-- Uses pre-configured GitHub actions to automatically pushes the report to Github Pages
+- Pulls data about package releases, milestones and, optionally qualification status using the GitHub API
+- Creates a report summarizing the status for each package using R Markdown
+- Uses pre-configured GitHub Actions to automatically push the report to GitHub Pages
 
 The {gh.dash} repo automatically runs a sample report for tidyverse packages, but the package can be configured to work with any GitHub repos using the steps below. 
 
@@ -31,14 +31,15 @@ render_dash(
 
 ## Setting up Automated Dashboards
 
-You can set up a repo that will automatically post the gh.dash report to github pages by following thse steps:
+You can set up a repo that will automatically post the gh.dash report to GitHub Pages by following these steps:
 
-1. Create a .csv package list with a `repo` column (recommended: `/pkg_list.csv`).
-2. Set up environmental variables
-    - Set a repository variable called `PKGLISTPATH` pointing to the csv if it isn't saved as `/pkg_list.csv`. 
-    - Set a repository (or organization) secret `GH_DASH_REPOS` if you need access to private repositories. See below for guidance on fine-grained permissions. 
-4. Enable GitHub Pages (deploys to `gh-pages`) if you want the report to be hosted.
-5. Add a workflow  (e.g. `.github/workflows/render-package-status-report.yaml`) using the template below: 
+1. Create a CSV package list with a `repo` column (recommended: `/pkg_list.csv`).
+2. Set up repository variables and secrets:
+	- Set a repository variable `PKGLISTPATH` pointing to the CSV if it isn't saved as `/pkg_list.csv`.
+	- Set repository variables `QUALREPO` and `QUALPATH` pointing to a CSV with qualification details (optional).
+	- Set a repository (or organization) secret `GH_DASH_REPOS` if you need access to private repositories.
+3. Enable GitHub Pages (deploys to `gh-pages`) if you want the report to be hosted.
+4. Add a workflow (e.g. `.github/workflows/render-package-status-report.yaml`) using the template below:
 
 ```yaml
 name: render-package-status-report
@@ -65,7 +66,9 @@ jobs:
 
 # Technical Details
 
-## Environmental Variables
+## Environment Variables
+
+### PAT for GitHub API
 
 The workflows optionally use the following repository secret:
 
@@ -76,6 +79,19 @@ If you use a fine-grained PAT for `GH_DASH_REPOS`, grant access to the repositor
 - Contents: Read
 - Metadata: Read
 - Issues: Read (for issue/milestone data)
+
+### Package List
+
+Set the `PKGLISTPATH` repository variable when your package list CSV is not saved as `/pkg_list.csv`.
+
+### Qualification List
+
+Set the `QUALREPO` and `QUALPATH` repository variables to enable qualification metadata:
+
+- `QUALREPO`: Repository slug that hosts the CSV (e.g. `Gilead-BioStats/r-qualification`).
+- `QUALPATH`: Path to the CSV within that repository (e.g. `qualified-releases.csv`).
+
+If either variable is missing, qualification data is skipped.
 
 ## GitHub Actions
 
