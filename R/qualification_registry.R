@@ -23,7 +23,7 @@ default_qualification_registry_url <- function() {
 #' @param url URL to the qualification registry CSV
 #' @param token GitHub personal access token (optional)
 #' @return Data frame with qualification registry or NULL if fetch fails
-#' @keywords internal
+#' @export
 fetch_qualification_registry <- function(
   url = default_qualification_registry_url(),
   token = NULL

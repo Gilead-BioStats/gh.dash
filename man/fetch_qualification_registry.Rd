@@ -21,4 +21,3 @@ Data frame with qualification registry or NULL if fetch fails
 Downloads and processes the qualification registry CSV, with fallback to
 GitHub API if direct CSV access fails.
 }
-\keyword{internal}
