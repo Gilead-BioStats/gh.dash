@@ -191,6 +191,7 @@ jobs:
         if: ${{ inputs.deploy }}
         uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
+          token: ${{ github.token }}
           branch: gh-pages
           folder: ${{ steps.deploy-path.outputs.value }}
           clean: ${{ inputs.deploy-clean }}
