@@ -24,7 +24,7 @@ jobs:
     with:
       ref: ${{ github.ref }}
       title: "Tidyverse"
-      pkg-list-path: "inst/extdata/package_list.csv"
+      pkg-list-path: "inst/extdata/package-list.csv"
       output-subdir: ""
       deploy: true
       deploy-target: ""
@@ -40,7 +40,7 @@ jobs:
     with:
       ref: ${{ github.ref }}
       title: "Tidyverse"
-      pkg-list-path: "inst/extdata/package_list.csv"
+      pkg-list-path: "inst/extdata/package-list.csv"
       deploy: true
       deploy-target: dev
       deploy-clean: false
@@ -53,7 +53,7 @@ jobs:
     with:
       ref: ${{ github.sha }}
       title: "Tidyverse"
-      pkg-list-path: "inst/extdata/package_list.csv"
+      pkg-list-path: "inst/extdata/package-list.csv"
       output-subdir: pr/${{ github.event.pull_request.number }}
       deploy: true
       deploy-target: pr/${{ github.event.pull_request.number }}

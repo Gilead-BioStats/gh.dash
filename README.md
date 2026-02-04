@@ -72,18 +72,17 @@ jobs:
 
 The following inputs can be customized using the `with:` section. 
 
-- `ref` (required): Git reference or SHA to check out.
-- `title` (optional): Report title displayed in the dashboard.
-- `package-list` (optional): R vector of repositories (e.g. `c("org/repo1", "org/repo2")`).
+- `title` : Report title displayed in the dashboard.
 - `pkg-list-path` (optional): Path to a CSV file with a `repo` column containing repository slugs (default: `pkg_list.csv`).
-- `qual-repo` (optional): Qualification registry repository slug (e.g. `Gilead-BioStats/r-qualification`). Overrides repo variable `QUALREPO`.
-- `qual-path` (optional): Path to the qualification registry CSV within the repo (e.g. `qualified-releases.csv`). Overrides repo variable `QUALPATH`.
+- `qual-repo` (optional): Qualification registry repository slug (e.g. `Gilead-BioStats/r-qualification`). 
+- `qual-path` (optional): Path to the qualification registry CSV within the repo (e.g. `qualified-releases.csv`).
 - `output-subdir` (optional): Subdirectory for output (e.g. `dev`).
-- `deploy` (optional): Whether to deploy the rendered report to `gh-pages` (default: false).
+- `deploy` (optional): Whether to deploy the rendered report to `gh-pages` (default: true).
 - `deploy-target` (optional): Target folder on `gh-pages` to deploy into.
 - `deploy-clean` (optional): Whether to clean the target folder before deploy (default: false).
 - `deploy-clean-exclude` (optional): Newline-delimited patterns to preserve when cleaning.
-- `pr-number` (optional): Pull request number (used for PR preview comments).
+
+For a slightly more complex implementation of GHA deploy see `.github/workflows/render-package-status-report.yaml`. 
 
 ## PAT for GitHub API
 
@@ -96,13 +95,3 @@ If you use a fine-grained PAT for `GH_DASH_REPOS`, grant access to the repositor
 - Contents: Read
 - Metadata: Read
 - Issues: Read (for issue/milestone data)
-
-## GitHub Actions
-
-Two workflows keep the hosted reports current:
-
-- `.github/workflows/render-package-status-report.yaml` handles pushes to `main` and `dev`, pull requests, and manual `workflow_dispatch` runs. Each job calls the reusable workflow in `.github/workflows/render-report-reusable.yaml`, passing the branch-specific ref, output directory, and the package list (as an R vector string, e.g. `c("org/repo1", "org/repo2")`). Main publishes to `report/`, dev publishes to `report/dev/`, and pull requests publish to `report/pr/<number>/` while also posting a comment that links to the preview site.
-- `.github/workflows/render-package-status-report-scheduled.yaml` runs nightly at 05:00 UTC. It invokes the reusable workflow twice—first for `main`, then for `dev`—to refresh both environments even when there are no new commits during the day.
-
-Manual runs are available through the *Run workflow* button on `render-package-status-report`. Select either the `main` or `dev` target; trigger two runs back-to-back whenever both environments need rebuilding. Pull requests originating from forks are skipped automatically during deployment because the workflows rely on the runtime `github.token`.
-
