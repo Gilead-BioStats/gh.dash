@@ -16,6 +16,11 @@ on:
         required: false
         type: string
         default: ""
+      pkg-list-path:
+        description: Path to a CSV file with a `repo` column containing repository slugs
+        required: false
+        type: string
+        default: "pkg_list.csv"
       output-subdir:
         description: Subdirectory under report to place the output
         required: false
@@ -55,6 +60,7 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GH_DASH_REPOS || github.token }}
       PACKAGE_LIST: ${{ inputs.package-list }}
+      PKG_LIST_PATH: ${{ vars.PKGLISTPATH || inputs.pkg-list-path }}
       OUTPUT_SUBDIR: ${{ inputs.output-subdir }}
       PR_NUMBER: ${{ inputs.pr-number }}
     steps:
@@ -78,7 +84,19 @@ jobs:
             any::cli
             any::htmltools
             any::gh
+
+      - name: Install gh.dash from local checkout
+        if: ${{ github.repository == 'Gilead-BioStats/gh.dash' }}
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
             local::.
+
+      - name: Install gh.dash from GitHub
+        if: ${{ github.repository != 'Gilead-BioStats/gh.dash' }}
+        shell: Rscript {0}
+        run: |
+          remotes::install_github("Gilead-BioStats/gh.dash")
 
       - name: Fetch qualification registry (sparse checkout)
         if: ${{ env.GITHUB_PAT != '' }}
@@ -130,14 +148,10 @@ jobs:
             output_file = "index.html",
             params = list(
               token = Sys.getenv("GITHUB_PAT"),
-              packageList = {
-                list_env <- Sys.getenv("PACKAGE_LIST", unset = "")
-                repos <- if (nzchar(list_env)) eval(parse(text = list_env)) else character(0)
-                repos <- as.character(repos)
-                repos <- trimws(repos)
-                repos <- repos[nzchar(repos)]
-                repos
-              },
+              packageList = read.csv(
+                Sys.getenv("PKG_LIST_PATH"),
+                stringsAsFactors = FALSE
+              )$repo,
               qualification_registry_url = Sys.getenv("GH_DASH_QUAL_REGISTRY_URL", unset = "")
             )
           )

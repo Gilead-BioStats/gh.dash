@@ -1,20 +1,81 @@
 # gh.dash
 
-{gh.dash} is an R package that creates a simple dashboad that summarizes the development status for Github repos. 
+{gh.dash} is an R package that creates a simple dashboard that summarizes the development status for Github repos. The user provides a list of pacakges to include and the pacakge does the following: 
 
-## Published report
+- Pulls data about package releases, milestones and, optionally qualification status using the github API
+- Creates a report summarizing the status for each pacakge using R markdown
+- Uses pre-configured GitHub actions to automatically pushes the report to Github Pages
 
-The report is rendered nightly by GitHub Actions and deployed to the `gh-pages` branch so that it is served at <https://gilead-biostats.github.io/gh.dash/>. Each run overwrites the `report/` directory on the `gh-pages` branch to keep the published HTML current. Fork the package and update `inst/extdata/pacakge-list.csv` to run the report for your custom list of packages.  
+The {gh.dash} repo automatically runs a sample report for tidyverse packages, but the package can be configured to work with any GitHub repos using the steps below. 
 
-## Local development
+# Configuration
 
-To render the package status report locally, run the helper script:
+## Running a Single Report
 
-```sh
-Rscript inst/examples/RenderReport.R
+Use `render_dash()` to generate a local HTML report from an R session:
+
+```r
+library(gh.dash)
+
+render_dash(
+	packages = c(
+		"tidyverse/ggplot2",
+		"tidyverse/dplyr",
+		"tidyverse/tidyr"
+	),
+	output_dir = "report",
+	output_file = "index.html",
+	title = "Tidyverse"
+)
 ```
 
-The script loads the package (using `pkgload::load_all()` when needed) and writes the HTML output to `inst/examples/output/index.html`. Open that file in a browser to preview changes. The document is self-contained, so no additional assets are required when publishing.
+## Setting up Automated Dashboards
+
+You can set up a repo that will automatically post the gh.dash report to github pages by following thse steps:
+
+1. Create a .csv package list with a `repo` column (recommended: `/pkg_list.csv`).
+2. Set up environmental variables
+    - Set a repository variable called `PKGLISTPATH` pointing to the csv if it isn't saved as `/pkg_list.csv`. 
+    - Set a repository (or organization) secret `GH_DASH_REPOS` if you need access to private repositories. See below for guidance on fine-grained permissions. 
+4. Enable GitHub Pages (deploys to `gh-pages`) if you want the report to be hosted.
+5. Add a workflow  (e.g. `.github/workflows/render-package-status-report.yaml`) using the template below: 
+
+```yaml
+name: render-package-status-report
+
+on:
+	workflow_dispatch:
+	push:
+		branches: [main]
+
+jobs:
+	render:
+		uses: Gilead-BioStats/gh.dash/.github/workflows/render-report-reusable.yaml@main
+		with:
+			ref: ${{ github.ref_name }}
+			pkg-list-path: "pkg_list.csv"
+			output-subdir: ""
+			deploy: true
+			deploy-target: ""
+			deploy-clean: false
+			deploy-clean-exclude: ""
+		secrets:
+			GH_DASH_REPOS: ${{ secrets.GH_DASH_REPOS }}
+```
+
+# Technical Details
+
+## Environmental Variables
+
+The workflows optionally use the following repository secret:
+
+- `GH_DASH_REPOS` (optional): A fine-grained PAT used to access private repositories and (optionally) the qualification registry. If not provided, the workflow falls back to the default `github.token`, which only has access to public repositories.
+
+If you use a fine-grained PAT for `GH_DASH_REPOS`, grant access to the repositories you want to report on and the following repository permissions:
+
+- Contents: Read
+- Metadata: Read
+- Issues: Read (for issue/milestone data)
 
 ## GitHub Actions
 
@@ -24,11 +85,4 @@ Two workflows keep the hosted reports current:
 - `.github/workflows/render-package-status-report-scheduled.yaml` runs nightly at 05:00 UTC. It invokes the reusable workflow twice—first for `main`, then for `dev`—to refresh both environments even when there are no new commits during the day.
 
 Manual runs are available through the *Run workflow* button on `render-package-status-report`. Select either the `main` or `dev` target; trigger two runs back-to-back whenever both environments need rebuilding. Pull requests originating from forks are skipped automatically during deployment because the workflows rely on the runtime `github.token`.
-
-### Required secrets
-
-The workflows optionally use the following repository secret:
-
-- `GH_DASH_REPOS_TOKEN` (optional): A PAT with `repo` scope for accessing private repositories. If not provided, the workflow falls back to the default `github.token`, which only has access to public repositories.
-- `GH_QUAL_REGISTRY_TOKEN` (optional): A PAT with access to `Gilead-BioStats/r-qualification` when qualification metadata is needed. If not provided, qualification data is skipped.
 
