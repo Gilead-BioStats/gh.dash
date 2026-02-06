@@ -11,7 +11,6 @@ if (length(script_path)) {
   script_dir <- getwd()
 }
 
-package_root <- normalizePath(file.path(script_dir, "..", ".."), mustWork = TRUE)
 output_dir <- normalizePath(file.path(script_dir, "output"), mustWork = FALSE)
 if (dir.exists(output_dir)) {
   unlink(output_dir, recursive = TRUE)
@@ -19,7 +18,7 @@ if (dir.exists(output_dir)) {
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 if (requireNamespace("pkgload", quietly = TRUE)) {
-  pkgload::load_all(package_root, quiet = TRUE)
+  pkgload::load_all(script_dir, quiet = TRUE)
 } else {
   library(gh.dash)
 }
