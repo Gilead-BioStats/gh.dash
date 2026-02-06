@@ -251,12 +251,8 @@ render_status_table <- function(df) {
                 "Dev status",
                 htmltools::tags$span(
                   class = "info-icon",
-                  `data-tooltip` = "The difference in commits between 'main' and 'dev' branches: \n
-A positive number means dev is ahead of main by n commits; A negative number means dev is behind main by n commits;\n
-\"Unavailable\" means that there is no branch named 'dev' and/or 'main'.",
-                  `aria-label` = "The difference in commits between 'main' and 'dev' branches:  
-A positive number means dev is ahead of main by n commits; A negative number means dev is behind main by n commits; 
-\"Unavailable\" means that there is no branch named 'dev' and/or 'main'.",
+                  `data-tooltip` = "The difference in commits between 'main' and 'dev' branches: \n A positive number means dev is ahead of main by n commits; \n A negative number means dev is behind main by n commits;\n \"Unavailable\" means that there is no branch named 'dev' and/or 'main'.",
+                  `aria-label` = "The difference in commits between 'main' and 'dev' branches: A positive number means dev is ahead of main by n commits; A negative number means dev is behind main by n commits; \"Unavailable\" means that there is no branch named 'dev' and/or 'main'.",
                   tabindex = "0",
                   "i"
                 )
