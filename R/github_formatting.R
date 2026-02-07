@@ -25,7 +25,6 @@ format_repo_link <- function(owner, repo) {
 #' @keywords internal
 #' @importFrom htmltools tags HTML htmlEscape
 format_release_summary <- function(owner, repo, release, registry) {
-
   base_url <- sprintf("https://github.com/%s/%s", owner, repo)
   releases_url <- paste0(base_url, "/releases")
 
@@ -298,6 +297,83 @@ format_branch_comparison <- function(owner, repo, comparison) {
   repo_url <- sprintf("https://github.com/%s/%s/compare/main...dev", owner, repo)
   anchor <- htmltools::tags$a(href = repo_url, status_text)
   as.character(anchor)
+}
+
+#' Parse release published date
+#'
+#' Internal function to parse the `published_at` field of a GitHub release
+#' object into a `Date`.
+#'
+#' @param published_at ISO 8601 date-time string from GitHub API (e.g.
+#'   `"2025-01-15T12:00:00Z"`)
+#' @return A `Date` value, or `NA` if the input is `NULL`, empty, or
+#'   unparseable.
+#' @keywords internal
+parse_release_date <- function(published_at) {
+  if (is.null(published_at) || !nzchar(published_at)) {
+    return(NA_real_)
+  }
+  as.Date(substr(published_at, 1L, 10L))
+}
+
+#' Derive latest published release from a releases list
+#'
+#' Internal function to find the latest non-draft, non-prerelease entry
+#' from the list returned by `fetch_releases()`.
+#'
+#' @param releases List of release objects from `fetch_releases()`
+#' @return A single release list element, or `NULL` if none qualify.
+#' @keywords internal
+#' @importFrom purrr detect
+derive_latest_release <- function(releases) {
+  if (is.null(releases) || !length(releases)) {
+    return(NULL)
+  }
+  purrr::detect(releases, ~ !isTRUE(.x$draft) && !isTRUE(.x$prerelease))
+}
+
+#' Count year-to-date releases
+#'
+#' Internal function to count the number of non-draft, non-prerelease
+#' releases published between January 1 of the current year and today
+#' (inclusive).
+#'
+#' @param releases List of release objects from `fetch_releases()`
+#' @return Integer count of qualifying releases.
+#' @keywords internal
+#' @importFrom purrr keep
+count_ytd_releases <- function(releases) {
+  if (is.null(releases) || !length(releases)) {
+    return(0L)
+  }
+  year_start <- as.Date(paste0(format(Sys.Date(), "%Y"), "-01-01"))
+  today <- Sys.Date()
+
+  releases %>%
+    purrr::keep(~ !isTRUE(.x$draft) && !isTRUE(.x$prerelease)) %>%
+    purrr::keep(~ {
+      pub_date <- parse_release_date(.x$published_at)
+      !is.na(pub_date) && pub_date >= year_start && pub_date <= today
+    }) %>%
+    length() %>%
+    as.integer()
+}
+
+#' Format year-to-date release count as HTML
+#'
+#' Internal function to format the YTD release count as a hyperlink
+#' pointing to the repository's releases page.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param releases List of release objects from `fetch_releases()`
+#' @return Character string with HTML anchor tag
+#' @keywords internal
+#' @importFrom htmltools tags
+format_ytd_releases <- function(owner, repo, releases) {
+  count <- count_ytd_releases(releases)
+  url <- sprintf("https://github.com/%s/%s/releases", owner, repo)
+  as.character(htmltools::tags$a(href = url, as.character(count)))
 }
 
 #' Get branch status text

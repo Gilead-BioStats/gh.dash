@@ -39,6 +39,7 @@ status <- if (length(repos) == 0L) {
     latest_release = character(0),
     upcoming_milestones = character(0),
     dev_branch_status = character(0),
+    ytd_releases = character(0),
     stringsAsFactors = FALSE
   )
 } else {
@@ -79,6 +80,10 @@ styles <- c(
   "  color: #475569;",
   "}",
   "",
+  ".status-table th.status-table__cell--right {",
+  "  text-align: right;",
+  "}",
+  "",
   ".status-table td {",
   "  padding: 1rem 1.25rem;",
   "  font-size: 1.2rem;",
@@ -99,6 +104,11 @@ styles <- c(
   "  font-weight: 600;",
   "  color: #0f172a;",
   "  white-space: nowrap;",
+  "}",
+  "",
+  ".status-table__cell--right {",
+  "  text-align: right;",
+  "  padding-right: 1.25rem !important;",
   "}",
   "",
   ".empty-state {",
@@ -174,6 +184,10 @@ render_status_table <- function(df) {
       htmltools::tags$td(
         class = "status-table__cell",
         htmltools::HTML(df$dev_branch_status[[i]])
+      ),
+      htmltools::tags$td(
+        class = "status-table__cell status-table__cell--right",
+        htmltools::HTML(df$ytd_releases[[i]])
       )
     )
   })
@@ -190,7 +204,8 @@ render_status_table <- function(df) {
             htmltools::tags$th(scope = "col", "Repository"),
             htmltools::tags$th(scope = "col", "Latest release"),
             htmltools::tags$th(scope = "col", "Open milestones"),
-            htmltools::tags$th(scope = "col", "Dev status")
+            htmltools::tags$th(scope = "col", "Dev status"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "# Releases YTD")
           )
         ),
         tbody
