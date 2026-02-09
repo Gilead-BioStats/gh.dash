@@ -356,16 +356,16 @@ count_ytd_releases <- function(releases) {
   year_start <- as.Date(paste0(format(Sys.Date(), "%Y"), "-01-01"))
   today <- Sys.Date()
 
-  releases %>%
-    purrr::keep(~ !isTRUE(.x$draft) && !isTRUE(.x$prerelease)) %>%
+  releases |>
+    purrr::keep(~ !isTRUE(.x$draft) && !isTRUE(.x$prerelease)) |>
     purrr::keep(~ {
       if (is.null(.x$published_at)) {
         return(FALSE)
       }
       pub_date <- parse_release_date(.x$published_at)
       !is.na(pub_date) && pub_date >= year_start && pub_date <= today
-    }) %>%
-    length() %>%
+    }) |>
+    length() |>
     as.integer()
 }
 
