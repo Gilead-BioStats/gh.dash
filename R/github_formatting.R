@@ -310,10 +310,17 @@ format_branch_comparison <- function(owner, repo, comparison) {
 #'   unparseable.
 #' @keywords internal
 parse_release_date <- function(published_at) {
-  if (is.null(published_at) || !nzchar(published_at)) {
-    return(NA_real_)
+  if (is.null(published_at) || length(published_at) == 0L) {
+    return(as.Date(NA_character_))
   }
-  as.Date(substr(published_at, 1L, 10L))
+  published_at <- as.character(published_at)
+  if (!nzchar(published_at)) {
+    return(as.Date(NA_character_))
+  }
+  tryCatch(
+    as.Date(substr(published_at, 1L, 10L)),
+    error = function(e) as.Date(NA_character_)
+  )
 }
 
 #' Derive latest published release from a releases list
@@ -352,6 +359,9 @@ count_ytd_releases <- function(releases) {
   releases %>%
     purrr::keep(~ !isTRUE(.x$draft) && !isTRUE(.x$prerelease)) %>%
     purrr::keep(~ {
+      if (is.null(.x$published_at)) {
+        return(FALSE)
+      }
       pub_date <- parse_release_date(.x$published_at)
       !is.na(pub_date) && pub_date >= year_start && pub_date <= today
     }) %>%
