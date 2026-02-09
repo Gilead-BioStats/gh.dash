@@ -339,22 +339,22 @@ derive_latest_release <- function(releases) {
   purrr::detect(releases, ~ !isTRUE(.x$draft) && !isTRUE(.x$prerelease))
 }
 
-#' Count year-to-date releases
+#' Count releases from last N days
 #'
 #' Internal function to count the number of non-draft, non-prerelease
-#' releases published between January 1 of the current year and today
-#' (inclusive).
+#' releases published in the last N days (inclusive).
 #'
 #' @param releases List of release objects from `fetch_releases()`
+#' @param days Number of days to look back from today
 #' @return Integer count of qualifying releases.
 #' @keywords internal
 #' @importFrom purrr keep
-count_ytd_releases <- function(releases) {
+count_releases_last_n_days <- function(releases, days) {
   if (is.null(releases) || !length(releases)) {
     return(0L)
   }
-  year_start <- as.Date(paste0(format(Sys.Date(), "%Y"), "-01-01"))
   today <- Sys.Date()
+  start_date <- today - days
 
   releases |>
     purrr::keep(~ !isTRUE(.x$draft) && !isTRUE(.x$prerelease)) |>
@@ -363,16 +363,29 @@ count_ytd_releases <- function(releases) {
         return(FALSE)
       }
       pub_date <- parse_release_date(.x$published_at)
-      !is.na(pub_date) && pub_date >= year_start && pub_date <= today
+      !is.na(pub_date) && pub_date >= start_date && pub_date <= today
     }) |>
     length() |>
     as.integer()
 }
 
-#' Format year-to-date release count as HTML
+#' Count releases from last 365 days
 #'
-#' Internal function to format the YTD release count as a hyperlink
-#' pointing to the repository's releases page.
+#' Internal function to count the number of non-draft, non-prerelease
+#' releases published in the last 365 days (inclusive).
+#'
+#' @param releases List of release objects from `fetch_releases()`
+#' @return Integer count of qualifying releases.
+#' @keywords internal
+count_ytd_releases <- function(releases) {
+  count_releases_last_n_days(releases, 365)
+}
+
+#' Format release count from last 365 days as HTML
+#'
+#' Internal function to format the release count from the last 365 days
+#' as a hyperlink pointing to the repository's releases page. Tooltip shows
+#' the count for the last 90 days.
 #'
 #' @param owner Repository owner (GitHub username or organization)
 #' @param repo Repository name
@@ -381,9 +394,11 @@ count_ytd_releases <- function(releases) {
 #' @keywords internal
 #' @importFrom htmltools tags
 format_ytd_releases <- function(owner, repo, releases) {
-  count <- count_ytd_releases(releases)
+  count_365 <- count_ytd_releases(releases)
+  count_90 <- count_releases_last_n_days(releases, 90)
   url <- sprintf("https://github.com/%s/%s/releases", owner, repo)
-  as.character(htmltools::tags$a(href = url, as.character(count)))
+  tooltip <- sprintf("%s releases in past 90 days", count_90)
+  as.character(htmltools::tags$a(href = url, title = tooltip, as.character(count_365)))
 }
 
 #' Get branch status text

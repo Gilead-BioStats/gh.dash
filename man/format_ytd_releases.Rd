@@ -2,7 +2,7 @@
 % Please edit documentation in R/github_formatting.R
 \name{format_ytd_releases}
 \alias{format_ytd_releases}
-\title{Format year-to-date release count as HTML}
+\title{Format release count from last 365 days as HTML}
 \usage{
 format_ytd_releases(owner, repo, releases)
 }
@@ -17,7 +17,8 @@ format_ytd_releases(owner, repo, releases)
 Character string with HTML anchor tag
 }
 \description{
-Internal function to format the YTD release count as a hyperlink
-pointing to the repository's releases page.
+Internal function to format the release count from the last 365 days
+as a hyperlink pointing to the repository's releases page. Tooltip shows
+the count for the last 90 days.
 }
 \keyword{internal}

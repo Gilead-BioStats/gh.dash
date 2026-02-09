@@ -205,7 +205,7 @@ render_status_table <- function(df) {
             htmltools::tags$th(scope = "col", "Latest release"),
             htmltools::tags$th(scope = "col", "Open milestones"),
             htmltools::tags$th(scope = "col", "Dev status"),
-            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "# Releases YTD")
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "# Releases")
           )
         ),
         tbody

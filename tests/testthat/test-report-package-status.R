@@ -39,7 +39,7 @@ test_that("count_ytd_releases returns 0 for NULL or empty list", {
 
 test_that("format_ytd_releases always returns a hyperlink", {
   result <- gh.dash:::format_ytd_releases("org", "repo", NULL)
-  expect_match(result, "<a href=\"https://github.com/org/repo/releases\">0</a>")
+  expect_match(result, "<a href=\"https://github.com/org/repo/releases\" title=\"0 releases in past 90 days\">0</a>")
 })
 
 test_that("derive_latest_release skips drafts and prereleases", {
@@ -125,7 +125,7 @@ test_that("summarize_github_repos assembles release and milestone summaries", {
   )
   expect_match(result$upcoming_milestones, "<a href=\"https://github.com/org/repo/milestone/1\">")
   expect_match(result$upcoming_milestones, "3 open of 5")
-  expect_match(result$ytd_releases, "<a href=\"https://github.com/org/repo/releases\">")
+  expect_match(result$ytd_releases, "<a href=\"https://github.com/org/repo/releases\" title=\"0 releases in past 90 days\">")
 })
 
 test_that("summarize_github_repos appends qualification badge when registry matches", {
@@ -261,7 +261,7 @@ test_that("summarize_github_repos supports multiple repositories", {
   expect_match(result$upcoming_milestones[[1]], "1 open of 5")
   expect_match(result$upcoming_milestones[[2]], "<a href=\"https://github.com/org2/repo2/milestones\">")
   expect_match(result$upcoming_milestones[[2]], "None")
-  expect_match(result$ytd_releases[[1]], "<a href=\"https://github.com/org/repo/releases\">")
-  expect_match(result$ytd_releases[[2]], "<a href=\"https://github.com/org2/repo2/releases\">")
+  expect_match(result$ytd_releases[[1]], "<a href=\"https://github.com/org/repo/releases\" title=\"0 releases in past 90 days\">")
+  expect_match(result$ytd_releases[[2]], "<a href=\"https://github.com/org2/repo2/releases\" title=\"0 releases in past 90 days\">")
   expect_match(result$ytd_releases[[2]], ">0</a>")
 })
