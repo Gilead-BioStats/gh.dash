@@ -1,10 +1,6 @@
 #!/usr/bin/env Rscript
 # Render the tidyverse demo package status report into a local report/ directory.
 
-if (!requireNamespace("rmarkdown", quietly = TRUE)) {
-  stop("Package 'rmarkdown' is required to render the report.", call. = FALSE)
-}
-
 args <- commandArgs(trailingOnly = FALSE)
 file_flag <- "--file="
 script_path <- args[grepl(file_flag, args, fixed = TRUE)]
@@ -16,7 +12,6 @@ if (length(script_path)) {
 }
 
 package_root <- normalizePath(file.path(script_dir, "..", ".."), mustWork = TRUE)
-report_dir <- normalizePath(file.path(package_root, "inst", "report"), mustWork = TRUE)
 output_dir <- normalizePath(file.path(script_dir, "output"), mustWork = FALSE)
 if (dir.exists(output_dir)) {
   unlink(output_dir, recursive = TRUE)
@@ -29,26 +24,21 @@ if (requireNamespace("pkgload", quietly = TRUE)) {
   library(gh.dash)
 }
 
-rmarkdown::render(
-  input = file.path(report_dir, "package_status_report.Rmd"),
+render_dash(
+  packages = c(
+    "tidyverse/ggplot2",
+    "tidyverse/dplyr",
+    "tidyverse/tidyr",
+    "tidyverse/readr",
+    "tidyverse/purrr",
+    "tidyverse/tibble",
+    "tidyverse/stringr",
+    "tidyverse/forcats",
+    "tidyverse/lubridate"
+  ),
   output_dir = output_dir,
   output_file = "index.html",
-  params = list(
-    token = Sys.getenv("GITHUB_TOKEN", unset = ""),
-    title = "Tidyverse",
-    packageList = c(
-      "tidyverse/ggplot2",
-      "tidyverse/dplyr",
-      "tidyverse/tidyr",
-      "tidyverse/readr",
-      "tidyverse/purrr",
-      "tidyverse/tibble",
-      "tidyverse/stringr",
-      "tidyverse/forcats",
-      "tidyverse/lubridate"
-    )
-  ),
-  clean = TRUE
+  title = "Tidyverse"
 )
 
 message("Report rendered to ", file.path(output_dir, "index.html"))

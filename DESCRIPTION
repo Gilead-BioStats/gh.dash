@@ -19,7 +19,8 @@ Imports:
     gh,
     htmltools,
     rlang,
-    base64enc
+    base64enc,
+    purrr
 Suggests:
     pkgload,
     rmarkdown,

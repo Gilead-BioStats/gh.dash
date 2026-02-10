@@ -25,7 +25,6 @@ format_repo_link <- function(owner, repo) {
 #' @keywords internal
 #' @importFrom htmltools tags HTML htmlEscape
 format_release_summary <- function(owner, repo, release, registry) {
-
   base_url <- sprintf("https://github.com/%s/%s", owner, repo)
   releases_url <- paste0(base_url, "/releases")
 
@@ -298,6 +297,108 @@ format_branch_comparison <- function(owner, repo, comparison) {
   repo_url <- sprintf("https://github.com/%s/%s/compare/main...dev", owner, repo)
   anchor <- htmltools::tags$a(href = repo_url, status_text)
   as.character(anchor)
+}
+
+#' Parse release published date
+#'
+#' Internal function to parse the `published_at` field of a GitHub release
+#' object into a `Date`.
+#'
+#' @param published_at ISO 8601 date-time string from GitHub API (e.g.
+#'   `"2025-01-15T12:00:00Z"`)
+#' @return A `Date` value, or `NA` if the input is `NULL`, empty, or
+#'   unparseable.
+#' @keywords internal
+parse_release_date <- function(published_at) {
+  if (is.null(published_at) || length(published_at) == 0L) {
+    return(as.Date(NA_character_))
+  }
+  published_at <- as.character(published_at)
+  if (!nzchar(published_at)) {
+    return(as.Date(NA_character_))
+  }
+  tryCatch(
+    as.Date(substr(published_at, 1L, 10L)),
+    error = function(e) as.Date(NA_character_)
+  )
+}
+
+#' Derive latest published release from a releases list
+#'
+#' Internal function to find the latest non-draft, non-prerelease entry
+#' from the list returned by `fetch_releases()`.
+#'
+#' @param releases List of release objects from `fetch_releases()`
+#' @return A single release list element, or `NULL` if none qualify.
+#' @keywords internal
+#' @importFrom purrr detect
+derive_latest_release <- function(releases) {
+  if (is.null(releases) || !length(releases)) {
+    return(NULL)
+  }
+  purrr::detect(releases, ~ !isTRUE(.x$draft) && !isTRUE(.x$prerelease))
+}
+
+#' Count releases from last N days
+#'
+#' Internal function to count the number of non-draft, non-prerelease
+#' releases published in the last N days (inclusive).
+#'
+#' @param releases List of release objects from `fetch_releases()`
+#' @param days Number of days to look back from today
+#' @return Integer count of qualifying releases.
+#' @keywords internal
+#' @importFrom purrr keep
+count_releases_last_n_days <- function(releases, days) {
+  if (is.null(releases) || !length(releases)) {
+    return(0L)
+  }
+  today <- Sys.Date()
+  start_date <- today - days
+
+  releases |>
+    purrr::keep(~ !isTRUE(.x$draft) && !isTRUE(.x$prerelease)) |>
+    purrr::keep(~ {
+      if (is.null(.x$published_at)) {
+        return(FALSE)
+      }
+      pub_date <- parse_release_date(.x$published_at)
+      !is.na(pub_date) && pub_date >= start_date && pub_date <= today
+    }) |>
+    length() |>
+    as.integer()
+}
+
+#' Count releases from last 365 days
+#'
+#' Internal function to count the number of non-draft, non-prerelease
+#' releases published in the last 365 days (inclusive).
+#'
+#' @param releases List of release objects from `fetch_releases()`
+#' @return Integer count of qualifying releases.
+#' @keywords internal
+count_ytd_releases <- function(releases) {
+  count_releases_last_n_days(releases, 365)
+}
+
+#' Format release count from last 365 days as HTML
+#'
+#' Internal function to format the release count from the last 365 days
+#' as a hyperlink pointing to the repository's releases page. Tooltip shows
+#' the count for the last 90 days.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param releases List of release objects from `fetch_releases()`
+#' @return Character string with HTML anchor tag
+#' @keywords internal
+#' @importFrom htmltools tags
+format_ytd_releases <- function(owner, repo, releases) {
+  count_365 <- count_ytd_releases(releases)
+  count_90 <- count_releases_last_n_days(releases, 90)
+  url <- sprintf("https://github.com/%s/%s/releases", owner, repo)
+  tooltip <- sprintf("%s releases in past 90 days", count_90)
+  as.character(htmltools::tags$a(href = url, title = tooltip, as.character(count_365)))
 }
 
 #' Get branch status text

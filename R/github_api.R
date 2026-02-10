@@ -18,6 +18,29 @@ fetch_latest_release <- function(owner, repo, token) {
   )
 }
 
+#' Fetch releases from GitHub API
+#'
+#' Internal function to retrieve published releases for a GitHub repository.
+#' Returns up to 100 releases per page. Used to compute year-to-date release
+#' counts while reusing the same response for latest-release information.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param token GitHub personal access token (optional)
+#' @return List of release objects or NULL if none found
+#' @keywords internal
+#' @importFrom gh gh
+fetch_releases <- function(owner, repo, token) {
+  safe_gh(
+    gh::gh,
+    "GET /repos/{owner}/{repo}/releases",
+    owner = owner,
+    repo = repo,
+    per_page = 100,
+    .token = token
+  )
+}
+
 #' Fetch open milestones from GitHub API
 #'
 #' Internal function to retrieve open milestones for a GitHub repository.
