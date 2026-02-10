@@ -140,6 +140,12 @@ styles <- c(
   "",
   ".status-table td {",
   "  padding: 0.75rem 0.75rem;",
+  "}",
+  ".status-table__cell--right {",
+  "  text-align: right;",
+  "  padding-right: 1.25rem !important;",
+  "  width: 10rem;",
+  "}",
   "  font-size: 1rem;",
   "  line-height: 1.5;",
   "  color: #1f2937;",
@@ -272,7 +278,20 @@ render_status_table <- function(df) {
                 )
               )
             ),
-            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "# Releases")
+            htmltools::tags$th(
+              scope = "col",
+              class = "status-table__cell--right",
+              htmltools::tagList(
+                "# Releases",
+                htmltools::tags$span(
+                  class = "info-icon",
+                  `data-tooltip` = "Number of releases for the past 365 days",
+                  `aria-label` = "Number of releases for the past 365 days",
+                  tabindex = "0",
+                  "i"
+                )
+              )
+            )
           )
         ),
         tbody
