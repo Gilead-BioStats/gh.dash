@@ -285,8 +285,8 @@ render_status_table <- function(df) {
                 "# Releases",
                 htmltools::tags$span(
                   class = "info-icon",
-                  `data-tooltip` = "Number of releases for the past 365 days",
-                  `aria-label` = "Number of releases for the past 365 days",
+                  `data-tooltip` = "Number of releases over the past 365 days",
+                  `aria-label` = "Number of releases over the past 365 days",
                   tabindex = "0",
                   "i"
                 )
