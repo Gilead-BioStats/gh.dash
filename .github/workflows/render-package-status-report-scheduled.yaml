@@ -1,0 +1,35 @@
+name: render-package-status-report-scheduled
+
+on:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  build-main:
+    uses: ./.github/workflows/render-report-reusable.yaml
+    secrets: inherit
+    with:
+      ref: main
+      title: "Tidyverse"
+      pkg-list-path: "inst/extdata/package-list.csv"
+      output-subdir: ""
+      deploy: true
+      deploy-target: ""
+      deploy-clean: true
+      deploy-clean-exclude: |
+        dev
+        pr
+
+  build-dev:
+    needs: build-main
+    uses: ./.github/workflows/render-report-reusable.yaml
+    secrets: inherit
+    with:
+      ref: dev
+      title: "Tidyverse"
+      pkg-list-path: "inst/extdata/package-list.csv"
+      output-subdir: dev
+      deploy: true
+      deploy-target: dev
+      deploy-clean: false
