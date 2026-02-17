@@ -1,4 +1,9 @@
 name: render-package-status-report
+
+concurrency:
+  group: gh-pages-${{ github.repository }}
+  cancel-in-progress: false
+
 on:
   push:
     branches:
