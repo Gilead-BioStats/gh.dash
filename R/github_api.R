@@ -63,6 +63,36 @@ fetch_open_milestones <- function(owner, repo, token) {
   )
 }
 
+#' Fetch open pull requests from GitHub API
+#'
+#' Internal function to retrieve open pull requests for a GitHub repository.
+#' Excludes draft pull requests by default.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param token GitHub personal access token (optional)
+#' @return List of pull request objects or NULL if none found
+#' @keywords internal
+#' @importFrom gh gh
+fetch_open_prs <- function(owner, repo, token) {
+  prs <- safe_gh(
+    gh::gh,
+    "GET /repos/{owner}/{repo}/pulls",
+    owner = owner,
+    repo = repo,
+    state = "open",
+    per_page = 100,
+    .token = token
+  )
+  
+  # Filter out draft PRs
+  if (!is.null(prs) && length(prs) > 0) {
+    prs <- prs[!vapply(prs, function(pr) isTRUE(pr$draft), logical(1))]
+  }
+  
+  prs
+}
+
 #' Fetch branch comparison from GitHub API
 #'
 #' Internal function to compare two branches in a GitHub repository.

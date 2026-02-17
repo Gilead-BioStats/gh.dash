@@ -281,6 +281,98 @@ grayscale_milestone_label <- function(text, tooltip, completion) {
   )
 }
 
+#' Format open pull requests summary
+#'
+#' Internal function to format open pull requests as HTML badges.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param prs List of pull request objects from GitHub API
+#' @return Character string with formatted HTML
+#' @keywords internal
+#' @importFrom htmltools tags HTML htmlEscape
+format_pr_summary <- function(owner, repo, prs) {
+  base_url <- sprintf("https://github.com/%s/%s/pulls", owner, repo)
+
+  if (is.null(prs) || !length(prs)) {
+    label <- tailwind_label("None", title = "No open pull requests", variant = "slate")
+    return(as.character(htmltools::tags$a(href = base_url, htmltools::HTML(label))))
+  }
+
+  entries <- vapply(
+    prs,
+    format_single_pr,
+    character(1),
+    owner = owner,
+    repo = repo,
+    USE.NAMES = FALSE
+  )
+  entries <- entries[nzchar(entries)]
+
+  if (!length(entries)) {
+    label <- tailwind_label("None", title = "No open pull requests", variant = "slate")
+    return(as.character(htmltools::tags$a(href = base_url, htmltools::HTML(label))))
+  }
+
+  paste(entries, collapse = " ")
+}
+
+#' Format single pull request as HTML badge
+#'
+#' Internal function to format a single GitHub pull request as a badge with metadata.
+#'
+#' @param pr Pull request object from GitHub API
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @return Character string with formatted HTML
+#' @keywords internal
+#' @importFrom htmltools tags HTML htmlEscape
+format_single_pr <- function(pr, owner, repo) {
+  title <- first_non_empty(pr$title, "Untitled PR")
+  number <- sanitize_issue_count(pr$number)
+  
+  if (!is.finite(number) || number == 0) {
+    return("")
+  }
+
+  # Build tooltip with PR information
+  tooltip_parts <- c(paste0("PR #", number, ": ", title))
+  
+  # Add commits info if available
+  if (!is.null(pr$commits) && is.finite(pr$commits)) {
+    commits_text <- if (pr$commits == 1) "1 commit" else paste(pr$commits, "commits")
+    tooltip_parts <- c(tooltip_parts, commits_text)
+  }
+  
+  # Add linked issues count if available (approximated by counting "closes #" patterns)
+  if (!is.null(pr$body) && nzchar(pr$body)) {
+    closes_pattern <- gregexpr("(?i)(close[sd]?|fix(e[sd])?|resolve[sd]?)\\s*#\\d+", pr$body, perl = TRUE)
+    if (length(closes_pattern[[1]]) > 0 && closes_pattern[[1]][1] != -1) {
+      issues_count <- length(closes_pattern[[1]])
+      issues_text <- if (issues_count == 1) "closes 1 issue" else paste("closes", issues_count, "issues")
+      tooltip_parts <- c(tooltip_parts, issues_text)
+    }
+  }
+  
+  tooltip <- paste(tooltip_parts, collapse = "; ")
+
+  # Create the badge - using "emerald" variant for PRs
+  pr_label <- paste0("#", number)
+  label <- tailwind_label(
+    pr_label,
+    title = tooltip,
+    variant = "emerald"
+  )
+
+  # Link to the specific PR
+  target <- first_non_empty(
+    pr$html_url,
+    sprintf("https://github.com/%s/%s/pull/%s", owner, repo, number)
+  )
+
+  as.character(htmltools::tags$a(href = target, htmltools::HTML(label)))
+}
+
 #' Format branch comparison as HTML
 #'
 #' Internal function to format branch comparison results as HTML.

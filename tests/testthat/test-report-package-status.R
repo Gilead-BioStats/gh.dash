@@ -8,6 +8,44 @@ test_that("summarize_github_repos validates repository format", {
   )
 })
 
+# -- Open PRs helpers ----------------------------------------------------------
+
+test_that("format_pr_summary returns 'None' for NULL or empty PR list", {
+  result <- gh.dash:::format_pr_summary("org", "repo", NULL)
+  expect_match(result, "None")
+  expect_match(result, "href=\"https://github.com/org/repo/pulls\"")
+  
+  result_empty <- gh.dash:::format_pr_summary("org", "repo", list())
+  expect_match(result_empty, "None")
+  expect_match(result_empty, "href=\"https://github.com/org/repo/pulls\"")
+})
+
+test_that("format_single_pr handles PR with basic information", {
+  pr <- list(
+    number = 42,
+    title = "Fix bug in dashboard",
+    html_url = "https://github.com/org/repo/pull/42"
+  )
+  result <- gh.dash:::format_single_pr(pr, "org", "repo")
+  expect_match(result, "#42")
+  expect_match(result, "Fix bug in dashboard")
+  expect_match(result, "href=\"https://github.com/org/repo/pull/42\"")
+})
+
+test_that("format_single_pr includes commit and issue information when available", {
+  pr <- list(
+    number = 123,
+    title = "Enhancement PR",
+    html_url = "https://github.com/org/repo/pull/123",
+    commits = 5,
+    body = "This PR fixes #456 and closes #789"
+  )
+  result <- gh.dash:::format_single_pr(pr, "org", "repo")
+  expect_match(result, "#123")
+  expect_match(result, "5 commits")
+  expect_match(result, "closes 2 issues")
+})
+
 # -- YTD release helpers -------------------------------------------------------
 
 test_that("parse_release_date returns Date for valid ISO 8601 input", {

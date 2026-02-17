@@ -39,6 +39,7 @@ status <- if (length(repos) == 0L) {
     repo = character(0),
     latest_release = character(0),
     upcoming_milestones = character(0),
+    open_prs = character(0),
     dev_branch_status = character(0),
     ytd_releases = character(0),
     stringsAsFactors = FALSE
@@ -244,6 +245,10 @@ render_status_table <- function(df) {
       ),
       htmltools::tags$td(
         class = "status-table__cell",
+        htmltools::HTML(df$open_prs[[i]])
+      ),
+      htmltools::tags$td(
+        class = "status-table__cell",
         htmltools::HTML(df$dev_branch_status[[i]])
       ),
       htmltools::tags$td(
@@ -265,6 +270,7 @@ render_status_table <- function(df) {
             htmltools::tags$th(scope = "col", "Repository"),
             htmltools::tags$th(scope = "col", "Latest release"),
             htmltools::tags$th(scope = "col", "Open milestones"),
+            htmltools::tags$th(scope = "col", "Open PRs"),
             htmltools::tags$th(
               scope = "col",
               htmltools::tagList(
