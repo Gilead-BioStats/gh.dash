@@ -43,7 +43,7 @@ Additionally, you can render a report from the terminal.
 ```sh
 Rscript inst/examples/RenderReport.R
 ```
-The script loads the package (using `pkgload::load_all()` when needed) and writes the HTML output to `inst/examples/output/index.html`. Open that file in a browser to preview changes. The document is self-contained, so no additional assets are required when publishing.
+The script assumes the `{gh.dash}` package is installed and writes the HTML output to `inst/examples/output/index.html`. Open that file in a browser to preview changes. The document is self-contained, so no additional assets are required when publishing.
 
 ## Setting up Automated Dashboards
 
