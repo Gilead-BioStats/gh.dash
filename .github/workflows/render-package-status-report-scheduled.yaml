@@ -1,5 +1,9 @@
 name: render-package-status-report-scheduled
 
+concurrency:
+  group: gh-pages-${{ github.repository }}
+  cancel-in-progress: false
+
 on:
   schedule:
     - cron: '0 5 * * *'
