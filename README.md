@@ -38,7 +38,7 @@ render_dash(
 )
 ```
 
-Additionaly, you can render report from the terminal.
+Additionally, you can render a report from the terminal.
 
 ```sh
 Rscript inst/examples/RenderReport.R
