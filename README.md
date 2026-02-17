@@ -10,6 +10,15 @@ The {gh.dash} repo automatically runs a sample report for tidyverse packages, bu
 
 # Configuration
 
+## GitHub Actions Overview
+
+The {gh.dash} package includes reusable GitHub Actions workflows that automate report generation and deployment. 
+- The main workflow (`render-report-reusable.yaml`) orchestrates the entire process: it checks out your repository, installs R and dependencies, fetches package data from the GitHub API using your package list CSV, optionally enriches the data with qualification status from a registry repository, renders the dashboard report using R Markdown, and deploys the resulting HTML to GitHub Pages. You can configure workflows to run on different triggers (push, pull request, scheduled) and deploy to different subdirectories on `gh-pages` (e.g., `main` branch to root, `dev` branch to `/dev`, pull requests to `/pr/{number}`). This automation ensures your dashboard stays up-to-date without manual intervention—simply push changes or wait for the scheduled run, and your stakeholders will see the latest package status at your GitHub Pages URL.
+
+Two workflows keep the hosted reports current:
+- `render-package-status-report.yaml` handles pushes to main and dev, pull requests, and manual workflow_dispatch runs. Each job calls the reusable workflow in render-report-reusable.yaml, passing the branch-specific ref and output directory. Main publishes to the root of GitHub Pages, dev publishes to the dev/ subdirectory, and pull requests publish to pr/<number>/ while also posting a comment that links to the preview site.
+- `render-package-status-report-scheduled.yaml` runs nightly at 05:00 UTC. It invokes the reusable workflow twice—first for main, then for dev—to refresh both environments even when there are no new commits during the day.
+
 ## Running a Single Report
 
 Use `render_dash()` to generate a local HTML report from an R session:
@@ -29,6 +38,13 @@ render_dash(
 )
 ```
 
+Additionaly, you can render report from the terminal.
+
+```sh
+Rscript inst/examples/RenderReport.R
+```
+The script loads the package (using `pkgload::load_all()` when needed) and writes the HTML output to `inst/examples/output/index.html`. Open that file in a browser to preview changes. The document is self-contained, so no additional assets are required when publishing.
+
 ## Setting up Automated Dashboards
 
 You can set up a repo that will automatically post the gh.dash report to GitHub Pages by following these steps:
@@ -38,7 +54,6 @@ You can set up a repo that will automatically post the gh.dash report to GitHub 
 3. Enable GitHub Pages (deploys to `gh-pages`) if you want the report to be hosted.
 4. Add a workflow (e.g. `.github/workflows/render-package-status-report.yaml`) to run the {gh.dash} action. See below for a template. 
 5. Update the `with:` section of the yaml to match the configuration of your repo. See below for config details. 
-
 
 
 # Technical Details
