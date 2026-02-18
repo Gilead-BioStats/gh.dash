@@ -128,6 +128,28 @@ test_that("summarize_github_repos assembles release and milestone summaries", {
   expect_match(result$ytd_releases, "<a href=\"https://github.com/org/repo/releases\" title=\"0 releases in past 90 days\">")
 })
 
+test_that("summarize_github_repos includes open PR count", {
+  result <- with_mocked_bindings(
+    summarize_github_repos("org/repo"),
+    fetch_repo_metadata = function(owner, repo, token) {
+      expect_equal(owner, "org")
+      expect_equal(repo, "repo")
+      list(private = FALSE)
+    },
+    fetch_latest_release = function(...) NULL,
+    fetch_releases = function(...) list(),
+    fetch_open_milestones = function(...) list(),
+    fetch_open_prs = function(owner, repo, token) {
+      expect_equal(owner, "org")
+      expect_equal(repo, "repo")
+      3L
+    },
+    fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
+  )
+
+  expect_equal(result$open_prs, "<a href=\"https://github.com/org/repo/pulls\">3</a>")
+})
+
 test_that("summarize_github_repos appends qualification badge when registry matches", {
   mock_release <- list(
     tag_name = "v1.0.0",

@@ -9,8 +9,8 @@
 #'   with columns `org`, `repo`, `version`, `release.url`, `release.date`,
 #'   `qualification.url`, and `qualification.date`.
 #'
-#' @return A data frame with columns `repo`, `latest_release`,
-#'   `upcoming_milestones`, `dev_branch_status`, and `ytd_releases`.
+#' @return A data frame with columns `repo`, `latest_release`, `upcoming_milestones`, `open_prs`,
+#'   `dev_branch_status`, and `ytd_releases`.
 #' @examples
 #' \dontrun{
 #' summarize_github_repos(c("tidyverse/ggplot2"))
@@ -35,15 +35,20 @@ summarize_github_repos <- function(
     owner <- pieces[[1]]
     repo <- pieces[[2]]
 
+    metadata <- fetch_repo_metadata(owner, repo, token)
+    is_private <- if (!is.null(metadata)) metadata$private else FALSE
+    
     release <- fetch_latest_release(owner, repo, token)
     releases <- fetch_releases(owner, repo, token)
     milestones <- fetch_open_milestones(owner, repo, token)
+    pr_count <- fetch_open_prs(owner, repo, token)
     comparison <- fetch_branch_comparison(owner, repo, base = "main", head = "dev", token = token)
 
     results[[idx]] <- list(
-      repo = format_repo_link(owner, repo),
+      repo = format_repo_link(owner, repo, is_private = is_private),
       latest_release = format_release_summary(owner, repo, release, registry),
       upcoming_milestones = format_milestone_summary(owner, repo, milestones),
+      open_prs = format_pr_summary(owner, repo, pr_count),
       dev_branch_status = format_branch_comparison(owner, repo, comparison),
       ytd_releases = format_ytd_releases(owner, repo, releases)
     )
@@ -53,6 +58,7 @@ summarize_github_repos <- function(
     repo = vapply(results, `[[`, character(1), "repo"),
     latest_release = vapply(results, `[[`, character(1), "latest_release"),
     upcoming_milestones = vapply(results, `[[`, character(1), "upcoming_milestones"),
+    open_prs = vapply(results, `[[`, character(1), "open_prs"),
     dev_branch_status = vapply(results, `[[`, character(1), "dev_branch_status"),
     ytd_releases = vapply(results, `[[`, character(1), "ytd_releases"),
     stringsAsFactors = FALSE

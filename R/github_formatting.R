@@ -1,15 +1,29 @@
 #' Format repository link as HTML
 #'
 #' Internal function to create an HTML link for a GitHub repository.
+#' Includes a lock icon if the repository is private.
 #'
 #' @param owner Repository owner (GitHub username or organization)
 #' @param repo Repository name
+#' @param is_private Logical indicating if repository is private
 #' @return Character string with HTML anchor tag
 #' @keywords internal
 #' @importFrom htmltools tags
-format_repo_link <- function(owner, repo) {
+format_repo_link <- function(owner, repo, is_private = FALSE) {
   url <- sprintf("https://github.com/%s/%s", owner, repo)
-  as.character(htmltools::tags$a(href = url, sprintf("%s/%s", owner, repo)))
+  repo_text <- sprintf("%s/%s", owner, repo)
+  
+  if (isTRUE(is_private)) {
+    lock_icon <- htmltools::tags$span(
+      title = "Private repository",
+      "\U0001F512 "
+    )
+    link_content <- htmltools::tagList(lock_icon, repo_text)
+  } else {
+    link_content <- repo_text
+  }
+  
+  as.character(htmltools::tags$a(href = url, link_content))
 }
 
 #' Format release summary with qualification badge
@@ -278,6 +292,31 @@ grayscale_milestone_label <- function(text, tooltip, completion) {
     htmltools::htmlEscape(tooltip),
     meter_background,
     htmltools::htmlEscape(text)
+  )
+}
+
+#' Format pull request summary as HTML
+#'
+#' Internal function to format GitHub pull requests count with link as HTML.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param pr_count Integer count of open pull requests
+#' @return Character string with formatted HTML link
+#' @keywords internal
+#' @importFrom htmltools tags
+format_pr_summary <- function(owner, repo, pr_count) {
+  base_url <- sprintf("https://github.com/%s/%s/pulls", owner, repo)
+  
+  if (pr_count == 0) {
+    return(as.character(htmltools::tags$a(href = base_url, "None")))
+  }
+  
+  as.character(
+    htmltools::tags$a(
+      href = base_url, 
+      sprintf("%d", pr_count)
+    )
   )
 }
 
