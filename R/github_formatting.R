@@ -16,7 +16,7 @@ format_repo_link <- function(owner, repo, is_private = FALSE) {
   if (isTRUE(is_private)) {
     lock_icon <- htmltools::tags$span(
       title = "Private repository",
-      "🔒 "
+      "\U0001F512 "
     )
     link_content <- htmltools::tagList(lock_icon, repo_text)
   } else {
