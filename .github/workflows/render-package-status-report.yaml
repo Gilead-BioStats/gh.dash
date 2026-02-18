@@ -63,6 +63,9 @@ jobs:
 
   build-pr:
     if: github.event_name == 'pull_request'
+    concurrency:
+      group: gh-pages-pr-${{ github.event.pull_request.number }}-${{ github.repository }}
+      cancel-in-progress: true
     uses: ./.github/workflows/render-report-reusable.yaml
     secrets: inherit
     with:
