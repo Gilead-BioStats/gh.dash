@@ -351,7 +351,7 @@ display: none;
 
 <h1 class="title toc-ignore">Tidyverse Package Status Report</h1>
 <h4 class="author"><a href="https://github.com/Gilead-BioStats/gh.dash">Gilead-BioStats/gh.dash</a></h4>
-<h4 class="date">February 18, 2026 01:57 UTC</h4>
+<h4 class="date">February 18, 2026 02:03 UTC</h4>
 
 </div>
 
@@ -435,18 +435,18 @@ text-align: right;
 }
 .status-table td {
 padding: 0.75rem 0.75rem;
-}
-.status-table__cell--right {
-text-align: right;
-padding-right: 1.25rem !important;
-width: 10rem;
-}
 font-size: 1rem;
 line-height: 1.5;
 color: #1f2937;
 vertical-align: top;
-word-wrap: break-word;
+overflow-wrap: anywhere;
 }
+.status-table th:nth-child(1), .status-table td:nth-child(1) { width: 21%; }
+.status-table th:nth-child(2), .status-table td:nth-child(2) { width: 27%; }
+.status-table th:nth-child(3), .status-table td:nth-child(3) { width: 27%; }
+.status-table th:nth-child(4), .status-table td:nth-child(4) { width: 7%; }
+.status-table th:nth-child(5), .status-table td:nth-child(5) { width: 8%; }
+.status-table th:nth-child(6), .status-table td:nth-child(6) { width: 10%; }
 .status-table tbody tr:nth-child(even) {
 background: #f8fafc;
 }
@@ -456,7 +456,8 @@ border-top: 1px solid #e2e8f0;
 .status-table__cell--repo {
 font-weight: 600;
 color: #0f172a;
-white-space: nowrap;
+white-space: normal;
+overflow-wrap: anywhere;
 }
 .status-table__cell--right {
 text-align: right;
