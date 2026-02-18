@@ -24,41 +24,40 @@ on:
           - dev
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        include:
-          - branch: main
-            deploy-target: ""
-            output-subdir: ""
-            deploy-clean: true
-            deploy-clean-exclude: |
-              dev
-              pr
-          - branch: dev
-            deploy-target: dev
-            output-subdir: dev
-            deploy-clean: false
-            deploy-clean-exclude: ""
-
+  build-main:
     if: >-
-      (github.event_name == 'push' && github.ref == format('refs/heads/{0}', matrix.branch))
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
       || github.event_name == 'schedule'
-      || (github.event_name == 'workflow_dispatch' && inputs.target == matrix.branch)
-
+      || (github.event_name == 'workflow_dispatch' && inputs.target == 'main')
     uses: ./.github/workflows/render-report-reusable.yaml
     secrets: inherit
     with:
-      ref: ${{ github.event_name == 'push' && github.ref || matrix.branch }}
+      ref: ${{ github.event_name == 'push' && github.ref || 'main' }}
       title: "Tidyverse"
       pkg-list-path: "inst/extdata/package-list.csv"
-      output-subdir: ${{ matrix.output-subdir }}
+      output-subdir: ""
       deploy: true
-      deploy-target: ${{ matrix.deploy-target }}
-      deploy-clean: ${{ matrix.deploy-clean }}
-      deploy-clean-exclude: ${{ matrix.deploy-clean-exclude }}
+      deploy-target: ""
+      deploy-clean: true
+      deploy-clean-exclude: |
+        dev
+        pr
+
+  build-dev:
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/dev')
+      || github.event_name == 'schedule'
+      || (github.event_name == 'workflow_dispatch' && inputs.target == 'dev')
+    uses: ./.github/workflows/render-report-reusable.yaml
+    secrets: inherit
+    with:
+      ref: ${{ github.event_name == 'push' && github.ref || 'dev' }}
+      title: "Tidyverse"
+      pkg-list-path: "inst/extdata/package-list.csv"
+      output-subdir: dev
+      deploy: true
+      deploy-target: dev
+      deploy-clean: false
 
 
   build-pr:
