@@ -1,15 +1,29 @@
 #' Format repository link as HTML
 #'
 #' Internal function to create an HTML link for a GitHub repository.
+#' Includes a lock icon if the repository is private.
 #'
 #' @param owner Repository owner (GitHub username or organization)
 #' @param repo Repository name
+#' @param is_private Logical indicating if repository is private
 #' @return Character string with HTML anchor tag
 #' @keywords internal
 #' @importFrom htmltools tags
-format_repo_link <- function(owner, repo) {
+format_repo_link <- function(owner, repo, is_private = FALSE) {
   url <- sprintf("https://github.com/%s/%s", owner, repo)
-  as.character(htmltools::tags$a(href = url, sprintf("%s/%s", owner, repo)))
+  repo_text <- sprintf("%s/%s", owner, repo)
+  
+  if (isTRUE(is_private)) {
+    lock_icon <- htmltools::tags$span(
+      title = "Private repository",
+      "🔒 "
+    )
+    link_content <- htmltools::tagList(lock_icon, repo_text)
+  } else {
+    link_content <- repo_text
+  }
+  
+  as.character(htmltools::tags$a(href = url, link_content))
 }
 
 #' Format release summary with qualification badge

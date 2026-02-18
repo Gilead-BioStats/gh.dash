@@ -35,6 +35,9 @@ summarize_github_repos <- function(
     owner <- pieces[[1]]
     repo <- pieces[[2]]
 
+    metadata <- fetch_repo_metadata(owner, repo, token)
+    is_private <- if (!is.null(metadata)) metadata$private else FALSE
+    
     release <- fetch_latest_release(owner, repo, token)
     releases <- fetch_releases(owner, repo, token)
     milestones <- fetch_open_milestones(owner, repo, token)
@@ -42,7 +45,7 @@ summarize_github_repos <- function(
     comparison <- fetch_branch_comparison(owner, repo, base = "main", head = "dev", token = token)
 
     results[[idx]] <- list(
-      repo = format_repo_link(owner, repo),
+      repo = format_repo_link(owner, repo, is_private = is_private),
       latest_release = format_release_summary(owner, repo, release, registry),
       upcoming_milestones = format_milestone_summary(owner, repo, milestones),
       open_prs = format_pr_summary(owner, repo, pr_count),

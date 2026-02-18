@@ -116,6 +116,26 @@ fetch_open_prs <- function(owner, repo, token) {
   0
 }
 
+#' Fetch repository metadata from GitHub API
+#'
+#' Internal function to retrieve basic repository metadata including private status.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param token GitHub personal access token (optional)
+#' @return List with repository metadata or NULL if retrieval fails
+#' @keywords internal
+#' @importFrom gh gh
+fetch_repo_metadata <- function(owner, repo, token) {
+  safe_gh(
+    gh::gh,
+    "GET /repos/{owner}/{repo}",
+    owner = owner,
+    repo = repo,
+    .token = token
+  )
+}
+
 #' Fetch branch comparison from GitHub API
 #'
 #' Internal function to compare two branches in a GitHub repository.
