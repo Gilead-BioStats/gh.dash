@@ -351,7 +351,7 @@ display: none;
 
 <h1 class="title toc-ignore">Tidyverse Package Status Report</h1>
 <h4 class="author"><a href="https://github.com/Gilead-BioStats/gh.dash">Gilead-BioStats/gh.dash</a></h4>
-<h4 class="date">February 18, 2026 02:03 UTC</h4>
+<h4 class="date">February 18, 2026 02:27 UTC</h4>
 
 </div>
 
@@ -364,6 +364,80 @@ margin-top: 1.5rem;
 border: 1px solid #e2e8f0;
 border-radius: 0.75rem;
 overflow: visible;
+position: relative;
+}
+.status-table-toolbar {
+display: flex;
+justify-content: flex-end;
+align-items: center;
+padding: 0.5rem 0.75rem;
+border-bottom: 1px solid #e2e8f0;
+background: #ffffff;
+}
+.column-settings {
+position: relative;
+}
+.column-settings__button {
+border: 1px solid #cbd5e1;
+background: #ffffff;
+color: #334155;
+border-radius: 0.5rem;
+padding: 0.35rem 0.6rem;
+font-size: 0.9rem;
+cursor: pointer;
+}
+.column-settings__button:hover {
+background: #f8fafc;
+}
+.column-settings__panel {
+position: absolute;
+top: calc(100% + 0.35rem);
+right: 0;
+width: 15rem;
+border: 1px solid #cbd5e1;
+border-radius: 0.5rem;
+background: #ffffff;
+box-shadow: 0 10px 18px rgba(15, 23, 42, 0.1);
+z-index: 20;
+display: none;
+padding: 0.5rem;
+}
+.column-settings__panel.is-open {
+display: block;
+}
+.column-settings__title {
+font-size: 0.85rem;
+font-weight: 600;
+color: #334155;
+margin-bottom: 0.4rem;
+}
+.column-settings__actions {
+display: flex;
+justify-content: space-between;
+gap: 0.4rem;
+margin-bottom: 0.45rem;
+}
+.column-settings__action {
+border: 1px solid #cbd5e1;
+background: #ffffff;
+border-radius: 0.4rem;
+padding: 0.2rem 0.4rem;
+font-size: 0.78rem;
+cursor: pointer;
+}
+.column-settings__list {
+display: grid;
+gap: 0.3rem;
+}
+.column-settings__item {
+display: flex;
+align-items: center;
+gap: 0.45rem;
+font-size: 0.82rem;
+color: #334155;
+}
+.status-table-container {
+width: 100%;
 }
 .status-table {
 width: 100%;
@@ -504,21 +578,60 @@ border-color: rgba(12, 74, 110, 0.25);
 }
 </style>
 <div class="status-table-wrapper">
+<div class="status-table-toolbar">
+<div class="column-settings">
+<button class="column-settings__button" type="button" aria-expanded="false" aria-haspopup="true" aria-label="Column settings">⚙ Settings</button>
+<div class="column-settings__panel">
+<div class="column-settings__title">Table Columns</div>
+<div class="column-settings__actions">
+<button type="button" class="column-settings__action" data-column-action="hide-all">Hide all</button>
+<button type="button" class="column-settings__action" data-column-action="show-all">Show all</button>
+</div>
+<div class="column-settings__list">
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-repo" checked="checked"></input>
+Repository
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-latest-release" checked="checked"></input>
+Latest release
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-open-milestones" checked="checked"></input>
+Open milestones
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-open-prs" checked="checked"></input>
+Open PRs
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-dev-status" checked="checked"></input>
+Dev status
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-releases" checked="checked"></input>
+# Releases
+</label>
+</div>
+</div>
+</div>
+</div>
+<div class="status-table-container">
 <table class="status-table">
 <thead>
 <tr>
-<th scope="col">Repository</th>
-<th scope="col">Latest release</th>
-<th scope="col">Open milestones</th>
-<th scope="col">Open PRs</th>
-<th scope="col">
+<th scope="col" class="col-repo">Repository</th>
+<th scope="col" class="col-latest-release">Latest release</th>
+<th scope="col" class="col-open-milestones">Open milestones</th>
+<th scope="col" class="col-open-prs">Open PRs</th>
+<th scope="col" class="col-dev-status">
 Dev status
 <span class="info-icon" data-tooltip="The difference in commits between &#39;main&#39; and &#39;dev&#39; branches: 
  A positive number means dev is ahead of main by n commits; 
  A negative number means dev is behind main by n commits;
  &quot;Unavailable&quot; means that there is no branch named &#39;dev&#39; and/or &#39;main&#39;." aria-label="The difference in commits between &#39;main&#39; and &#39;dev&#39; branches: A positive number means dev is ahead of main by n commits; A negative number means dev is behind main by n commits; &quot;Unavailable&quot; means that there is no branch named &#39;dev&#39; and/or &#39;main&#39;." tabindex="0">i</span>
 </th>
-<th scope="col" class="status-table__cell--right">
+<th scope="col" class="status-table__cell--right col-releases">
 # Releases
 <span class="info-icon" data-tooltip="Number of releases over the past 365 days" aria-label="Number of releases over the past 365 days" tabindex="0">i</span>
 </th>
@@ -526,80 +639,156 @@ Dev status
 </thead>
 <tbody>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/ggplot2">tidyverse/ggplot2</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/ggplot2/releases/tag/v4.0.2"><span class="badge badge--emerald" title="Released 2026-02-03">v4.0.2</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/ggplot2/milestone/27"><span class="badge badge--milestone" title="Editioning: 6 open of 8" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 25.0%, #e0f2fe 25.0%, #e0f2fe 100%);">Editioning</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/ggplot2/pulls">30</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/ggplot2/compare/main...dev">Unavailable</a></td>
-<td class="status-table__cell status-table__cell--right"><a href="https://github.com/tidyverse/ggplot2/releases" title="1 releases in past 90 days">4</a></td>
+<td class="status-table__cell status-table__cell--repo col-repo"><a href="https://github.com/tidyverse/ggplot2">tidyverse/ggplot2</a></td>
+<td class="status-table__cell col-latest-release"><a href="https://github.com/tidyverse/ggplot2/releases/tag/v4.0.2"><span class="badge badge--emerald" title="Released 2026-02-03">v4.0.2</span></a></td>
+<td class="status-table__cell col-open-milestones"><a href="https://github.com/tidyverse/ggplot2/milestone/27"><span class="badge badge--milestone" title="Editioning: 6 open of 8" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 25.0%, #e0f2fe 25.0%, #e0f2fe 100%);">Editioning</span></a></td>
+<td class="status-table__cell col-open-prs"><a href="https://github.com/tidyverse/ggplot2/pulls">30</a></td>
+<td class="status-table__cell col-dev-status"><a href="https://github.com/tidyverse/ggplot2/compare/main...dev">Unavailable</a></td>
+<td class="status-table__cell status-table__cell--right col-releases"><a href="https://github.com/tidyverse/ggplot2/releases" title="1 releases in past 90 days">4</a></td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/dplyr">tidyverse/dplyr</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/dplyr/releases/tag/v1.2.0"><span class="badge badge--emerald" title="Released 2026-02-04">v1.2.0</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/dplyr/milestone/31"><span class="badge badge--milestone" title="1.1.1: 0 open of 25" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">1.1.1</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/dplyr/pulls">2</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/dplyr/compare/main...dev">Unavailable</a></td>
-<td class="status-table__cell status-table__cell--right"><a href="https://github.com/tidyverse/dplyr/releases" title="1 releases in past 90 days">1</a></td>
+<td class="status-table__cell status-table__cell--repo col-repo"><a href="https://github.com/tidyverse/dplyr">tidyverse/dplyr</a></td>
+<td class="status-table__cell col-latest-release"><a href="https://github.com/tidyverse/dplyr/releases/tag/v1.2.0"><span class="badge badge--emerald" title="Released 2026-02-04">v1.2.0</span></a></td>
+<td class="status-table__cell col-open-milestones"><a href="https://github.com/tidyverse/dplyr/milestone/31"><span class="badge badge--milestone" title="1.1.1: 0 open of 25" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">1.1.1</span></a></td>
+<td class="status-table__cell col-open-prs"><a href="https://github.com/tidyverse/dplyr/pulls">2</a></td>
+<td class="status-table__cell col-dev-status"><a href="https://github.com/tidyverse/dplyr/compare/main...dev">Unavailable</a></td>
+<td class="status-table__cell status-table__cell--right col-releases"><a href="https://github.com/tidyverse/dplyr/releases" title="1 releases in past 90 days">1</a></td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/tidyr">tidyverse/tidyr</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/tidyr/releases/tag/v1.3.2"><span class="badge badge--emerald" title="Released 2026-01-09">v1.3.2</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/tidyr/milestone/3"><span class="badge badge--milestone" title="v1.3.0: 0 open of 14" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">v1.3.0</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/tidyr/pulls">12</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/tidyr/compare/main...dev">Unavailable</a></td>
-<td class="status-table__cell status-table__cell--right"><a href="https://github.com/tidyverse/tidyr/releases" title="1 releases in past 90 days">1</a></td>
+<td class="status-table__cell status-table__cell--repo col-repo"><a href="https://github.com/tidyverse/tidyr">tidyverse/tidyr</a></td>
+<td class="status-table__cell col-latest-release"><a href="https://github.com/tidyverse/tidyr/releases/tag/v1.3.2"><span class="badge badge--emerald" title="Released 2026-01-09">v1.3.2</span></a></td>
+<td class="status-table__cell col-open-milestones"><a href="https://github.com/tidyverse/tidyr/milestone/3"><span class="badge badge--milestone" title="v1.3.0: 0 open of 14" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">v1.3.0</span></a></td>
+<td class="status-table__cell col-open-prs"><a href="https://github.com/tidyverse/tidyr/pulls">12</a></td>
+<td class="status-table__cell col-dev-status"><a href="https://github.com/tidyverse/tidyr/compare/main...dev">Unavailable</a></td>
+<td class="status-table__cell status-table__cell--right col-releases"><a href="https://github.com/tidyverse/tidyr/releases" title="1 releases in past 90 days">1</a></td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/readr">tidyverse/readr</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/readr/releases/tag/v2.1.6"><span class="badge badge--emerald" title="Released 2025-11-14">v2.1.6</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/readr/milestone/1"><span class="badge badge--milestone" title="0.1: 0 open of 3" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">0.1</span></a> <a href="https://github.com/tidyverse/readr/milestone/2"><span class="badge badge--milestone" title="0.2: 0 open of 1" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">0.2</span></a> <a href="https://github.com/tidyverse/readr/milestone/4"><span class="badge badge--milestone" title="0.3.0: 0 open of 17" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">0.3.0</span></a> <a href="https://github.com/tidyverse/readr/milestone/5"><span class="badge badge--milestone" title="backlog: 0 open of 20" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">backlog</span></a> <a href="https://github.com/tidyverse/readr/milestone/6"><span class="badge badge--milestone" title="1.2.0: 0 open of 4" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">1.2.0</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/readr/pulls">10</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/readr/compare/main...dev">Unavailable</a></td>
-<td class="status-table__cell status-table__cell--right"><a href="https://github.com/tidyverse/readr/releases" title="0 releases in past 90 days">1</a></td>
+<td class="status-table__cell status-table__cell--repo col-repo"><a href="https://github.com/tidyverse/readr">tidyverse/readr</a></td>
+<td class="status-table__cell col-latest-release"><a href="https://github.com/tidyverse/readr/releases/tag/v2.1.6"><span class="badge badge--emerald" title="Released 2025-11-14">v2.1.6</span></a></td>
+<td class="status-table__cell col-open-milestones"><a href="https://github.com/tidyverse/readr/milestone/1"><span class="badge badge--milestone" title="0.1: 0 open of 3" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">0.1</span></a> <a href="https://github.com/tidyverse/readr/milestone/2"><span class="badge badge--milestone" title="0.2: 0 open of 1" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">0.2</span></a> <a href="https://github.com/tidyverse/readr/milestone/4"><span class="badge badge--milestone" title="0.3.0: 0 open of 17" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">0.3.0</span></a> <a href="https://github.com/tidyverse/readr/milestone/5"><span class="badge badge--milestone" title="backlog: 0 open of 20" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">backlog</span></a> <a href="https://github.com/tidyverse/readr/milestone/6"><span class="badge badge--milestone" title="1.2.0: 0 open of 4" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">1.2.0</span></a></td>
+<td class="status-table__cell col-open-prs"><a href="https://github.com/tidyverse/readr/pulls">10</a></td>
+<td class="status-table__cell col-dev-status"><a href="https://github.com/tidyverse/readr/compare/main...dev">Unavailable</a></td>
+<td class="status-table__cell status-table__cell--right col-releases"><a href="https://github.com/tidyverse/readr/releases" title="0 releases in past 90 days">1</a></td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/purrr">tidyverse/purrr</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/purrr/releases/tag/v1.2.1"><span class="badge badge--emerald" title="Released 2026-01-09">v1.2.1</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/purrr/milestone/1"><span class="badge badge--milestone" title="vctrs: 0 open of 20" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">vctrs</span></a> <a href="https://github.com/tidyverse/purrr/milestone/4"><span class="badge badge--milestone" title="0.4.0: 0 open of 4" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">0.4.0</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/purrr/pulls">8</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/purrr/compare/main...dev">Unavailable</a></td>
-<td class="status-table__cell status-table__cell--right"><a href="https://github.com/tidyverse/purrr/releases" title="1 releases in past 90 days">3</a></td>
+<td class="status-table__cell status-table__cell--repo col-repo"><a href="https://github.com/tidyverse/purrr">tidyverse/purrr</a></td>
+<td class="status-table__cell col-latest-release"><a href="https://github.com/tidyverse/purrr/releases/tag/v1.2.1"><span class="badge badge--emerald" title="Released 2026-01-09">v1.2.1</span></a></td>
+<td class="status-table__cell col-open-milestones"><a href="https://github.com/tidyverse/purrr/milestone/1"><span class="badge badge--milestone" title="vctrs: 0 open of 20" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">vctrs</span></a> <a href="https://github.com/tidyverse/purrr/milestone/4"><span class="badge badge--milestone" title="0.4.0: 0 open of 4" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">0.4.0</span></a></td>
+<td class="status-table__cell col-open-prs"><a href="https://github.com/tidyverse/purrr/pulls">8</a></td>
+<td class="status-table__cell col-dev-status"><a href="https://github.com/tidyverse/purrr/compare/main...dev">Unavailable</a></td>
+<td class="status-table__cell status-table__cell--right col-releases"><a href="https://github.com/tidyverse/purrr/releases" title="1 releases in past 90 days">3</a></td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/tibble">tidyverse/tibble</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/tibble/releases/tag/v3.3.1"><span class="badge badge--emerald" title="Released 2026-01-13">v3.3.1</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/tibble/milestone/13"><span class="badge badge--milestone" title="4.0.0: 7 open of 10" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 30.0%, #e0f2fe 30.0%, #e0f2fe 100%);">4.0.0</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/tibble/pulls">10</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/tibble/compare/main...dev">Unavailable</a></td>
-<td class="status-table__cell status-table__cell--right"><a href="https://github.com/tidyverse/tibble/releases" title="1 releases in past 90 days">2</a></td>
+<td class="status-table__cell status-table__cell--repo col-repo"><a href="https://github.com/tidyverse/tibble">tidyverse/tibble</a></td>
+<td class="status-table__cell col-latest-release"><a href="https://github.com/tidyverse/tibble/releases/tag/v3.3.1"><span class="badge badge--emerald" title="Released 2026-01-13">v3.3.1</span></a></td>
+<td class="status-table__cell col-open-milestones"><a href="https://github.com/tidyverse/tibble/milestone/13"><span class="badge badge--milestone" title="4.0.0: 7 open of 10" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 30.0%, #e0f2fe 30.0%, #e0f2fe 100%);">4.0.0</span></a></td>
+<td class="status-table__cell col-open-prs"><a href="https://github.com/tidyverse/tibble/pulls">10</a></td>
+<td class="status-table__cell col-dev-status"><a href="https://github.com/tidyverse/tibble/compare/main...dev">Unavailable</a></td>
+<td class="status-table__cell status-table__cell--right col-releases"><a href="https://github.com/tidyverse/tibble/releases" title="1 releases in past 90 days">2</a></td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/stringr">tidyverse/stringr</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/stringr/releases/tag/v1.6.0"><span class="badge badge--emerald" title="Released 2025-11-04">v1.6.0</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/stringr/milestones"><span class="badge badge--slate" title="No open milestones">None</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/stringr/pulls">3</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/stringr/compare/main...dev">Unavailable</a></td>
-<td class="status-table__cell status-table__cell--right"><a href="https://github.com/tidyverse/stringr/releases" title="0 releases in past 90 days">1</a></td>
+<td class="status-table__cell status-table__cell--repo col-repo"><a href="https://github.com/tidyverse/stringr">tidyverse/stringr</a></td>
+<td class="status-table__cell col-latest-release"><a href="https://github.com/tidyverse/stringr/releases/tag/v1.6.0"><span class="badge badge--emerald" title="Released 2025-11-04">v1.6.0</span></a></td>
+<td class="status-table__cell col-open-milestones"><a href="https://github.com/tidyverse/stringr/milestones"><span class="badge badge--slate" title="No open milestones">None</span></a></td>
+<td class="status-table__cell col-open-prs"><a href="https://github.com/tidyverse/stringr/pulls">3</a></td>
+<td class="status-table__cell col-dev-status"><a href="https://github.com/tidyverse/stringr/compare/main...dev">Unavailable</a></td>
+<td class="status-table__cell status-table__cell--right col-releases"><a href="https://github.com/tidyverse/stringr/releases" title="0 releases in past 90 days">1</a></td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/forcats">tidyverse/forcats</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/forcats/releases/tag/v1.0.1"><span class="badge badge--emerald" title="Released 2025-09-25">v1.0.1</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/forcats/milestone/1"><span class="badge badge--milestone" title="v1.0.0: 0 open of 22" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">v1.0.0</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/forcats/pulls">2</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/forcats/compare/main...dev">Unavailable</a></td>
-<td class="status-table__cell status-table__cell--right"><a href="https://github.com/tidyverse/forcats/releases" title="0 releases in past 90 days">1</a></td>
+<td class="status-table__cell status-table__cell--repo col-repo"><a href="https://github.com/tidyverse/forcats">tidyverse/forcats</a></td>
+<td class="status-table__cell col-latest-release"><a href="https://github.com/tidyverse/forcats/releases/tag/v1.0.1"><span class="badge badge--emerald" title="Released 2025-09-25">v1.0.1</span></a></td>
+<td class="status-table__cell col-open-milestones"><a href="https://github.com/tidyverse/forcats/milestone/1"><span class="badge badge--milestone" title="v1.0.0: 0 open of 22" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 100.0%, #e0f2fe 100.0%, #e0f2fe 100%);">v1.0.0</span></a></td>
+<td class="status-table__cell col-open-prs"><a href="https://github.com/tidyverse/forcats/pulls">2</a></td>
+<td class="status-table__cell col-dev-status"><a href="https://github.com/tidyverse/forcats/compare/main...dev">Unavailable</a></td>
+<td class="status-table__cell status-table__cell--right col-releases"><a href="https://github.com/tidyverse/forcats/releases" title="0 releases in past 90 days">1</a></td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/lubridate">tidyverse/lubridate</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/lubridate/releases/tag/v1.9.5"><span class="badge badge--emerald" title="Released 2026-02-09">v1.9.5</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/lubridate/milestones"><span class="badge badge--slate" title="No open milestones">None</span></a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/lubridate/pulls">8</a></td>
-<td class="status-table__cell"><a href="https://github.com/tidyverse/lubridate/compare/main...dev">Unavailable</a></td>
-<td class="status-table__cell status-table__cell--right"><a href="https://github.com/tidyverse/lubridate/releases" title="2 releases in past 90 days">2</a></td>
+<td class="status-table__cell status-table__cell--repo col-repo"><a href="https://github.com/tidyverse/lubridate">tidyverse/lubridate</a></td>
+<td class="status-table__cell col-latest-release"><a href="https://github.com/tidyverse/lubridate/releases/tag/v1.9.5"><span class="badge badge--emerald" title="Released 2026-02-09">v1.9.5</span></a></td>
+<td class="status-table__cell col-open-milestones"><a href="https://github.com/tidyverse/lubridate/milestones"><span class="badge badge--slate" title="No open milestones">None</span></a></td>
+<td class="status-table__cell col-open-prs"><a href="https://github.com/tidyverse/lubridate/pulls">8</a></td>
+<td class="status-table__cell col-dev-status"><a href="https://github.com/tidyverse/lubridate/compare/main...dev">Unavailable</a></td>
+<td class="status-table__cell status-table__cell--right col-releases"><a href="https://github.com/tidyverse/lubridate/releases" title="2 releases in past 90 days">2</a></td>
 </tr>
 </tbody>
 </table>
 </div>
+</div>
+<script>
+(function() {
+  var wrappers = document.querySelectorAll('.status-table-wrapper');
+  wrappers.forEach(function(wrapper) {
+    var button = wrapper.querySelector('.column-settings__button');
+    var panel = wrapper.querySelector('.column-settings__panel');
+    if (!button || !panel) return;
+
+    var checkboxes = Array.prototype.slice.call(panel.querySelectorAll('input[type="checkbox"][data-column]'));
+    var hideAll = panel.querySelector('[data-column-action="hide-all"]');
+    var showAll = panel.querySelector('[data-column-action="show-all"]');
+
+    function setColumnVisible(columnClass, visible) {
+      var cells = wrapper.querySelectorAll('.' + columnClass);
+      cells.forEach(function(cell) {
+        cell.style.display = visible ? '' : 'none';
+      });
+    }
+
+    function ensureAtLeastOneVisible() {
+      var anyChecked = checkboxes.some(function(cb) { return cb.checked; });
+      if (!anyChecked) {
+        var repoCb = checkboxes.find(function(cb) { return cb.getAttribute('data-column') === 'col-repo'; });
+        if (repoCb) {
+          repoCb.checked = true;
+          setColumnVisible('col-repo', true);
+        }
+      }
+    }
+
+    checkboxes.forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        setColumnVisible(cb.getAttribute('data-column'), cb.checked);
+        ensureAtLeastOneVisible();
+      });
+    });
+
+    if (hideAll) {
+      hideAll.addEventListener('click', function() {
+        checkboxes.forEach(function(cb) {
+          cb.checked = false;
+          setColumnVisible(cb.getAttribute('data-column'), false);
+        });
+        ensureAtLeastOneVisible();
+      });
+    }
+
+    if (showAll) {
+      showAll.addEventListener('click', function() {
+        checkboxes.forEach(function(cb) {
+          cb.checked = true;
+          setColumnVisible(cb.getAttribute('data-column'), true);
+        });
+      });
+    }
+
+    button.addEventListener('click', function(event) {
+      event.stopPropagation();
+      var isOpen = panel.classList.toggle('is-open');
+      button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    panel.addEventListener('click', function(event) {
+      event.stopPropagation();
+    });
+
+    document.addEventListener('click', function() {
+      if (panel.classList.contains('is-open')) {
+        panel.classList.remove('is-open');
+        button.setAttribute('aria-expanded', 'false');
+      }
+    });
+  });
+})();
+</script>
 
 
 
