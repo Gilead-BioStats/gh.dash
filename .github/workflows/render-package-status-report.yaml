@@ -44,10 +44,15 @@ jobs:
         pr
 
   build-dev:
+    needs: [build-main]
     if: >-
-      (github.event_name == 'push' && github.ref == 'refs/heads/dev')
-      || github.event_name == 'schedule'
-      || (github.event_name == 'workflow_dispatch' && inputs.target == 'dev')
+      always()
+      && (needs.build-main.result == 'success' || needs.build-main.result == 'skipped')
+      && (
+        (github.event_name == 'push' && github.ref == 'refs/heads/dev')
+        || github.event_name == 'schedule'
+        || (github.event_name == 'workflow_dispatch' && inputs.target == 'dev')
+      )
     uses: ./.github/workflows/render-report-reusable.yaml
     secrets: inherit
     with:
