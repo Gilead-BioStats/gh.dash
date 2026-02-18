@@ -61,6 +61,92 @@ styles <- c(
   "  border: 1px solid #e2e8f0;",
   "  border-radius: 0.75rem;",
   "  overflow: visible;",
+  "  position: relative;",
+  "}",
+  "",
+  ".status-table-toolbar {",
+  "  display: flex;",
+  "  justify-content: flex-end;",
+  "  align-items: center;",
+  "  padding: 0.5rem 0.75rem;",
+  "  border-bottom: 1px solid #e2e8f0;",
+  "  background: #ffffff;",
+  "}",
+  "",
+  ".column-settings {",
+  "  position: relative;",
+  "}",
+  "",
+  ".column-settings__button {",
+  "  border: 1px solid #cbd5e1;",
+  "  background: #ffffff;",
+  "  color: #334155;",
+  "  border-radius: 0.5rem;",
+  "  padding: 0.35rem 0.6rem;",
+  "  font-size: 0.9rem;",
+  "  cursor: pointer;",
+  "}",
+  "",
+  ".column-settings__button:hover {",
+  "  background: #f8fafc;",
+  "}",
+  "",
+  ".column-settings__panel {",
+  "  position: absolute;",
+  "  top: calc(100% + 0.35rem);",
+  "  right: 0;",
+  "  width: 15rem;",
+  "  border: 1px solid #cbd5e1;",
+  "  border-radius: 0.5rem;",
+  "  background: #ffffff;",
+  "  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.1);",
+  "  z-index: 20;",
+  "  display: none;",
+  "  padding: 0.5rem;",
+  "}",
+  "",
+  ".column-settings__panel.is-open {",
+  "  display: block;",
+  "}",
+  "",
+  ".column-settings__title {",
+  "  font-size: 0.85rem;",
+  "  font-weight: 600;",
+  "  color: #334155;",
+  "  margin-bottom: 0.4rem;",
+  "}",
+  "",
+  ".column-settings__actions {",
+  "  display: flex;",
+  "  justify-content: space-between;",
+  "  gap: 0.4rem;",
+  "  margin-bottom: 0.45rem;",
+  "}",
+  "",
+  ".column-settings__action {",
+  "  border: 1px solid #cbd5e1;",
+  "  background: #ffffff;",
+  "  border-radius: 0.4rem;",
+  "  padding: 0.2rem 0.4rem;",
+  "  font-size: 0.78rem;",
+  "  cursor: pointer;",
+  "}",
+  "",
+  ".column-settings__list {",
+  "  display: grid;",
+  "  gap: 0.3rem;",
+  "}",
+  "",
+  ".column-settings__item {",
+  "  display: flex;",
+  "  align-items: center;",
+  "  gap: 0.45rem;",
+  "  font-size: 0.82rem;",
+  "  color: #334155;",
+  "}",
+  "",
+  ".status-table-container {",
+  "  width: 100%;",
   "}",
   "",
   ".status-table {",
@@ -234,27 +320,27 @@ render_status_table <- function(df) {
   rows <- lapply(seq_len(nrow(df)), function(i) {
     htmltools::tags$tr(
       htmltools::tags$td(
-        class = "status-table__cell status-table__cell--repo",
+        class = "status-table__cell status-table__cell--repo col-repo",
         htmltools::HTML(df$repo[[i]])
       ),
       htmltools::tags$td(
-        class = "status-table__cell",
+        class = "status-table__cell col-latest-release",
         htmltools::HTML(df$latest_release[[i]])
       ),
       htmltools::tags$td(
-        class = "status-table__cell",
+        class = "status-table__cell col-open-milestones",
         htmltools::HTML(df$upcoming_milestones[[i]])
       ),
       htmltools::tags$td(
-        class = "status-table__cell",
+        class = "status-table__cell col-open-prs",
         htmltools::HTML(df$open_prs[[i]])
       ),
       htmltools::tags$td(
-        class = "status-table__cell",
+        class = "status-table__cell col-dev-status",
         htmltools::HTML(df$dev_branch_status[[i]])
       ),
       htmltools::tags$td(
-        class = "status-table__cell status-table__cell--right",
+        class = "status-table__cell status-table__cell--right col-releases",
         htmltools::HTML(df$ytd_releases[[i]])
       )
     )
@@ -265,48 +351,166 @@ render_status_table <- function(df) {
   htmltools::browsable(
     htmltools::div(
       class = "status-table-wrapper",
-      htmltools::tags$table(
-        class = "status-table",
-        htmltools::tags$thead(
-          htmltools::tags$tr(
-            htmltools::tags$th(scope = "col", "Repository"),
-            htmltools::tags$th(scope = "col", "Latest release"),
-            htmltools::tags$th(scope = "col", "Open milestones"),
-            htmltools::tags$th(scope = "col", "Open PRs"),
-            htmltools::tags$th(
-              scope = "col",
-              htmltools::tagList(
-                "Dev status",
-                htmltools::tags$span(
-                  class = "info-icon",
-                  `data-tooltip` = "The difference in commits between 'main' and 'dev' branches: \n A positive number means dev is ahead of main by n commits; \n A negative number means dev is behind main by n commits;\n \"Unavailable\" means that there is no branch named 'dev' and/or 'main'.",
-                  `aria-label` = "The difference in commits between 'main' and 'dev' branches: A positive number means dev is ahead of main by n commits; A negative number means dev is behind main by n commits; \"Unavailable\" means that there is no branch named 'dev' and/or 'main'.",
-                  tabindex = "0",
-                  "i"
-                )
-              )
+      htmltools::div(
+        class = "status-table-toolbar",
+        htmltools::div(
+          class = "column-settings",
+          htmltools::tags$button(
+            class = "column-settings__button",
+            type = "button",
+            `aria-expanded` = "false",
+            `aria-haspopup` = "true",
+            `aria-label` = "Column settings",
+            "⚙ Settings"
+          ),
+          htmltools::div(
+            class = "column-settings__panel",
+            htmltools::tags$div(class = "column-settings__title", "Table Columns"),
+            htmltools::tags$div(
+              class = "column-settings__actions",
+              htmltools::tags$button(type = "button", class = "column-settings__action", `data-column-action` = "hide-all", "Hide all"),
+              htmltools::tags$button(type = "button", class = "column-settings__action", `data-column-action` = "show-all", "Show all")
             ),
-            htmltools::tags$th(
-              scope = "col",
-              class = "status-table__cell--right",
-              htmltools::tagList(
-                "# Releases",
-                htmltools::tags$span(
-                  class = "info-icon",
-                  `data-tooltip` = "Number of releases over the past 365 days",
-                  `aria-label` = "Number of releases over the past 365 days",
-                  tabindex = "0",
-                  "i"
+            htmltools::tags$div(
+              class = "column-settings__list",
+              htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-repo", checked = "checked"), "Repository"),
+              htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-latest-release", checked = "checked"), "Latest release"),
+              htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-open-milestones", checked = "checked"), "Open milestones"),
+              htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-open-prs", checked = "checked"), "Open PRs"),
+              htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-dev-status", checked = "checked"), "Dev status"),
+              htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-releases", checked = "checked"), "# Releases")
+            )
+          )
+        )
+      ),
+      htmltools::div(
+        class = "status-table-container",
+        htmltools::tags$table(
+          class = "status-table",
+          htmltools::tags$thead(
+            htmltools::tags$tr(
+              htmltools::tags$th(scope = "col", class = "col-repo", "Repository"),
+              htmltools::tags$th(scope = "col", class = "col-latest-release", "Latest release"),
+              htmltools::tags$th(scope = "col", class = "col-open-milestones", "Open milestones"),
+              htmltools::tags$th(scope = "col", class = "col-open-prs", "Open PRs"),
+              htmltools::tags$th(
+                scope = "col",
+                class = "col-dev-status",
+                htmltools::tagList(
+                  "Dev status",
+                  htmltools::tags$span(
+                    class = "info-icon",
+                    `data-tooltip` = "The difference in commits between 'main' and 'dev' branches: \n A positive number means dev is ahead of main by n commits; \n A negative number means dev is behind main by n commits;\n \"Unavailable\" means that there is no branch named 'dev' and/or 'main'.",
+                    `aria-label` = "The difference in commits between 'main' and 'dev' branches: A positive number means dev is ahead of main by n commits; A negative number means dev is behind main by n commits; \"Unavailable\" means that there is no branch named 'dev' and/or 'main'.",
+                    tabindex = "0",
+                    "i"
+                  )
+                )
+              ),
+              htmltools::tags$th(
+                scope = "col",
+                class = "status-table__cell--right col-releases",
+                htmltools::tagList(
+                  "# Releases",
+                  htmltools::tags$span(
+                    class = "info-icon",
+                    `data-tooltip` = "Number of releases over the past 365 days",
+                    `aria-label` = "Number of releases over the past 365 days",
+                    tabindex = "0",
+                    "i"
+                  )
                 )
               )
             )
-          )
-        ),
-        tbody
+          ),
+          tbody
+        )
       )
     )
   )
 }
 
 render_status_table(status)
+```
+
+```{r column_settings_js, echo=FALSE, results='asis'}
+column_settings_js <- c(
+  "<script>",
+  "(function() {",
+  "  var wrappers = document.querySelectorAll('.status-table-wrapper');",
+  "  wrappers.forEach(function(wrapper) {",
+  "    var button = wrapper.querySelector('.column-settings__button');",
+  "    var panel = wrapper.querySelector('.column-settings__panel');",
+  "    if (!button || !panel) return;",
+  "",
+  "    var checkboxes = Array.prototype.slice.call(panel.querySelectorAll('input[type=\"checkbox\"][data-column]'));",
+  "    var hideAll = panel.querySelector('[data-column-action=\"hide-all\"]');",
+  "    var showAll = panel.querySelector('[data-column-action=\"show-all\"]');",
+  "",
+  "    function setColumnVisible(columnClass, visible) {",
+  "      var cells = wrapper.querySelectorAll('.' + columnClass);",
+  "      cells.forEach(function(cell) {",
+  "        cell.style.display = visible ? '' : 'none';",
+  "      });",
+  "    }",
+  "",
+  "    function ensureAtLeastOneVisible() {",
+  "      var anyChecked = checkboxes.some(function(cb) { return cb.checked; });",
+  "      if (!anyChecked) {",
+  "        var repoCb = checkboxes.find(function(cb) { return cb.getAttribute('data-column') === 'col-repo'; });",
+  "        if (repoCb) {",
+  "          repoCb.checked = true;",
+  "          setColumnVisible('col-repo', true);",
+  "        }",
+  "      }",
+  "    }",
+  "",
+  "    checkboxes.forEach(function(cb) {",
+  "      cb.addEventListener('change', function() {",
+  "        setColumnVisible(cb.getAttribute('data-column'), cb.checked);",
+  "        ensureAtLeastOneVisible();",
+  "      });",
+  "    });",
+  "",
+  "    if (hideAll) {",
+  "      hideAll.addEventListener('click', function() {",
+  "        checkboxes.forEach(function(cb) {",
+  "          cb.checked = false;",
+  "          setColumnVisible(cb.getAttribute('data-column'), false);",
+  "        });",
+  "        ensureAtLeastOneVisible();",
+  "      });",
+  "    }",
+  "",
+  "    if (showAll) {",
+  "      showAll.addEventListener('click', function() {",
+  "        checkboxes.forEach(function(cb) {",
+  "          cb.checked = true;",
+  "          setColumnVisible(cb.getAttribute('data-column'), true);",
+  "        });",
+  "      });",
+  "    }",
+  "",
+  "    button.addEventListener('click', function(event) {",
+  "      event.stopPropagation();",
+  "      var isOpen = panel.classList.toggle('is-open');",
+  "      button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');",
+  "    });",
+  "",
+  "    panel.addEventListener('click', function(event) {",
+  "      event.stopPropagation();",
+  "    });",
+  "",
+  "    document.addEventListener('click', function() {",
+  "      if (panel.classList.contains('is-open')) {",
+  "        panel.classList.remove('is-open');",
+  "        button.setAttribute('aria-expanded', 'false');",
+  "      }",
+  "    });",
+  "  });",
+  "})();",
+  "</script>"
+)
+
+cat(paste(column_settings_js, collapse = '\n'))
 ```
