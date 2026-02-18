@@ -282,6 +282,31 @@ grayscale_milestone_label <- function(text, tooltip, completion) {
   )
 }
 
+#' Format pull request summary as HTML
+#'
+#' Internal function to format GitHub pull requests count with link as HTML.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param pr_count Integer count of open pull requests
+#' @return Character string with formatted HTML link
+#' @keywords internal
+#' @importFrom htmltools tags
+format_pr_summary <- function(owner, repo, pr_count) {
+  base_url <- sprintf("https://github.com/%s/%s/pulls", owner, repo)
+  
+  if (pr_count == 0) {
+    return(as.character(htmltools::tags$a(href = base_url, "None")))
+  }
+  
+  as.character(
+    htmltools::tags$a(
+      href = base_url, 
+      sprintf("%d", pr_count)
+    )
+  )
+}
+
 #' Format branch comparison as HTML
 #'
 #' Internal function to format branch comparison results as HTML.

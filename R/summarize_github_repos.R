@@ -9,7 +9,7 @@
 #'   with columns `org`, `repo`, `version`, `release.url`, `release.date`,
 #'   `qualification.url`, and `qualification.date`.
 #'
-#' @return A data frame with columns `repo`, `latest_release`, `upcoming_milestones`, and
+#' @return A data frame with columns `repo`, `latest_release`, `upcoming_milestones`, `open_prs`, and
 #'   `dev_branch_status`.
 #' @examples
 #' \dontrun{
@@ -37,12 +37,14 @@ summarize_github_repos <- function(
 
     release <- fetch_latest_release(owner, repo, token)
     milestones <- fetch_open_milestones(owner, repo, token)
+    pr_count <- fetch_open_prs(owner, repo, token)
     comparison <- fetch_branch_comparison(owner, repo, base = "main", head = "dev", token = token)
 
     results[[idx]] <- list(
       repo = format_repo_link(owner, repo),
       latest_release = format_release_summary(owner, repo, release, registry),
       upcoming_milestones = format_milestone_summary(owner, repo, milestones),
+      open_prs = format_pr_summary(owner, repo, pr_count),
       dev_branch_status = format_branch_comparison(owner, repo, comparison)
     )
   }
@@ -51,6 +53,7 @@ summarize_github_repos <- function(
     repo = vapply(results, `[[`, character(1), "repo"),
     latest_release = vapply(results, `[[`, character(1), "latest_release"),
     upcoming_milestones = vapply(results, `[[`, character(1), "upcoming_milestones"),
+    open_prs = vapply(results, `[[`, character(1), "open_prs"),
     dev_branch_status = vapply(results, `[[`, character(1), "dev_branch_status"),
     stringsAsFactors = FALSE
   )

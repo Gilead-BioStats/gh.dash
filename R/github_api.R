@@ -40,6 +40,59 @@ fetch_open_milestones <- function(owner, repo, token) {
   )
 }
 
+#' Fetch open pull requests count from GitHub API
+#'
+#' Internal function to retrieve count of open pull requests for a GitHub repository.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param token GitHub personal access token (optional)
+#' @return Integer count of open PRs or NULL if retrieval fails
+#' @keywords internal
+#' @importFrom gh gh
+fetch_open_prs <- function(owner, repo, token) {
+  result <- safe_gh(
+    gh::gh,
+    "GET /repos/{owner}/{repo}/pulls",
+    owner = owner,
+    repo = repo,
+    state = "open",
+    .token = token
+  )
+  
+  # Extract the count from response headers if available
+  if (!is.null(result)) {
+    headers <- attr(result, "response")
+    if (!is.null(headers)) {
+      link_header <- headers$headers[["link"]]
+      if (!is.null(link_header) && nzchar(link_header)) {
+        # Parse the Link header to get total count
+        # Format: <url>; rel="last"
+        parts <- strsplit(link_header, ",")[[1]]
+        for (part in parts) {
+          if (grepl('rel="last"', part)) {
+            # Extract page number from the last URL
+            match <- regexpr("page=([0-9]+)", part)
+            if (match > 0) {
+              page_str <- regmatches(part, regexpr("[0-9]+", substring(part, regexpr("page=", part))))
+              if (length(page_str) > 0) {
+                last_page <- as.integer(page_str[1])
+                # Return (last_page - 1) * per_page + items_on_last_page
+                # But we don't know items on last page easily, so count the current results
+                return(length(result) + (last_page - 1) * 30)
+              }
+            }
+          }
+        }
+      }
+    }
+    # If no Link header, just return the count of results
+    return(length(result))
+  }
+  
+  0
+}
+
 #' Fetch branch comparison from GitHub API
 #'
 #' Internal function to compare two branches in a GitHub repository.
