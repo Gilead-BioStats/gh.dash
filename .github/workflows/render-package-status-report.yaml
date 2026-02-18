@@ -10,6 +10,8 @@ on:
       - main
       - dev
   pull_request:
+  schedule:
+    - cron: '0 5 * * *'
   workflow_dispatch:
     inputs:
       target:
@@ -22,33 +24,41 @@ on:
           - dev
 
 jobs:
-  build-main:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: ./.github/workflows/render-report-reusable.yaml
-    secrets: inherit
-    with:
-      ref: ${{ github.ref }}
-      title: "Tidyverse"
-      pkg-list-path: "inst/extdata/package-list.csv"
-      output-subdir: ""
-      deploy: true
-      deploy-target: ""
-      deploy-clean: true
-      deploy-clean-exclude: |
-        dev
-        pr
+  build:
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - branch: main
+            deploy-target: ""
+            output-subdir: ""
+            deploy-clean: true
+            deploy-clean-exclude: |
+              dev
+              pr
+          - branch: dev
+            deploy-target: dev
+            output-subdir: dev
+            deploy-clean: false
+            deploy-clean-exclude: ""
 
-  build-dev:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    if: >-
+      (github.event_name == 'push' && github.ref == format('refs/heads/{0}', matrix.branch))
+      || github.event_name == 'schedule'
+      || (github.event_name == 'workflow_dispatch' && inputs.target == matrix.branch)
+
     uses: ./.github/workflows/render-report-reusable.yaml
     secrets: inherit
     with:
-      ref: ${{ github.ref }}
+      ref: ${{ github.event_name == 'push' && github.ref || matrix.branch }}
       title: "Tidyverse"
       pkg-list-path: "inst/extdata/package-list.csv"
+      output-subdir: ${{ matrix.output-subdir }}
       deploy: true
-      deploy-target: dev
-      deploy-clean: false
+      deploy-target: ${{ matrix.deploy-target }}
+      deploy-clean: ${{ matrix.deploy-clean }}
+      deploy-clean-exclude: ${{ matrix.deploy-clean-exclude }}
 
 
   build-pr:
