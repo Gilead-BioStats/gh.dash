@@ -75,13 +75,13 @@ render_status_table <- function(df) {
     return(htmltools::div(class = "empty-state", "No repositories available."))
   }
 
-  info_header <- function(label, tooltip, aria_label = tooltip) {
+  info_header <- function(label, tooltip) {
     htmltools::HTML(
       sprintf(
         "%s <span class=\"info-icon\" data-tooltip=\"%s\" aria-label=\"%s\" tabindex=\"0\">i</span>",
         label,
         htmltools::htmlEscape(tooltip),
-        htmltools::htmlEscape(aria_label)
+        htmltools::htmlEscape(tooltip)
       )
     )
   }
@@ -96,8 +96,7 @@ render_status_table <- function(df) {
       dev_branch_status = reactable::colDef(
         header = info_header(
           "Dev status",
-          "The difference in commits between 'main' and 'dev' branches: \n A positive number means dev is ahead of main by n commits; \n A negative number means dev is behind main by n commits;\n \"Unavailable\" means that there is no branch named 'dev' and/or 'main'.",
-          aria_label = "The difference in commits between 'main' and 'dev' branches: A positive number means dev is ahead of main by n commits; A negative number means dev is behind main by n commits; \"Unavailable\" means that there is no branch named 'dev' and/or 'main'."
+          "The difference in commits between 'main' and 'dev' branches: A positive number means dev is ahead of main by n commits; A negative number means dev is behind main by n commits; \"Unavailable\" means that there is no branch named 'dev' and/or 'main'."
         ),
         html = TRUE,
         minWidth = 160
