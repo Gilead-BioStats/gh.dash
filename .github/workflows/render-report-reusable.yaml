@@ -151,7 +151,7 @@ jobs:
           }
           dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
           rmarkdown::render(
-            input = system.file("report", "package_status_report.Rmd", package = "gh.dash"),
+            input = system.file("report", "package_status_report.qmd", package = "gh.dash"),
             output_dir = output_dir,
             output_file = "index.html",
             params = list(
