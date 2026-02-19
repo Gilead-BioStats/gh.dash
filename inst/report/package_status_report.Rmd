@@ -13,6 +13,8 @@ params:
 
 This report summarizes the current release and milestone status for a selection of `r params$title` packages hosted on GitHub.
 
+## Row
+
 ```{r setup, message=FALSE, echo=FALSE}
 library(gh.dash)
 

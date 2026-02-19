@@ -60,8 +60,6 @@ status <- if (length(repos) == 0L) {
 
 This report summarizes the current release and milestone status for a selection of `r params$title` packages hosted on GitHub.
 
-## Row
-
 ```{r}
 #| label: status-report
 #| echo: false
