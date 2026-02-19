@@ -27,11 +27,18 @@ render_dash(
 
 \item{qualification_registry_url}{URL or file path to the qualification registry CSV (optional).}
 
-\item{clean}{Whether to clean intermediate files after rendering.}
+\item{clean}{Whether to clean intermediate files after rendering.
+Only used with the legacy rmarkdown engine; ignored when rendering via Quarto.}
 }
 \value{
 The path to the rendered HTML report (invisibly).
 }
 \description{
 Renders the package status report locally using the gh.dash report template.
+}
+\details{
+When the \pkg{quarto} R package and the Quarto CLI (>= 1.4) are available the
+Quarto dashboard template is used.
+Otherwise the function falls back to the legacy \pkg{rmarkdown} template.
+At least one of the two must be available.
 }

@@ -1,0 +1,138 @@
+---
+title: "`r params$title` Package Status Report"
+author: "[`r params$repo`](https://github.com/`r params$repo`)"
+date: "`r format(Sys.time(), '%B %d, %Y %H:%M %Z')`"
+format:
+  dashboard:
+    scrolling: true
+    css: styles.css
+    embed-resources: true
+params:
+  token: NULL
+  packageList: NULL
+  title: "Tidyverse"
+  repo: "gh.dash"
+  qualification_registry_url: NULL
+---
+
+```{r}
+#| label: setup
+#| echo: false
+#| output: false
+library(gh.dash)
+
+# Use token from params, fallback to automatic discovery
+github_token <- params$token
+qualification_registry_url <- params$qualification_registry_url
+qualification_registry <- NULL
+
+if (is.null(qualification_registry_url) || !nzchar(qualification_registry_url)) {
+  qualification_registry_url <- NULL
+} else {
+  qualification_registry <- fetch_qualification_registry(qualification_registry_url, github_token)
+}
+
+repos <- if (is.null(params$packageList)) {
+  warning("No packageList provided; report will be empty.")
+  character(0)
+} else {
+  as.character(params$packageList)
+}
+
+status <- if (length(repos) == 0L) {
+  data.frame(
+    repo = character(0),
+    latest_release = character(0),
+    upcoming_milestones = character(0),
+    open_prs = character(0),
+    dev_branch_status = character(0),
+    ytd_releases = character(0),
+    stringsAsFactors = FALSE
+  )
+} else {
+  summarize_github_repos(
+    repos,
+    token = github_token,
+    qualification_registry = qualification_registry
+  )
+}
+```
+
+This report summarizes the current release and milestone status for a selection of `r params$title` packages hosted on GitHub.
+
+## Row
+
+```{r}
+#| label: status-report
+#| echo: false
+
+render_status_table <- function(df) {
+  if (!requireNamespace("reactable", quietly = TRUE)) {
+    stop("Please install the 'reactable' package to render this dashboard.", call. = FALSE)
+  }
+
+  if (!nrow(df)) {
+    return(htmltools::div(class = "empty-state", "No repositories available."))
+  }
+
+  info_header <- function(label, tooltip, aria_label = tooltip) {
+    htmltools::HTML(
+      sprintf(
+        "%s <span class=\"info-icon\" data-tooltip=\"%s\" aria-label=\"%s\" tabindex=\"0\">i</span>",
+        label,
+        htmltools::htmlEscape(tooltip),
+        htmltools::htmlEscape(aria_label)
+      )
+    )
+  }
+
+  reactable::reactable(
+    df,
+    columns = list(
+      repo = reactable::colDef(name = "Repository", html = TRUE, minWidth = 180),
+      latest_release = reactable::colDef(name = "Latest release", html = TRUE, minWidth = 200),
+      upcoming_milestones = reactable::colDef(name = "Open milestones", html = TRUE, minWidth = 160),
+      open_prs = reactable::colDef(name = "Open PRs", html = TRUE, width = 90),
+      dev_branch_status = reactable::colDef(
+        header = info_header(
+          "Dev status",
+          "The difference in commits between 'main' and 'dev' branches: \n A positive number means dev is ahead of main by n commits; \n A negative number means dev is behind main by n commits;\n \"Unavailable\" means that there is no branch named 'dev' and/or 'main'.",
+          aria_label = "The difference in commits between 'main' and 'dev' branches: A positive number means dev is ahead of main by n commits; A negative number means dev is behind main by n commits; \"Unavailable\" means that there is no branch named 'dev' and/or 'main'."
+        ),
+        html = TRUE,
+        minWidth = 160
+      ),
+      ytd_releases = reactable::colDef(
+        header = info_header("# Releases", "Number of releases over the past 365 days"),
+        html = TRUE,
+        align = "right",
+        width = 110
+      )
+    ),
+    defaultColDef = reactable::colDef(html = TRUE, sortable = FALSE),
+    pagination = FALSE,
+    highlight = TRUE,
+    theme = reactable::reactableTheme(
+      color = "#1f2937",
+      borderColor = "#e2e8f0",
+      stripedColor = "#f8fafc",
+      tableStyle = list(border = "1px solid #e2e8f0", borderRadius = "12px"),
+      headerStyle = list(
+        background = "#f1f5f9",
+        borderBottom = "1px solid #e2e8f0",
+        fontSize = "0.85rem",
+        textTransform = "uppercase",
+        fontWeight = 600,
+        letterSpacing = "0.04em",
+        color = "#475569"
+      ),
+      cellPadding = "12px 14px"
+    )
+  )
+}
+
+htmltools::div(
+  class = "reactable-card",
+  render_status_table(status)
+)
+```

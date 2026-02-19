@@ -1,5 +1,9 @@
 #!/usr/bin/env Rscript
 # Render the tidyverse demo package status report into a local report/ directory.
+#
+# Prerequisites:
+#   - Quarto CLI >= 1.4 (https://quarto.org/docs/get-started/) and the quarto R
+#     package are preferred.  If unavailable, the renderer falls back to rmarkdown.
 
 args <- commandArgs(trailingOnly = FALSE)
 file_flag <- "--file="
