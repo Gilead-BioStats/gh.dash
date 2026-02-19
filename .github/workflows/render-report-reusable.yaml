@@ -3,7 +3,7 @@ name: render-report
 on:
   workflow_call:
     secrets:
-      GH_DASH_REPOS:
+      GHDASH_REPOS:
         description: 'PAT with repo access for fetching private repository data (optional, falls back to github.token)'
         required: false
     inputs:
@@ -68,7 +68,7 @@ jobs:
       contents: write
       pull-requests: write
     env:
-      GITHUB_PAT: ${{ secrets.GH_DASH_REPOS || github.token }}
+      GITHUB_PAT: ${{ secrets.GHDASH_REPOS || github.token }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -112,7 +112,7 @@ jobs:
         with:
           repository: ${{ inputs.qual-repo }}
           ref: main
-          token: ${{ secrets.GH_DASH_REPOS || github.token }}
+          token: ${{ secrets.GHDASH_REPOS || github.token }}
           sparse-checkout: |
             ${{ inputs.qual-path }}
           path: registry
