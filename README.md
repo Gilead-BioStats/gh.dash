@@ -4,6 +4,7 @@
 
 - Pulls data about package releases, milestones and, optionally qualification status using the GitHub API
 - Creates a report summarizing the status for each package using R Markdown
+- Includes a PR activity tab summarizing PRs opened and reviewed by user over a configurable lookback window (default: 365 days)
 - Uses pre-configured GitHub Actions to automatically push the report to GitHub Pages
 
 The {gh.dash} repo automatically runs a sample report for tidyverse packages, but the package can be configured to work with any GitHub repos using the steps below. 
@@ -23,6 +24,7 @@ render_dash(
 		"tidyverse/dplyr",
 		"tidyverse/tidyr"
 	),
+	pr_activity_days = 365,
 	output_dir = "report",
 	output_file = "index.html",
 	title = "Tidyverse"

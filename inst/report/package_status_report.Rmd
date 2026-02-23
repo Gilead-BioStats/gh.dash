@@ -9,6 +9,7 @@ params:
   title: "Tidyverse"
   repo: "gh.dash"
   qualification_registry_url: NULL
+  pr_activity_days: 365
 ---
 
 This report summarizes the current release and milestone status for a selection of `r params$title` packages hosted on GitHub.
@@ -20,6 +21,7 @@ library(gh.dash)
 github_token <- params$token
 qualification_registry_url <- params$qualification_registry_url
 qualification_registry <- NULL
+pr_activity_days <- gh.dash:::validate_lookback_days(params$pr_activity_days)
 
 if (is.null(qualification_registry_url) || !nzchar(qualification_registry_url)) {
   qualification_registry_url <- NULL
@@ -51,6 +53,22 @@ status <- if (length(repos) == 0L) {
     qualification_registry = qualification_registry
   )
 }
+
+pr_activity <- if (length(repos) == 0L) {
+  data.frame(
+    user = character(0),
+    prs_opened = integer(0),
+    prs_reviewed = integer(0),
+    total_activity = integer(0),
+    stringsAsFactors = FALSE
+  )
+} else {
+  summarize_pr_activity_by_user(
+    repos,
+    token = github_token,
+    days = pr_activity_days
+  )
+}
 ```
 
 ```{r report_styles, echo = FALSE, results = 'asis'}
@@ -62,6 +80,42 @@ styles <- c(
   "  border-radius: 0.75rem;",
   "  overflow: visible;",
   "  position: relative;",
+  "}",
+  "",
+  ".dash-tabs {",
+  "  margin-top: 1.25rem;",
+  "}",
+  "",
+  ".dash-tabs__list {",
+  "  display: flex;",
+  "  gap: 0.5rem;",
+  "  border-bottom: 1px solid #e2e8f0;",
+  "  padding-bottom: 0.5rem;",
+  "}",
+  "",
+  ".dash-tabs__button {",
+  "  border: 1px solid #cbd5e1;",
+  "  background: #ffffff;",
+  "  color: #334155;",
+  "  border-radius: 0.5rem;",
+  "  padding: 0.35rem 0.7rem;",
+  "  font-size: 0.9rem;",
+  "  font-weight: 600;",
+  "  cursor: pointer;",
+  "}",
+  "",
+  ".dash-tabs__button.is-active {",
+  "  background: #e0f2fe;",
+  "  border-color: #7dd3fc;",
+  "  color: #0c4a6e;",
+  "}",
+  "",
+  ".dash-tab-panel {",
+  "  display: none;",
+  "}",
+  "",
+  ".dash-tab-panel.is-active {",
+  "  display: block;",
   "}",
   "",
   ".status-table-toolbar {",
@@ -234,6 +288,12 @@ styles <- c(
   "  overflow-wrap: anywhere;",
   "}",
   "",
+  ".status-table--compact th,",
+  ".status-table--compact td {",
+  "  padding-top: 0.6rem;",
+  "  padding-bottom: 0.6rem;",
+  "}",
+  "",
   ".status-table tbody tr:nth-child(even) {",
   "  background: #f8fafc;",
   "}",
@@ -341,8 +401,7 @@ render_status_table <- function(df) {
 
   tbody <- htmltools::tagAppendChildren(htmltools::tags$tbody(), rows)
 
-  htmltools::browsable(
-    htmltools::div(
+  htmltools::div(
       class = "status-table-wrapper",
       htmltools::div(
         class = "status-table-toolbar",
@@ -420,10 +479,94 @@ render_status_table <- function(df) {
         )
       )
     )
+}
+
+render_pr_activity_table <- function(df, days) {
+  if (!nrow(df)) {
+    return(htmltools::div(
+      class = "empty-state",
+      sprintf("No PR activity found in the past %d days.", days)
+    ))
+  }
+
+  rows <- lapply(seq_len(nrow(df)), function(i) {
+    opened <- suppressWarnings(as.numeric(df$prs_opened[[i]]))
+    reviewed <- suppressWarnings(as.numeric(df$prs_reviewed[[i]]))
+
+    ratio <- if (!is.finite(reviewed) || reviewed <= 0) {
+      if (is.finite(opened) && opened > 0) {
+        "∞"
+      } else {
+        "0.00"
+      }
+    } else {
+      sprintf("%.2f", opened / reviewed)
+    }
+
+    htmltools::tags$tr(
+      htmltools::tags$td(class = "status-table__cell", htmltools::htmlEscape(df$user[[i]])),
+      htmltools::tags$td(class = "status-table__cell status-table__cell--right", as.character(df$prs_opened[[i]])),
+      htmltools::tags$td(class = "status-table__cell status-table__cell--right", as.character(df$prs_reviewed[[i]])),
+      htmltools::tags$td(class = "status-table__cell status-table__cell--right", ratio)
+    )
+  })
+
+  tbody <- htmltools::tagAppendChildren(htmltools::tags$tbody(), rows)
+
+  htmltools::div(
+    class = "status-table-wrapper",
+    htmltools::div(
+      class = "status-table-container",
+      htmltools::tags$table(
+        class = "status-table status-table--compact",
+        htmltools::tags$thead(
+          htmltools::tags$tr(
+            htmltools::tags$th(scope = "col", "User"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Opened"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Reviewed"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "Created/Reviewed")
+          )
+        ),
+        tbody
+      )
+    )
   )
 }
 
-render_status_table(status)
+render_dashboard_tabs <- function(status_df, pr_activity_df, days) {
+  htmltools::browsable(
+    htmltools::div(
+      class = "dash-tabs",
+      htmltools::div(
+        class = "dash-tabs__list",
+        htmltools::tags$button(
+          class = "dash-tabs__button is-active",
+          type = "button",
+          `data-tab-target` = "tab-repo-status",
+          "Repository Status"
+        ),
+        htmltools::tags$button(
+          class = "dash-tabs__button",
+          type = "button",
+          `data-tab-target` = "tab-pr-activity",
+          sprintf("PR Activity (Last %d Days)", days)
+        )
+      ),
+      htmltools::div(
+        id = "tab-repo-status",
+        class = "dash-tab-panel is-active",
+        render_status_table(status_df)
+      ),
+      htmltools::div(
+        id = "tab-pr-activity",
+        class = "dash-tab-panel",
+        render_pr_activity_table(pr_activity_df, days)
+      )
+    )
+  )
+}
+
+render_dashboard_tabs(status, pr_activity, pr_activity_days)
 ```
 
 ```{r column_settings_js, echo=FALSE, results='asis'}
@@ -499,6 +642,26 @@ column_settings_js <- c(
   "        panel.classList.remove('is-open');",
   "        button.setAttribute('aria-expanded', 'false');",
   "      }",
+  "    });",
+  "  });",
+  "",
+  "  var tabButtons = Array.prototype.slice.call(document.querySelectorAll('.dash-tabs__button[data-tab-target]'));",
+  "  var tabPanels = Array.prototype.slice.call(document.querySelectorAll('.dash-tab-panel'));",
+  "",
+  "  function activateTab(targetId) {",
+  "    tabButtons.forEach(function(button) {",
+  "      var isActive = button.getAttribute('data-tab-target') === targetId;",
+  "      button.classList.toggle('is-active', isActive);",
+  "    });",
+  "",
+  "    tabPanels.forEach(function(panel) {",
+  "      panel.classList.toggle('is-active', panel.id === targetId);",
+  "    });",
+  "  }",
+  "",
+  "  tabButtons.forEach(function(button) {",
+  "    button.addEventListener('click', function() {",
+  "      activateTab(button.getAttribute('data-tab-target'));",
   "    });",
   "  });",
   "})();",

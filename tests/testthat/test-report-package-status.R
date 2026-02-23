@@ -90,6 +90,7 @@ test_that("summarize_github_repos assembles release and milestone summaries", {
 
   result <- with_mocked_bindings(
     summarize_github_repos("org/repo"),
+    fetch_repo_metadata = function(...) list(private = FALSE),
     fetch_latest_release = function(owner, repo, token) {
       expect_equal(owner, "org")
       expect_equal(repo, "repo")
@@ -105,6 +106,7 @@ test_that("summarize_github_repos assembles release and milestone summaries", {
       expect_equal(repo, "repo")
       mock_milestones
     },
+    fetch_open_prs = function(...) 0L,
     fetch_branch_comparison = function(owner, repo, base, head, token) {
       expect_equal(
         list(owner = owner, repo = repo, base = base, head = head),
@@ -170,9 +172,11 @@ test_that("summarize_github_repos appends qualification badge when registry matc
 
   result <- with_mocked_bindings(
     summarize_github_repos("org/repo", qualification_registry = registry),
+    fetch_repo_metadata = function(...) list(private = FALSE),
     fetch_latest_release = function(...) mock_release,
     fetch_releases = function(...) list(mock_release),
     fetch_open_milestones = function(...) list(),
+    fetch_open_prs = function(...) 0L,
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
@@ -200,9 +204,11 @@ test_that("summarize_github_repos shows grey badge when older version qualified"
 
   result <- with_mocked_bindings(
     summarize_github_repos("org/repo", qualification_registry = registry),
+    fetch_repo_metadata = function(...) list(private = FALSE),
     fetch_latest_release = function(...) mock_release,
     fetch_releases = function(...) list(mock_release),
     fetch_open_milestones = function(...) list(),
+    fetch_open_prs = function(...) 0L,
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
@@ -249,6 +255,7 @@ test_that("summarize_github_repos supports multiple repositories", {
   index <- 0
   result <- with_mocked_bindings(
     summarize_github_repos(c("org/repo", "org2/repo2")),
+    fetch_repo_metadata = function(...) list(private = FALSE),
     fetch_latest_release = function(owner, repo, token) {
       index <<- index + 1
       releases[[index]]
@@ -259,6 +266,7 @@ test_that("summarize_github_repos supports multiple repositories", {
     fetch_open_milestones = function(owner, repo, token) {
       milestones[[index]]
     },
+    fetch_open_prs = function(...) 0L,
     fetch_branch_comparison = function(owner, repo, base, head, token) {
       comparisons[[index]]
     }
@@ -286,4 +294,131 @@ test_that("summarize_github_repos supports multiple repositories", {
   expect_match(result$ytd_releases[[1]], "<a href=\"https://github.com/org/repo/releases\" title=\"0 releases in past 90 days\">")
   expect_match(result$ytd_releases[[2]], "<a href=\"https://github.com/org2/repo2/releases\" title=\"0 releases in past 90 days\">")
   expect_match(result$ytd_releases[[2]], ">0</a>")
+})
+
+test_that("summarize_pr_activity_by_user validates lookback days", {
+  expect_error(summarize_pr_activity_by_user("org/repo", days = 0, use_cache = FALSE), "positive integer")
+  expect_error(summarize_pr_activity_by_user("org/repo", days = NA, use_cache = FALSE), "single non-missing")
+})
+
+test_that("summarize_pr_activity_by_user aggregates opened and reviewed PRs by user", {
+  pulls <- list(
+    list(
+      number = 10,
+      created_at = "2026-01-10T10:00:00Z",
+      updated_at = "2026-01-12T11:00:00Z",
+      user = list(login = "alice")
+    ),
+    list(
+      number = 11,
+      created_at = "2026-01-11T10:00:00Z",
+      updated_at = "2026-01-12T12:00:00Z",
+      user = list(login = "bob")
+    )
+  )
+
+  result <- with_mocked_bindings(
+    summarize_pr_activity_by_user("org/repo", days = 365, use_cache = FALSE),
+    fetch_pull_requests_since = function(owner, repo, token, since_date) {
+      expect_equal(owner, "org")
+      expect_equal(repo, "repo")
+      pulls
+    },
+    fetch_pull_request_reviews = function(owner, repo, pull_number, token) {
+      if (pull_number == 10) {
+        return(list(
+          list(submitted_at = "2026-01-13T10:00:00Z", state = "APPROVED", user = list(login = "bob")),
+          list(submitted_at = "2026-01-13T11:00:00Z", state = "COMMENTED", user = list(login = "bob"))
+        ))
+      }
+
+      list(
+        list(submitted_at = "2026-01-14T09:00:00Z", state = "CHANGES_REQUESTED", user = list(login = "alice")),
+        list(submitted_at = "2026-01-14T09:30:00Z", state = "APPROVED", user = list(login = "carol"))
+      )
+    }
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_equal(sort(result$user), c("alice", "bob", "carol"))
+
+  alice <- result[result$user == "alice", , drop = FALSE]
+  bob <- result[result$user == "bob", , drop = FALSE]
+  carol <- result[result$user == "carol", , drop = FALSE]
+
+  expect_equal(alice$prs_opened, 1L)
+  expect_equal(alice$prs_reviewed, 1L)
+  expect_equal(alice$total_activity, 2L)
+
+  expect_equal(bob$prs_opened, 1L)
+  expect_equal(bob$prs_reviewed, 1L)
+  expect_equal(bob$total_activity, 2L)
+
+  expect_equal(carol$prs_opened, 0L)
+  expect_equal(carol$prs_reviewed, 1L)
+  expect_equal(carol$total_activity, 1L)
+})
+
+test_that("summarize_pr_activity_by_user returns empty data frame when no activity", {
+  result <- with_mocked_bindings(
+    summarize_pr_activity_by_user("org/repo", days = 365, use_cache = FALSE),
+    fetch_pull_requests_since = function(...) list()
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0)
+  expect_equal(names(result), c("user", "prs_opened", "prs_reviewed", "total_activity"))
+})
+
+test_that("summarize_pr_activity_by_user reuses cached review payloads", {
+  pulls <- list(
+    list(
+      number = 42,
+      created_at = "2026-01-10T10:00:00Z",
+      updated_at = "2026-01-12T11:00:00Z",
+      user = list(login = "alice")
+    )
+  )
+
+  review_calls <- 0L
+  cache_dir <- file.path(tempdir(), paste0("ghdash-cache-", as.integer(Sys.time())))
+
+  first <- with_mocked_bindings(
+    summarize_pr_activity_by_user(
+      "org/repo",
+      days = 365,
+      use_cache = TRUE,
+      cache_dir = cache_dir
+    ),
+    fetch_pull_requests_since = function(...) pulls,
+    fetch_pull_request_reviews = function(...) {
+      review_calls <<- review_calls + 1L
+      list(list(
+        submitted_at = "2026-01-13T10:00:00Z",
+        state = "APPROVED",
+        user = list(login = "bob")
+      ))
+    }
+  )
+
+  second <- with_mocked_bindings(
+    summarize_pr_activity_by_user(
+      "org/repo",
+      days = 365,
+      use_cache = TRUE,
+      cache_dir = cache_dir
+    ),
+    fetch_pull_requests_since = function(...) pulls,
+    fetch_pull_request_reviews = function(...) {
+      review_calls <<- review_calls + 1L
+      list(list(
+        submitted_at = "2026-01-13T10:00:00Z",
+        state = "APPROVED",
+        user = list(login = "bob")
+      ))
+    }
+  )
+
+  expect_equal(review_calls, 1L)
+  expect_equal(first, second)
 })

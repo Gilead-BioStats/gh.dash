@@ -28,6 +28,27 @@ validate_repo_vector <- function(repos) {
   invisible(repos)
 }
 
+#' Validate lookback days value
+#'
+#' Internal function to validate a lookback window (in days) used for
+#' time-bounded GitHub summaries.
+#'
+#' @param days Numeric scalar indicating number of days to look back
+#' @return Integer day count
+#' @keywords internal
+validate_lookback_days <- function(days) {
+  if (is.null(days) || length(days) != 1L || is.na(days)) {
+    rlang::abort("`days` must be a single non-missing numeric value.")
+  }
+
+  value <- suppressWarnings(as.integer(days))
+  if (is.na(value) || value <= 0L) {
+    rlang::abort("`days` must be a positive integer.")
+  }
+
+  value
+}
+
 #' Return first non-empty value from a list of candidates
 #'
 #' Internal utility function that returns the first non-NULL, non-empty string
