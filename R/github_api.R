@@ -1,23 +1,3 @@
-#' Fetch latest release information from GitHub API
-#'
-#' Internal function to retrieve the latest release for a GitHub repository.
-#'
-#' @param owner Repository owner (GitHub username or organization)
-#' @param repo Repository name
-#' @param token GitHub personal access token (optional)
-#' @return List with release information or NULL if no release found
-#' @keywords internal
-#' @importFrom gh gh
-fetch_latest_release <- function(owner, repo, token) {
-  safe_gh(
-    gh::gh,
-    "GET /repos/{owner}/{repo}/releases/latest",
-    owner = owner,
-    repo = repo,
-    .token = token
-  )
-}
-
 #' Fetch releases from GitHub API
 #'
 #' Internal function to retrieve published releases for a GitHub repository.

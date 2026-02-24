@@ -63,11 +63,6 @@ test_that("derive_latest_release returns NULL when all are drafts or prereleases
 })
 
 test_that("summarize_github_repos assembles release and milestone summaries", {
-  mock_release <- list(
-    tag_name = "v1.0.0",
-    published_at = "2025-01-01T12:00:00Z",
-    html_url = "https://github.com/org/repo/releases/tag/v1.0.0"
-  )
   mock_releases <- list(
     list(
       tag_name = "v1.0.0",
@@ -91,11 +86,6 @@ test_that("summarize_github_repos assembles release and milestone summaries", {
   result <- with_mocked_bindings(
     summarize_github_repos("org/repo"),
     fetch_repo_metadata = function(...) list(private = FALSE),
-    fetch_latest_release = function(owner, repo, token) {
-      expect_equal(owner, "org")
-      expect_equal(repo, "repo")
-      mock_release
-    },
     fetch_releases = function(owner, repo, token) {
       expect_equal(owner, "org")
       expect_equal(repo, "repo")
@@ -138,7 +128,6 @@ test_that("summarize_github_repos includes open PR count", {
       expect_equal(repo, "repo")
       list(private = FALSE)
     },
-    fetch_latest_release = function(...) NULL,
     fetch_releases = function(...) list(),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(owner, repo, token) {
@@ -156,7 +145,9 @@ test_that("summarize_github_repos appends qualification badge when registry matc
   mock_release <- list(
     tag_name = "v1.0.0",
     published_at = "2025-01-01T12:00:00Z",
-    html_url = "https://github.com/org/repo/releases/tag/v1.0.0"
+    html_url = "https://github.com/org/repo/releases/tag/v1.0.0",
+    draft = FALSE,
+    prerelease = FALSE
   )
 
   registry <- data.frame(
@@ -173,7 +164,6 @@ test_that("summarize_github_repos appends qualification badge when registry matc
   result <- with_mocked_bindings(
     summarize_github_repos("org/repo", qualification_registry = registry),
     fetch_repo_metadata = function(...) list(private = FALSE),
-    fetch_latest_release = function(...) mock_release,
     fetch_releases = function(...) list(mock_release),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
@@ -188,7 +178,9 @@ test_that("summarize_github_repos shows grey badge when older version qualified"
   mock_release <- list(
     tag_name = "v1.1.0",
     published_at = "2025-02-01T12:00:00Z",
-    html_url = "https://github.com/org/repo/releases/tag/v1.1.0"
+    html_url = "https://github.com/org/repo/releases/tag/v1.1.0",
+    draft = FALSE,
+    prerelease = FALSE
   )
 
   registry <- data.frame(
@@ -205,7 +197,6 @@ test_that("summarize_github_repos shows grey badge when older version qualified"
   result <- with_mocked_bindings(
     summarize_github_repos("org/repo", qualification_registry = registry),
     fetch_repo_metadata = function(...) list(private = FALSE),
-    fetch_latest_release = function(...) mock_release,
     fetch_releases = function(...) list(mock_release),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
@@ -218,14 +209,6 @@ test_that("summarize_github_repos shows grey badge when older version qualified"
 })
 
 test_that("summarize_github_repos supports multiple repositories", {
-  releases <- list(
-    list(
-      tag_name = "v1.1.0",
-      published_at = "2025-02-15T00:00:00Z",
-      html_url = "https://github.com/org/repo/releases/tag/v1.1.0"
-    ),
-    NULL
-  )
   all_releases <- list(
     list(
       list(
@@ -256,11 +239,8 @@ test_that("summarize_github_repos supports multiple repositories", {
   result <- with_mocked_bindings(
     summarize_github_repos(c("org/repo", "org2/repo2")),
     fetch_repo_metadata = function(...) list(private = FALSE),
-    fetch_latest_release = function(owner, repo, token) {
-      index <<- index + 1
-      releases[[index]]
-    },
     fetch_releases = function(owner, repo, token) {
+      index <<- index + 1
       all_releases[[index]]
     },
     fetch_open_milestones = function(owner, repo, token) {
@@ -294,6 +274,54 @@ test_that("summarize_github_repos supports multiple repositories", {
   expect_match(result$ytd_releases[[1]], "<a href=\"https://github.com/org/repo/releases\" title=\"0 releases in past 90 days\">")
   expect_match(result$ytd_releases[[2]], "<a href=\"https://github.com/org2/repo2/releases\" title=\"0 releases in past 90 days\">")
   expect_match(result$ytd_releases[[2]], ">0</a>")
+})
+
+test_that("summarize_github_repos reuses API payloads for duplicate repos", {
+  calls <- new.env(parent = emptyenv())
+  calls$metadata <- 0L
+  calls$releases <- 0L
+  calls$milestones <- 0L
+  calls$prs <- 0L
+  calls$comparison <- 0L
+
+  result <- with_mocked_bindings(
+    summarize_github_repos(c("org/repo", "org/repo")),
+    fetch_repo_metadata = function(...) {
+      calls$metadata <- calls$metadata + 1L
+      list(private = FALSE)
+    },
+    fetch_releases = function(...) {
+      calls$releases <- calls$releases + 1L
+      list(list(
+        tag_name = "v1.0.0",
+        published_at = "2025-01-01T12:00:00Z",
+        html_url = "https://github.com/org/repo/releases/tag/v1.0.0",
+        draft = FALSE,
+        prerelease = FALSE
+      ))
+    },
+    fetch_open_milestones = function(...) {
+      calls$milestones <- calls$milestones + 1L
+      list()
+    },
+    fetch_open_prs = function(...) {
+      calls$prs <- calls$prs + 1L
+      0L
+    },
+    fetch_branch_comparison = function(...) {
+      calls$comparison <- calls$comparison + 1L
+      list(ahead_by = 0, behind_by = 0)
+    }
+  )
+
+  expect_equal(calls$metadata, 1L)
+  expect_equal(calls$releases, 1L)
+  expect_equal(calls$milestones, 1L)
+  expect_equal(calls$prs, 1L)
+  expect_equal(calls$comparison, 1L)
+  expect_equal(nrow(result), 2L)
+  expect_equal(result$repo[[1]], result$repo[[2]])
+  expect_equal(result$latest_release[[1]], result$latest_release[[2]])
 })
 
 test_that("summarize_pr_activity_by_user validates lookback days", {
@@ -421,4 +449,45 @@ test_that("summarize_pr_activity_by_user reuses cached review payloads", {
 
   expect_equal(review_calls, 1L)
   expect_equal(first, second)
+})
+
+test_that("summarize_pr_activity_by_user reuses API payloads for duplicate repos", {
+  pulls <- list(
+    list(
+      number = 42,
+      created_at = "2026-01-10T10:00:00Z",
+      updated_at = "2026-01-12T11:00:00Z",
+      user = list(login = "alice")
+    )
+  )
+
+  pull_calls <- 0L
+  review_calls <- 0L
+
+  result <- with_mocked_bindings(
+    summarize_pr_activity_by_user(c("org/repo", "org/repo"), days = 365, use_cache = FALSE),
+    fetch_pull_requests_since = function(...) {
+      pull_calls <<- pull_calls + 1L
+      pulls
+    },
+    fetch_pull_request_reviews = function(...) {
+      review_calls <<- review_calls + 1L
+      list(list(
+        submitted_at = "2026-01-13T10:00:00Z",
+        state = "APPROVED",
+        user = list(login = "bob")
+      ))
+    }
+  )
+
+  expect_equal(pull_calls, 1L)
+  expect_equal(review_calls, 1L)
+
+  alice <- result[result$user == "alice", , drop = FALSE]
+  bob <- result[result$user == "bob", , drop = FALSE]
+
+  expect_equal(alice$prs_opened, 2L)
+  expect_equal(alice$total_activity, 2L)
+  expect_equal(bob$prs_reviewed, 2L)
+  expect_equal(bob$total_activity, 2L)
 })
