@@ -12,8 +12,13 @@
 #' @param cache_dir Optional cache directory path. When `NULL`, a platform-
 #'   appropriate default cache location is used.
 #'
-#' @return A data frame with columns `user`, `prs_opened`, `prs_reviewed`, and
-#'   `total_activity`.
+#' @return A data frame with columns `user`, `prs_opened`, `prs_reviewed`,
+#'   `prs_pending_review`, `total_activity`, and `pending_review_repos`.
+#'   `prs_pending_review` counts open PRs where the user is currently a
+#'   requested reviewer. `pending_review_repos` is a list-column where each
+#'   element is a character vector of unique `owner/repo` names contributing
+#'   to that user's pending review count. `total_activity` equals
+#'   `prs_opened + prs_reviewed` and does not include `prs_pending_review`.
 #' @examples
 #' \dontrun{
 #' summarize_pr_activity_by_user(c("tidyverse/ggplot2"), days = 365)
@@ -34,6 +39,8 @@ summarize_pr_activity_by_user <- function(
   since_date <- Sys.Date() - days
   opened_counts <- integer(0)
   reviewed_counts <- integer(0)
+  pending_counts <- integer(0)
+  pending_repos_list <- list()
 
   for (owner_repo in repos) {
     pieces <- strsplit(owner_repo, "/", fixed = TRUE)[[1]]
@@ -54,6 +61,22 @@ summarize_pr_activity_by_user <- function(
 
       if (nzchar(author) && !is.na(created_at) && created_at >= since_date) {
         opened_counts <- increment_named_count(opened_counts, author)
+      }
+
+      pr_state <- tolower(as.character(pr$state %||% ""))
+      if (pr_state == "open" && length(pr$requested_reviewers)) {
+        for (reviewer_obj in pr$requested_reviewers) {
+          reviewer_login <- as.character(reviewer_obj$login %||% "")
+          if (nzchar(reviewer_login)) {
+            pending_counts <- increment_named_count(pending_counts, reviewer_login)
+            existing <- pending_repos_list[[reviewer_login]]
+            if (is.null(existing)) {
+              pending_repos_list[[reviewer_login]] <- owner_repo
+            } else if (!owner_repo %in% existing) {
+              pending_repos_list[[reviewer_login]] <- c(existing, owner_repo)
+            }
+          }
+        }
       }
 
       number <- suppressWarnings(as.integer(pr$number))
@@ -102,15 +125,18 @@ summarize_pr_activity_by_user <- function(
     }
   }
 
-  users <- sort(unique(c(names(opened_counts), names(reviewed_counts))))
+  users <- sort(unique(c(names(opened_counts), names(reviewed_counts), names(pending_counts))))
   if (!length(users)) {
-    return(data.frame(
+    empty <- data.frame(
       user = character(0),
       prs_opened = integer(0),
       prs_reviewed = integer(0),
+      prs_pending_review = integer(0),
       total_activity = integer(0),
       stringsAsFactors = FALSE
-    ))
+    )
+    empty$pending_review_repos <- I(list())
+    return(empty)
   }
 
   opened <- as.integer(vapply(users, function(user) {
@@ -121,15 +147,25 @@ summarize_pr_activity_by_user <- function(
     value <- unname(reviewed_counts[user])
     if (!length(value) || is.na(value)) 0L else as.integer(value)
   }, integer(1)))
+  pending <- as.integer(vapply(users, function(user) {
+    value <- unname(pending_counts[user])
+    if (!length(value) || is.na(value)) 0L else as.integer(value)
+  }, integer(1)))
+  pending_repos_out <- lapply(users, function(user) {
+    r <- pending_repos_list[[user]]
+    if (is.null(r)) character(0) else r
+  })
   total <- opened + reviewed
 
   out <- data.frame(
     user = users,
     prs_opened = opened,
     prs_reviewed = reviewed,
+    prs_pending_review = pending,
     total_activity = total,
     stringsAsFactors = FALSE
   )
+  out$pending_review_repos <- pending_repos_out
 
   out[order(-out$total_activity, -out$prs_opened, -out$prs_reviewed, out$user), , drop = FALSE]
 }

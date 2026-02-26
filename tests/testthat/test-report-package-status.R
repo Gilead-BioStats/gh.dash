@@ -305,15 +305,19 @@ test_that("summarize_pr_activity_by_user aggregates opened and reviewed PRs by u
   pulls <- list(
     list(
       number = 10,
+      state = "open",
       created_at = "2026-01-10T10:00:00Z",
       updated_at = "2026-01-12T11:00:00Z",
-      user = list(login = "alice")
+      user = list(login = "alice"),
+      requested_reviewers = list(list(login = "carol"))
     ),
     list(
       number = 11,
+      state = "closed",
       created_at = "2026-01-11T10:00:00Z",
       updated_at = "2026-01-12T12:00:00Z",
-      user = list(login = "bob")
+      user = list(login = "bob"),
+      requested_reviewers = list(list(login = "alice"))
     )
   )
 
@@ -349,14 +353,18 @@ test_that("summarize_pr_activity_by_user aggregates opened and reviewed PRs by u
   expect_equal(alice$prs_opened, 1L)
   expect_equal(alice$prs_reviewed, 1L)
   expect_equal(alice$total_activity, 2L)
+  expect_equal(alice$prs_pending_review, 0L)
 
   expect_equal(bob$prs_opened, 1L)
   expect_equal(bob$prs_reviewed, 1L)
   expect_equal(bob$total_activity, 2L)
+  expect_equal(bob$prs_pending_review, 0L)
 
   expect_equal(carol$prs_opened, 0L)
   expect_equal(carol$prs_reviewed, 1L)
   expect_equal(carol$total_activity, 1L)
+  expect_equal(carol$prs_pending_review, 1L)
+  expect_equal(carol$pending_review_repos[[1]], "org/repo")
 })
 
 test_that("summarize_pr_activity_by_user returns empty data frame when no activity", {
@@ -367,7 +375,54 @@ test_that("summarize_pr_activity_by_user returns empty data frame when no activi
 
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 0)
-  expect_equal(names(result), c("user", "prs_opened", "prs_reviewed", "total_activity"))
+  expect_equal(names(result), c("user", "prs_opened", "prs_reviewed", "prs_pending_review", "total_activity", "pending_review_repos"))
+})
+
+test_that("summarize_pr_activity_by_user counts pending reviews and deduplicates repos per user", {
+  pulls <- list(
+    list(
+      number = 20,
+      state = "open",
+      created_at = "2026-01-10T10:00:00Z",
+      updated_at = "2026-01-12T11:00:00Z",
+      user = list(login = "alice"),
+      requested_reviewers = list(list(login = "bob"), list(login = "carol"))
+    ),
+    list(
+      number = 21,
+      state = "open",
+      created_at = "2026-01-11T10:00:00Z",
+      updated_at = "2026-01-13T09:00:00Z",
+      user = list(login = "alice"),
+      requested_reviewers = list(list(login = "bob"))
+    ),
+    list(
+      number = 22,
+      state = "closed",
+      created_at = "2026-01-12T10:00:00Z",
+      updated_at = "2026-01-14T09:00:00Z",
+      user = list(login = "alice"),
+      requested_reviewers = list(list(login = "carol"))
+    )
+  )
+
+  result <- with_mocked_bindings(
+    summarize_pr_activity_by_user("org/repo", days = 365, use_cache = FALSE),
+    fetch_pull_requests_since = function(owner, repo, token, since_date) pulls,
+    fetch_pull_request_reviews = function(...) list()
+  )
+
+  bob   <- result[result$user == "bob",   , drop = FALSE]
+  carol <- result[result$user == "carol", , drop = FALSE]
+
+  # bob is requested on PR #20 and #21 (both open) — count = 2, one unique repo
+  expect_equal(bob$prs_pending_review, 2L)
+  expect_equal(bob$pending_review_repos[[1]], "org/repo")
+  expect_equal(length(bob$pending_review_repos[[1]]), 1L)
+
+  # carol is requested on PR #20 (open) and PR #22 (closed — ignored) — count = 1
+  expect_equal(carol$prs_pending_review, 1L)
+  expect_equal(carol$pending_review_repos[[1]], "org/repo")
 })
 
 test_that("summarize_pr_activity_by_user reuses cached review payloads", {
@@ -421,4 +476,67 @@ test_that("summarize_pr_activity_by_user reuses cached review payloads", {
 
   expect_equal(review_calls, 1L)
   expect_equal(first, second)
+})
+test_that("render_pr_activity_table includes PRs Pending review header and link", {
+  skip_if_not_installed("knitr")
+
+  rmd_path <- system.file("report", "package_status_report.Rmd", package = "gh.dash")
+  skip_if(nchar(rmd_path) == 0, "Rmd not installed in package")
+
+  tmp <- tempfile(fileext = ".R")
+  on.exit(unlink(tmp), add = TRUE)
+  knitr::purl(input = rmd_path, output = tmp, documentation = 0, quiet = TRUE)
+
+  purled <- readLines(tmp)
+  fn_start <- which(grepl("^render_pr_activity_table <- function", purled))
+  skip_if(!length(fn_start), "render_pr_activity_table not found in purled output")
+
+  depth <- 0L
+  fn_end <- fn_start
+  for (i in seq(fn_start, length(purled))) {
+    depth <- depth +
+      nchar(gsub("[^{]", "", purled[i])) -
+      nchar(gsub("[^}]", "", purled[i]))
+    if (depth == 0L && i > fn_start) {
+      fn_end <- i
+      break
+    }
+  }
+
+  render_pr_activity_table <- eval(
+    parse(text = paste(purled[fn_start:fn_end], collapse = "\n"))
+  )
+
+  # Non-zero pending review: should render link and tooltip with repo names
+  df <- data.frame(
+    user = "alice",
+    prs_opened = 3L,
+    prs_reviewed = 2L,
+    prs_pending_review = 2L,
+    total_activity = 5L,
+    stringsAsFactors = FALSE
+  )
+  df$pending_review_repos <- list(c("org/repo1", "org/repo2"))
+
+  html <- as.character(render_pr_activity_table(df, days = 365))
+
+  expect_true(grepl("PRs Pending review", html, fixed = TRUE))
+  expect_true(grepl("review-requested:alice", html))
+  expect_true(grepl("org/repo1", html, fixed = TRUE))
+  expect_true(grepl("org/repo2", html, fixed = TRUE))
+  expect_true(grepl("pr-pending-link", html, fixed = TRUE))
+
+  # Zero pending review: should render plain "0", no link
+  df_zero <- data.frame(
+    user = "bob",
+    prs_opened = 1L,
+    prs_reviewed = 1L,
+    prs_pending_review = 0L,
+    total_activity = 2L,
+    stringsAsFactors = FALSE
+  )
+  df_zero$pending_review_repos <- list(character(0))
+
+  html_zero <- as.character(render_pr_activity_table(df_zero, days = 365))
+  expect_false(grepl("pr-pending-link", html_zero, fixed = TRUE))
 })
