@@ -351,16 +351,21 @@ test_that("summarize_pr_activity_by_user aggregates opened and reviewed PRs by u
   carol <- result[result$user == "carol", , drop = FALSE]
 
   expect_equal(alice$prs_opened, 1L)
+  expect_equal(alice$prs_opened_active, 1L)
+  expect_equal(alice$opened_active_repos[[1]], "org/repo")
   expect_equal(alice$prs_reviewed, 1L)
   expect_equal(alice$total_activity, 2L)
   expect_equal(alice$prs_pending_review, 0L)
 
   expect_equal(bob$prs_opened, 1L)
+  expect_equal(bob$prs_opened_active, 0L)
+  expect_equal(length(bob$opened_active_repos[[1]]), 0L)
   expect_equal(bob$prs_reviewed, 1L)
   expect_equal(bob$total_activity, 2L)
   expect_equal(bob$prs_pending_review, 0L)
 
   expect_equal(carol$prs_opened, 0L)
+  expect_equal(carol$prs_opened_active, 0L)
   expect_equal(carol$prs_reviewed, 1L)
   expect_equal(carol$total_activity, 1L)
   expect_equal(carol$prs_pending_review, 1L)
@@ -375,7 +380,7 @@ test_that("summarize_pr_activity_by_user returns empty data frame when no activi
 
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 0)
-  expect_equal(names(result), c("user", "prs_opened", "prs_reviewed", "prs_pending_review", "total_activity", "pending_review_repos"))
+  expect_equal(names(result), c("user", "prs_opened", "prs_opened_active", "prs_reviewed", "prs_pending_review", "total_activity", "pending_review_repos", "opened_active_repos"))
 })
 
 test_that("summarize_pr_activity_by_user counts pending reviews and deduplicates repos per user", {
@@ -412,7 +417,7 @@ test_that("summarize_pr_activity_by_user counts pending reviews and deduplicates
     fetch_pull_request_reviews = function(...) list()
   )
 
-  bob   <- result[result$user == "bob",   , drop = FALSE]
+  bob <- result[result$user == "bob", , drop = FALSE]
   carol <- result[result$user == "carol", , drop = FALSE]
 
   # bob is requested on PR #20 and #21 (both open) — count = 2, one unique repo
@@ -423,6 +428,12 @@ test_that("summarize_pr_activity_by_user counts pending reviews and deduplicates
   # carol is requested on PR #20 (open) and PR #22 (closed — ignored) — count = 1
   expect_equal(carol$prs_pending_review, 1L)
   expect_equal(carol$pending_review_repos[[1]], "org/repo")
+
+  # alice opened all 3 PRs; only #20 and #21 are open => active = 2
+  alice <- result[result$user == "alice", , drop = FALSE]
+  expect_equal(alice$prs_opened, 3L)
+  expect_equal(alice$prs_opened_active, 2L)
+  expect_equal(alice$opened_active_repos[[1]], "org/repo")
 })
 
 test_that("summarize_pr_activity_by_user reuses cached review payloads", {
@@ -511,12 +522,14 @@ test_that("render_pr_activity_table includes PRs Pending review header and link"
   df <- data.frame(
     user = "alice",
     prs_opened = 3L,
+    prs_opened_active = 2L,
     prs_reviewed = 2L,
     prs_pending_review = 2L,
     total_activity = 5L,
     stringsAsFactors = FALSE
   )
   df$pending_review_repos <- list(c("org/repo1", "org/repo2"))
+  df$opened_active_repos <- list(c("org/repo1", "org/repo2"))
 
   html <- as.character(render_pr_activity_table(df, days = 365))
 
@@ -526,17 +539,31 @@ test_that("render_pr_activity_table includes PRs Pending review header and link"
   expect_true(grepl("org/repo2", html, fixed = TRUE))
   expect_true(grepl("pr-pending-link", html, fixed = TRUE))
 
-  # Zero pending review: should render plain "0", no link
+  # Check "PRs Opened (Active)" header
+  expect_true(grepl("PRs Opened (Active)", html, fixed = TRUE))
+
+  # Active count > 0 produces a linked active number with tooltip
+  expect_true(grepl("author:alice", html))
+  # Cell shows "3 (" followed by linked active number
+  expect_true(grepl("3 \\(", html))
+
+  # Zero pending review and zero active: should render plain "0", no link
   df_zero <- data.frame(
     user = "bob",
     prs_opened = 1L,
+    prs_opened_active = 0L,
     prs_reviewed = 1L,
     prs_pending_review = 0L,
     total_activity = 2L,
     stringsAsFactors = FALSE
   )
   df_zero$pending_review_repos <- list(character(0))
+  df_zero$opened_active_repos <- list(character(0))
 
   html_zero <- as.character(render_pr_activity_table(df_zero, days = 365))
   expect_false(grepl("pr-pending-link", html_zero, fixed = TRUE))
+  # Still shows deterministic format: "TOTAL (" ... "0" ... ")"
+  expect_true(grepl("1 \\(", html_zero))
+  # The "0" between parens (allowing whitespace/newlines around it)
+  expect_true(grepl("\\(\\s*\\n\\s*0\\s*\\n\\s*\\)", html_zero))
 })
