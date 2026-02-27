@@ -412,28 +412,36 @@ test_that("summarize_pr_activity_by_user returns empty data frame when no activi
 })
 
 test_that("summarize_pr_activity_by_user counts pending reviews and deduplicates repos per user", {
+  now <- Sys.time()
+  pr20_created <- format(now - 7 * 24 * 60 * 60, "%Y-%m-%dT%H:%M:%SZ")
+  pr20_updated <- format(now - 6 * 24 * 60 * 60, "%Y-%m-%dT%H:%M:%SZ")
+  pr21_created <- format(now - 5 * 24 * 60 * 60, "%Y-%m-%dT%H:%M:%SZ")
+  pr21_updated <- format(now - 4 * 24 * 60 * 60, "%Y-%m-%dT%H:%M:%SZ")
+  pr22_created <- format(now - 3 * 24 * 60 * 60, "%Y-%m-%dT%H:%M:%SZ")
+  pr22_updated <- format(now - 2 * 24 * 60 * 60, "%Y-%m-%dT%H:%M:%SZ")
+
   pulls <- list(
     list(
       number = 20,
       state = "open",
-      created_at = "2026-01-10T10:00:00Z",
-      updated_at = "2026-01-12T11:00:00Z",
+      created_at = pr20_created,
+      updated_at = pr20_updated,
       user = list(login = "alice"),
       requested_reviewers = list(list(login = "bob"), list(login = "carol"))
     ),
     list(
       number = 21,
       state = "open",
-      created_at = "2026-01-11T10:00:00Z",
-      updated_at = "2026-01-13T09:00:00Z",
+      created_at = pr21_created,
+      updated_at = pr21_updated,
       user = list(login = "alice"),
       requested_reviewers = list(list(login = "bob"))
     ),
     list(
       number = 22,
       state = "closed",
-      created_at = "2026-01-12T10:00:00Z",
-      updated_at = "2026-01-14T09:00:00Z",
+      created_at = pr22_created,
+      updated_at = pr22_updated,
       user = list(login = "alice"),
       requested_reviewers = list(list(login = "carol"))
     )
