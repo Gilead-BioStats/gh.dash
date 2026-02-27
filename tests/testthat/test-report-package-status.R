@@ -557,3 +557,150 @@ test_that("summarize_pr_activity_by_user reuses API payloads for duplicate repos
   expect_equal(bob$prs_reviewed, 2L)
   expect_equal(bob$total_activity, 2L)
 })
+
+test_that("summarize_pr_activity_by_user handles PRs with no reviews and no requested reviewers", {
+  # Exercises the initialized-but-empty reviewed_counts / pending_counts path
+  pulls <- list(
+    list(
+      number = 5,
+      state = "open",
+      created_at = "2026-01-10T10:00:00Z",
+      updated_at = "2026-01-12T11:00:00Z",
+      user = list(login = "alice"),
+      requested_reviewers = list()
+    )
+  )
+
+  result <- with_mocked_bindings(
+    summarize_pr_activity_by_user("org/repo", days = 365, use_cache = FALSE),
+    fetch_pull_requests_since = function(...) pulls,
+    fetch_pull_request_reviews = function(...) list()
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 1L)
+  alice <- result[result$user == "alice", , drop = FALSE]
+  expect_equal(alice$prs_opened, 1L)
+  expect_equal(alice$prs_reviewed, 0L)
+  expect_equal(alice$prs_pending_review, 0L)
+  expect_equal(alice$total_activity, 1L)
+})
+
+test_that("summarize_pr_activity_by_user excludes PENDING review state", {
+  pulls <- list(
+    list(
+      number = 7,
+      state = "open",
+      created_at = "2026-01-10T10:00:00Z",
+      updated_at = "2026-01-12T11:00:00Z",
+      user = list(login = "alice"),
+      requested_reviewers = list()
+    )
+  )
+
+  result <- with_mocked_bindings(
+    summarize_pr_activity_by_user("org/repo", days = 365, use_cache = FALSE),
+    fetch_pull_requests_since = function(...) pulls,
+    fetch_pull_request_reviews = function(...) {
+      list(
+        list(submitted_at = "2026-01-13T10:00:00Z", state = "PENDING", user = list(login = "bob"))
+      )
+    }
+  )
+
+  # "bob" has only a PENDING review — must not appear in reviewed_counts
+  expect_false("bob" %in% result$user)
+  alice <- result[result$user == "alice", , drop = FALSE]
+  expect_equal(alice$prs_reviewed, 0L)
+})
+
+test_that("summarize_pr_activity_by_user excludes reviews outside the lookback window", {
+  pulls <- list(
+    list(
+      number = 8,
+      state = "open",
+      created_at = "2026-01-10T10:00:00Z",
+      updated_at = "2026-01-12T11:00:00Z",
+      user = list(login = "alice"),
+      requested_reviewers = list()
+    )
+  )
+
+  result <- with_mocked_bindings(
+    # Use 30-day window; review was submitted 60 days ago
+    summarize_pr_activity_by_user("org/repo", days = 30, use_cache = FALSE),
+    fetch_pull_requests_since = function(...) pulls,
+    fetch_pull_request_reviews = function(...) {
+      list(
+        list(
+          submitted_at = format(Sys.time() - 60 * 86400, "%Y-%m-%dT%H:%M:%SZ"),
+          state = "APPROVED",
+          user = list(login = "bob")
+        )
+      )
+    }
+  )
+
+  # "bob"'s review is outside the window — must not be counted
+  expect_false("bob" %in% result$user)
+})
+
+test_that("summarize_pr_activity_by_user skips review fetch for PR with non-numeric number", {
+  pulls <- list(
+    list(
+      number = "not-a-number",
+      state = "open",
+      created_at = "2026-01-10T10:00:00Z",
+      updated_at = "2026-01-12T11:00:00Z",
+      user = list(login = "alice"),
+      requested_reviewers = list()
+    )
+  )
+
+  review_calls <- 0L
+
+  result <- with_mocked_bindings(
+    summarize_pr_activity_by_user("org/repo", days = 365, use_cache = FALSE),
+    fetch_pull_requests_since = function(...) pulls,
+    fetch_pull_request_reviews = function(...) {
+      review_calls <<- review_calls + 1L
+      list()
+    }
+  )
+
+  # Review fetch must be skipped entirely for bad PR numbers
+  expect_equal(review_calls, 0L)
+  alice <- result[result$user == "alice", , drop = FALSE]
+  expect_equal(alice$prs_opened, 1L)
+  expect_equal(alice$prs_reviewed, 0L)
+})
+
+test_that("summarize_github_repos renders lock icon for private repos", {
+  result <- with_mocked_bindings(
+    summarize_github_repos("org/repo"),
+    fetch_repo_metadata = function(...) list(private = TRUE),
+    fetch_releases = function(...) list(),
+    fetch_open_milestones = function(...) list(),
+    fetch_open_prs = function(...) 0L,
+    fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
+  )
+
+  expect_match(result$repo, "\U0001F512")
+  expect_match(result$repo, "Private repository")
+  expect_match(result$repo, "org/repo")
+})
+
+test_that("summarize_github_repos defaults is_private to FALSE when metadata is NULL", {
+  result <- with_mocked_bindings(
+    summarize_github_repos("org/repo"),
+    fetch_repo_metadata = function(...) NULL,
+    fetch_releases = function(...) list(),
+    fetch_open_milestones = function(...) list(),
+    fetch_open_prs = function(...) 0L,
+    fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
+  )
+
+  # No lock icon — should render as a plain public link
+  expect_false(grepl("\U0001F512", result$repo))
+  expect_match(result$repo, "org/repo")
+})
