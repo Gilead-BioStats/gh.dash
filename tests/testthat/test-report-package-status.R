@@ -330,20 +330,23 @@ test_that("summarize_pr_activity_by_user validates lookback days", {
 })
 
 test_that("summarize_pr_activity_by_user aggregates opened and reviewed PRs by user", {
+  now <- Sys.time()
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+
   pulls <- list(
     list(
       number = 10,
       state = "open",
-      created_at = "2026-01-10T10:00:00Z",
-      updated_at = "2026-01-12T11:00:00Z",
+      created_at = ts(10),
+      updated_at = ts(8),
       user = list(login = "alice"),
       requested_reviewers = list(list(login = "carol"))
     ),
     list(
       number = 11,
       state = "closed",
-      created_at = "2026-01-11T10:00:00Z",
-      updated_at = "2026-01-12T12:00:00Z",
+      created_at = ts(9),
+      updated_at = ts(8),
       user = list(login = "bob"),
       requested_reviewers = list(list(login = "alice"))
     )
@@ -359,14 +362,14 @@ test_that("summarize_pr_activity_by_user aggregates opened and reviewed PRs by u
     fetch_pull_request_reviews = function(owner, repo, pull_number, token) {
       if (pull_number == 10) {
         return(list(
-          list(submitted_at = "2026-01-13T10:00:00Z", state = "APPROVED", user = list(login = "bob")),
-          list(submitted_at = "2026-01-13T11:00:00Z", state = "COMMENTED", user = list(login = "bob"))
+          list(submitted_at = ts(7), state = "APPROVED", user = list(login = "bob")),
+          list(submitted_at = ts(7), state = "COMMENTED", user = list(login = "bob"))
         ))
       }
 
       list(
-        list(submitted_at = "2026-01-14T09:00:00Z", state = "CHANGES_REQUESTED", user = list(login = "alice")),
-        list(submitted_at = "2026-01-14T09:30:00Z", state = "APPROVED", user = list(login = "carol"))
+        list(submitted_at = ts(6), state = "CHANGES_REQUESTED", user = list(login = "alice")),
+        list(submitted_at = ts(6), state = "APPROVED", user = list(login = "carol"))
       )
     }
   )
@@ -473,11 +476,14 @@ test_that("summarize_pr_activity_by_user counts pending reviews and deduplicates
 })
 
 test_that("summarize_pr_activity_by_user reuses cached review payloads", {
+  now <- Sys.time()
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+
   pulls <- list(
     list(
       number = 42,
-      created_at = "2026-01-10T10:00:00Z",
-      updated_at = "2026-01-12T11:00:00Z",
+      created_at = ts(10),
+      updated_at = ts(8),
       user = list(login = "alice")
     )
   )
@@ -496,7 +502,7 @@ test_that("summarize_pr_activity_by_user reuses cached review payloads", {
     fetch_pull_request_reviews = function(...) {
       review_calls <<- review_calls + 1L
       list(list(
-        submitted_at = "2026-01-13T10:00:00Z",
+        submitted_at = ts(7),
         state = "APPROVED",
         user = list(login = "bob")
       ))
@@ -514,7 +520,7 @@ test_that("summarize_pr_activity_by_user reuses cached review payloads", {
     fetch_pull_request_reviews = function(...) {
       review_calls <<- review_calls + 1L
       list(list(
-        submitted_at = "2026-01-13T10:00:00Z",
+        submitted_at = ts(7),
         state = "APPROVED",
         user = list(login = "bob")
       ))
@@ -526,11 +532,14 @@ test_that("summarize_pr_activity_by_user reuses cached review payloads", {
 })
 
 test_that("summarize_pr_activity_by_user reuses API payloads for duplicate repos", {
+  now <- Sys.time()
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+
   pulls <- list(
     list(
       number = 42,
-      created_at = "2026-01-10T10:00:00Z",
-      updated_at = "2026-01-12T11:00:00Z",
+      created_at = ts(10),
+      updated_at = ts(8),
       user = list(login = "alice")
     )
   )
@@ -547,7 +556,7 @@ test_that("summarize_pr_activity_by_user reuses API payloads for duplicate repos
     fetch_pull_request_reviews = function(...) {
       review_calls <<- review_calls + 1L
       list(list(
-        submitted_at = "2026-01-13T10:00:00Z",
+        submitted_at = ts(7),
         state = "APPROVED",
         user = list(login = "bob")
       ))
@@ -568,12 +577,15 @@ test_that("summarize_pr_activity_by_user reuses API payloads for duplicate repos
 
 test_that("summarize_pr_activity_by_user handles PRs with no reviews and no requested reviewers", {
   # Exercises the initialized-but-empty reviewed_counts / pending_counts path
+  now <- Sys.time()
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+
   pulls <- list(
     list(
       number = 5,
       state = "open",
-      created_at = "2026-01-10T10:00:00Z",
-      updated_at = "2026-01-12T11:00:00Z",
+      created_at = ts(10),
+      updated_at = ts(8),
       user = list(login = "alice"),
       requested_reviewers = list()
     )
@@ -595,12 +607,15 @@ test_that("summarize_pr_activity_by_user handles PRs with no reviews and no requ
 })
 
 test_that("summarize_pr_activity_by_user excludes PENDING review state", {
+  now <- Sys.time()
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+
   pulls <- list(
     list(
       number = 7,
       state = "open",
-      created_at = "2026-01-10T10:00:00Z",
-      updated_at = "2026-01-12T11:00:00Z",
+      created_at = ts(10),
+      updated_at = ts(8),
       user = list(login = "alice"),
       requested_reviewers = list()
     )
@@ -611,7 +626,7 @@ test_that("summarize_pr_activity_by_user excludes PENDING review state", {
     fetch_pull_requests_since = function(...) pulls,
     fetch_pull_request_reviews = function(...) {
       list(
-        list(submitted_at = "2026-01-13T10:00:00Z", state = "PENDING", user = list(login = "bob"))
+        list(submitted_at = ts(7), state = "PENDING", user = list(login = "bob"))
       )
     }
   )
@@ -623,12 +638,15 @@ test_that("summarize_pr_activity_by_user excludes PENDING review state", {
 })
 
 test_that("summarize_pr_activity_by_user excludes reviews outside the lookback window", {
+  now <- Sys.time()
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+
   pulls <- list(
     list(
       number = 8,
       state = "open",
-      created_at = "2026-01-10T10:00:00Z",
-      updated_at = "2026-01-12T11:00:00Z",
+      created_at = ts(5),
+      updated_at = ts(3),
       user = list(login = "alice"),
       requested_reviewers = list()
     )
@@ -654,12 +672,15 @@ test_that("summarize_pr_activity_by_user excludes reviews outside the lookback w
 })
 
 test_that("summarize_pr_activity_by_user skips review fetch for PR with non-numeric number", {
+  now <- Sys.time()
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+
   pulls <- list(
     list(
       number = "not-a-number",
       state = "open",
-      created_at = "2026-01-10T10:00:00Z",
-      updated_at = "2026-01-12T11:00:00Z",
+      created_at = ts(10),
+      updated_at = ts(8),
       user = list(login = "alice"),
       requested_reviewers = list()
     )
