@@ -647,7 +647,7 @@ render_pr_activity_table <- function(df, days) {
             htmltools::tags$th(scope = "col", "User"),
             htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Opened (Active)"),
             htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Reviewed"),
-            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Pending review"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Pending Review"),
             htmltools::tags$th(scope = "col", class = "status-table__cell--right", "Created/Reviewed")
           )
         ),
