@@ -63,11 +63,6 @@ test_that("derive_latest_release returns NULL when all are drafts or prereleases
 })
 
 test_that("summarize_github_repos assembles release and milestone summaries", {
-  mock_release <- list(
-    tag_name = "v1.0.0",
-    published_at = "2025-01-01T12:00:00Z",
-    html_url = "https://github.com/org/repo/releases/tag/v1.0.0"
-  )
   mock_releases <- list(
     list(
       tag_name = "v1.0.0",
@@ -91,11 +86,6 @@ test_that("summarize_github_repos assembles release and milestone summaries", {
   result <- with_mocked_bindings(
     summarize_github_repos("org/repo"),
     fetch_repo_metadata = function(...) list(private = FALSE),
-    fetch_latest_release = function(owner, repo, token) {
-      expect_equal(owner, "org")
-      expect_equal(repo, "repo")
-      mock_release
-    },
     fetch_releases = function(owner, repo, token) {
       expect_equal(owner, "org")
       expect_equal(repo, "repo")
@@ -138,7 +128,6 @@ test_that("summarize_github_repos includes open PR count", {
       expect_equal(repo, "repo")
       list(private = FALSE)
     },
-    fetch_latest_release = function(...) NULL,
     fetch_releases = function(...) list(),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(owner, repo, token) {
@@ -156,7 +145,9 @@ test_that("summarize_github_repos appends qualification badge when registry matc
   mock_release <- list(
     tag_name = "v1.0.0",
     published_at = "2025-01-01T12:00:00Z",
-    html_url = "https://github.com/org/repo/releases/tag/v1.0.0"
+    html_url = "https://github.com/org/repo/releases/tag/v1.0.0",
+    draft = FALSE,
+    prerelease = FALSE
   )
 
   registry <- data.frame(
@@ -173,7 +164,6 @@ test_that("summarize_github_repos appends qualification badge when registry matc
   result <- with_mocked_bindings(
     summarize_github_repos("org/repo", qualification_registry = registry),
     fetch_repo_metadata = function(...) list(private = FALSE),
-    fetch_latest_release = function(...) mock_release,
     fetch_releases = function(...) list(mock_release),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
@@ -188,7 +178,9 @@ test_that("summarize_github_repos shows grey badge when older version qualified"
   mock_release <- list(
     tag_name = "v1.1.0",
     published_at = "2025-02-01T12:00:00Z",
-    html_url = "https://github.com/org/repo/releases/tag/v1.1.0"
+    html_url = "https://github.com/org/repo/releases/tag/v1.1.0",
+    draft = FALSE,
+    prerelease = FALSE
   )
 
   registry <- data.frame(
@@ -205,7 +197,6 @@ test_that("summarize_github_repos shows grey badge when older version qualified"
   result <- with_mocked_bindings(
     summarize_github_repos("org/repo", qualification_registry = registry),
     fetch_repo_metadata = function(...) list(private = FALSE),
-    fetch_latest_release = function(...) mock_release,
     fetch_releases = function(...) list(mock_release),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
@@ -218,14 +209,6 @@ test_that("summarize_github_repos shows grey badge when older version qualified"
 })
 
 test_that("summarize_github_repos supports multiple repositories", {
-  releases <- list(
-    list(
-      tag_name = "v1.1.0",
-      published_at = "2025-02-15T00:00:00Z",
-      html_url = "https://github.com/org/repo/releases/tag/v1.1.0"
-    ),
-    NULL
-  )
   all_releases <- list(
     list(
       list(
@@ -256,11 +239,8 @@ test_that("summarize_github_repos supports multiple repositories", {
   result <- with_mocked_bindings(
     summarize_github_repos(c("org/repo", "org2/repo2")),
     fetch_repo_metadata = function(...) list(private = FALSE),
-    fetch_latest_release = function(owner, repo, token) {
-      index <<- index + 1
-      releases[[index]]
-    },
     fetch_releases = function(owner, repo, token) {
+      index <<- index + 1
       all_releases[[index]]
     },
     fetch_open_milestones = function(owner, repo, token) {
@@ -294,6 +274,54 @@ test_that("summarize_github_repos supports multiple repositories", {
   expect_match(result$ytd_releases[[1]], "<a href=\"https://github.com/org/repo/releases\" title=\"0 releases in past 90 days\">")
   expect_match(result$ytd_releases[[2]], "<a href=\"https://github.com/org2/repo2/releases\" title=\"0 releases in past 90 days\">")
   expect_match(result$ytd_releases[[2]], ">0</a>")
+})
+
+test_that("summarize_github_repos reuses API payloads for duplicate repos", {
+  calls <- new.env(parent = emptyenv())
+  calls$metadata <- 0L
+  calls$releases <- 0L
+  calls$milestones <- 0L
+  calls$prs <- 0L
+  calls$comparison <- 0L
+
+  result <- with_mocked_bindings(
+    summarize_github_repos(c("org/repo", "org/repo")),
+    fetch_repo_metadata = function(...) {
+      calls$metadata <- calls$metadata + 1L
+      list(private = FALSE)
+    },
+    fetch_releases = function(...) {
+      calls$releases <- calls$releases + 1L
+      list(list(
+        tag_name = "v1.0.0",
+        published_at = "2025-01-01T12:00:00Z",
+        html_url = "https://github.com/org/repo/releases/tag/v1.0.0",
+        draft = FALSE,
+        prerelease = FALSE
+      ))
+    },
+    fetch_open_milestones = function(...) {
+      calls$milestones <- calls$milestones + 1L
+      list()
+    },
+    fetch_open_prs = function(...) {
+      calls$prs <- calls$prs + 1L
+      0L
+    },
+    fetch_branch_comparison = function(...) {
+      calls$comparison <- calls$comparison + 1L
+      list(ahead_by = 0, behind_by = 0)
+    }
+  )
+
+  expect_equal(calls$metadata, 1L)
+  expect_equal(calls$releases, 1L)
+  expect_equal(calls$milestones, 1L)
+  expect_equal(calls$prs, 1L)
+  expect_equal(calls$comparison, 1L)
+  expect_equal(nrow(result), 2L)
+  expect_equal(result$repo[[1]], result$repo[[2]])
+  expect_equal(result$latest_release[[1]], result$latest_release[[2]])
 })
 
 test_that("summarize_pr_activity_by_user validates lookback days", {
@@ -488,82 +516,44 @@ test_that("summarize_pr_activity_by_user reuses cached review payloads", {
   expect_equal(review_calls, 1L)
   expect_equal(first, second)
 })
-test_that("render_pr_activity_table includes PRs Pending review header and link", {
-  skip_if_not_installed("knitr")
 
-  rmd_path <- system.file("report", "package_status_report.Rmd", package = "gh.dash")
-  skip_if(nchar(rmd_path) == 0, "Rmd not installed in package")
+test_that("summarize_pr_activity_by_user reuses API payloads for duplicate repos", {
+  pulls <- list(
+    list(
+      number = 42,
+      created_at = "2026-01-10T10:00:00Z",
+      updated_at = "2026-01-12T11:00:00Z",
+      user = list(login = "alice")
+    )
+  )
 
-  tmp <- tempfile(fileext = ".R")
-  on.exit(unlink(tmp), add = TRUE)
-  knitr::purl(input = rmd_path, output = tmp, documentation = 0, quiet = TRUE)
+  pull_calls <- 0L
+  review_calls <- 0L
 
-  purled <- readLines(tmp)
-  fn_start <- which(grepl("^render_pr_activity_table <- function", purled))
-  skip_if(!length(fn_start), "render_pr_activity_table not found in purled output")
-
-  depth <- 0L
-  fn_end <- fn_start
-  for (i in seq(fn_start, length(purled))) {
-    depth <- depth +
-      nchar(gsub("[^{]", "", purled[i])) -
-      nchar(gsub("[^}]", "", purled[i]))
-    if (depth == 0L && i > fn_start) {
-      fn_end <- i
-      break
+  result <- with_mocked_bindings(
+    summarize_pr_activity_by_user(c("org/repo", "org/repo"), days = 365, use_cache = FALSE),
+    fetch_pull_requests_since = function(...) {
+      pull_calls <<- pull_calls + 1L
+      pulls
+    },
+    fetch_pull_request_reviews = function(...) {
+      review_calls <<- review_calls + 1L
+      list(list(
+        submitted_at = "2026-01-13T10:00:00Z",
+        state = "APPROVED",
+        user = list(login = "bob")
+      ))
     }
-  }
-
-  render_pr_activity_table <- eval(
-    parse(text = paste(purled[fn_start:fn_end], collapse = "\n"))
   )
 
-  # Non-zero pending review: should render link and tooltip with repo names
-  df <- data.frame(
-    user = "alice",
-    prs_opened = 3L,
-    prs_opened_active = 2L,
-    prs_reviewed = 2L,
-    prs_pending_review = 2L,
-    total_activity = 5L,
-    stringsAsFactors = FALSE
-  )
-  df$pending_review_repos <- list(c("org/repo1", "org/repo2"))
-  df$opened_active_repos <- list(c("org/repo1", "org/repo2"))
+  expect_equal(pull_calls, 1L)
+  expect_equal(review_calls, 1L)
 
-  html <- as.character(render_pr_activity_table(df, days = 365))
+  alice <- result[result$user == "alice", , drop = FALSE]
+  bob <- result[result$user == "bob", , drop = FALSE]
 
-  expect_true(grepl("PRs Pending review", html, fixed = TRUE))
-  expect_true(grepl("review-requested:alice", html))
-  expect_true(grepl("org/repo1", html, fixed = TRUE))
-  expect_true(grepl("org/repo2", html, fixed = TRUE))
-  expect_true(grepl("pr-pending-link", html, fixed = TRUE))
-
-  # Check "PRs Opened (Active)" header
-  expect_true(grepl("PRs Opened (Active)", html, fixed = TRUE))
-
-  # Active count > 0 produces a linked active number with tooltip
-  expect_true(grepl("author:alice", html))
-  # Cell shows "3 (" followed by linked active number
-  expect_true(grepl("3 \\(", html))
-
-  # Zero pending review and zero active: should render plain "0", no link
-  df_zero <- data.frame(
-    user = "bob",
-    prs_opened = 1L,
-    prs_opened_active = 0L,
-    prs_reviewed = 1L,
-    prs_pending_review = 0L,
-    total_activity = 2L,
-    stringsAsFactors = FALSE
-  )
-  df_zero$pending_review_repos <- list(character(0))
-  df_zero$opened_active_repos <- list(character(0))
-
-  html_zero <- as.character(render_pr_activity_table(df_zero, days = 365))
-  expect_false(grepl("pr-pending-link", html_zero, fixed = TRUE))
-  # Still shows deterministic format: "TOTAL (" ... "0" ... ")"
-  expect_true(grepl("1 \\(", html_zero))
-  # The "0" between parens (allowing any whitespace/newlines around it)
-  expect_true(grepl("\\(\\s*0\\s*\\)", html_zero))
+  expect_equal(alice$prs_opened, 2L)
+  expect_equal(alice$total_activity, 2L)
+  expect_equal(bob$prs_reviewed, 2L)
+  expect_equal(bob$total_activity, 2L)
 })

@@ -47,15 +47,22 @@ summarize_pr_activity_by_user <- function(
   opened_active_counts <- integer(0)
   opened_active_repos_list <- list()
   reviewed_counts <- integer(0)
-  pending_counts <- integer(0)
-  pending_repos_list <- list()
+  pulls_cache <- new.env(parent = emptyenv())
+  reviews_cache <- new.env(parent = emptyenv())
 
   for (owner_repo in repos) {
-    pieces <- strsplit(owner_repo, "/", fixed = TRUE)[[1]]
-    owner <- pieces[[1]]
-    repo <- pieces[[2]]
+    repo_parts <- split_repo_slug(owner_repo)
+    owner <- repo_parts$owner
+    repo <- repo_parts$repo
 
-    pulls <- fetch_pull_requests_since(owner, repo, token, since_date)
+    pulls_cache_key <- paste(owner, repo, as.character(since_date), sep = "|")
+    if (exists(pulls_cache_key, envir = pulls_cache, inherits = FALSE)) {
+      pulls <- get(pulls_cache_key, envir = pulls_cache, inherits = FALSE)
+    } else {
+      pulls <- fetch_pull_requests_since(owner, repo, token, since_date)
+      assign(pulls_cache_key, pulls, envir = pulls_cache)
+    }
+
     if (!length(pulls)) {
       next
     }
@@ -106,15 +113,22 @@ summarize_pr_activity_by_user <- function(
 
       updated_at <- first_non_empty(as.character(pr$updated_at), "")
 
-      reviews <- fetch_pull_request_reviews_cached(
-        owner = owner,
-        repo = repo,
-        pull_number = number,
-        updated_at = updated_at,
-        token = token,
-        use_cache = use_cache,
-        cache_dir = cache_dir
-      )
+      review_cache_key <- paste(owner, repo, number, updated_at, use_cache, sep = "|")
+      if (exists(review_cache_key, envir = reviews_cache, inherits = FALSE)) {
+        reviews <- get(review_cache_key, envir = reviews_cache, inherits = FALSE)
+      } else {
+        reviews <- fetch_pull_request_reviews_cached(
+          owner = owner,
+          repo = repo,
+          pull_number = number,
+          updated_at = updated_at,
+          token = token,
+          use_cache = use_cache,
+          cache_dir = cache_dir
+        )
+        assign(review_cache_key, reviews, envir = reviews_cache)
+      }
+
       if (!length(reviews)) {
         next
       }
