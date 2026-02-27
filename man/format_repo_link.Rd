@@ -18,5 +18,6 @@ Character string with HTML anchor tag
 }
 \description{
 Internal function to create an HTML link for a GitHub repository.
+Includes a lock icon if the repository is private.
 }
 \keyword{internal}

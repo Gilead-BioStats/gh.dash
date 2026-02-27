@@ -28,21 +28,40 @@ summarize_github_repos <- function(
   registry <- qualification_registry
 
   results <- vector("list", length(repos))
+  repo_snapshot_cache <- new.env(parent = emptyenv())
 
   for (idx in seq_along(repos)) {
     owner_repo <- repos[[idx]]
-    pieces <- strsplit(owner_repo, "/", fixed = TRUE)[[1]]
-    owner <- pieces[[1]]
-    repo <- pieces[[2]]
+    repo_parts <- split_repo_slug(owner_repo)
+    owner <- repo_parts$owner
+    repo <- repo_parts$repo
 
-    metadata <- fetch_repo_metadata(owner, repo, token)
-    is_private <- if (!is.null(metadata)) metadata$private else FALSE
-    
-    release <- fetch_latest_release(owner, repo, token)
-    releases <- fetch_releases(owner, repo, token)
-    milestones <- fetch_open_milestones(owner, repo, token)
-    pr_count <- fetch_open_prs(owner, repo, token)
-    comparison <- fetch_branch_comparison(owner, repo, base = "main", head = "dev", token = token)
+    cache_key <- paste(owner, repo, sep = "/")
+    if (exists(cache_key, envir = repo_snapshot_cache, inherits = FALSE)) {
+      snapshot <- get(cache_key, envir = repo_snapshot_cache, inherits = FALSE)
+    } else {
+      metadata <- fetch_repo_metadata(owner, repo, token)
+      releases <- fetch_releases(owner, repo, token)
+      milestones <- fetch_open_milestones(owner, repo, token)
+      pr_count <- fetch_open_prs(owner, repo, token)
+      comparison <- fetch_branch_comparison(owner, repo, base = "main", head = "dev", token = token)
+
+      snapshot <- list(
+        metadata = metadata,
+        releases = releases,
+        milestones = milestones,
+        pr_count = pr_count,
+        comparison = comparison
+      )
+      assign(cache_key, snapshot, envir = repo_snapshot_cache)
+    }
+
+    is_private <- if (!is.null(snapshot$metadata)) snapshot$metadata$private else FALSE
+    releases <- snapshot$releases
+    release <- derive_latest_release(releases)
+    milestones <- snapshot$milestones
+    pr_count <- snapshot$pr_count
+    comparison <- snapshot$comparison
 
     results[[idx]] <- list(
       repo = format_repo_link(owner, repo, is_private = is_private),

@@ -28,6 +28,19 @@ validate_repo_vector <- function(repos) {
   invisible(repos)
 }
 
+#' Split repository slug into owner and repo
+#'
+#' Internal helper to parse a validated repository slug (`owner/repo`) into
+#' separate `owner` and `repo` components.
+#'
+#' @param owner_repo Character scalar in `owner/repo` format
+#' @return Named list with `owner` and `repo` elements
+#' @keywords internal
+split_repo_slug <- function(owner_repo) {
+  pieces <- strsplit(owner_repo, "/", fixed = TRUE)[[1]]
+  list(owner = pieces[[1]], repo = pieces[[2]])
+}
+
 #' Validate lookback days value
 #'
 #' Internal function to validate a lookback window (in days) used for
