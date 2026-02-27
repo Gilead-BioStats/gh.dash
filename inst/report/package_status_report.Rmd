@@ -599,6 +599,8 @@ render_pr_activity_table <- function(df, days) {
         target = "_blank",
         rel = "noopener noreferrer",
         class = "pr-pending-link",
+        title = active_tooltip,
+        `aria-label` = active_tooltip,
         `data-tooltip` = active_tooltip,
         as.character(active_count)
       )
