@@ -194,7 +194,7 @@ safe_gh <- function(fun, ...) {
         if (!is.null(repo_label)) {
           msg <- paste0(msg, " for ", repo_label)
         }
-        msg <- paste0(msg, "; falling back to empty result. Provide a PAT with repo + issues (read) scope for private repos.")
+        msg <- paste0(msg, "; falling back to empty result. For private repos, provide a fine-grained PAT with repository access and read permissions for Contents, Metadata, Issues, and Pull requests.")
         warning(msg, call. = FALSE)
         return(NULL)
       }

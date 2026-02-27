@@ -103,8 +103,11 @@ The workflows optionally use the following repository secret:
 
 - `GH_DASH_REPOS` (optional): A fine-grained PAT used to access private repositories and (optionally) the qualification registry. If not provided, the workflow falls back to the default `github.token`, which only has access to public repositories.
 
-If you use a fine-grained PAT for `GH_DASH_REPOS`, grant access to the repositories you want to report on and the following repository permissions:
+If you use a fine-grained PAT for `GH_DASH_REPOS`, grant access to all repositories you want to report on (and to the qualification registry repository, if used), then grant the following repository permissions:
 
-- Contents: Read
-- Metadata: Read
-- Issues: Read (for issue/milestone data)
+- Contents: Read (releases, branch comparison, and optional qualification registry file)
+- Metadata: Read (repository metadata)
+- Issues: Read (milestones)
+- Pull requests: Read (open PR counts)
+
+For public repositories, `GH_DASH_REPOS` is optional. The workflow can use the default `github.token`, but it cannot access private repositories outside the workflow repository.
