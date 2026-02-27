@@ -18,7 +18,8 @@ if (dir.exists(output_dir)) {
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 if (requireNamespace("pkgload", quietly = TRUE)) {
-  pkgload::load_all(script_dir, quiet = TRUE)
+  pkg_root <- dirname(dirname(script_dir))
+  pkgload::load_all(pkg_root, quiet = TRUE)
 } else {
   library(gh.dash)
 }

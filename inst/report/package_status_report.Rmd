@@ -546,9 +546,11 @@ render_pr_activity_table <- function(df, days) {
 
     pending_count <- df$prs_pending_review[[i]]
     pending_repos <- df$pending_review_repos[[i]]
+    since_date <- format(Sys.Date() - days, "%Y-%m-%d")
     base_url <- paste0(
       "https://github.com/pulls?q=is:open+is:pr+review-requested:",
-      utils::URLencode(df$user[[i]], reserved = FALSE)
+      utils::URLencode(df$user[[i]], reserved = FALSE),
+      "+updated:>=", since_date
     )
     if (length(pending_repos) > 0) {
       repo_qs <- paste0("+repo:", pending_repos, collapse = "")
@@ -573,7 +575,6 @@ render_pr_activity_table <- function(df, days) {
         rel = "noopener noreferrer",
         class = "pr-pending-link",
         `aria-label` = pending_aria,
-        title = tooltip_text,
         `data-tooltip` = tooltip_text,
         as.character(pending_count)
       )
@@ -612,7 +613,6 @@ render_pr_activity_table <- function(df, days) {
         rel = "noopener noreferrer",
         class = "pr-pending-link",
         `aria-label` = active_aria,
-        title = active_tooltip,
         `data-tooltip` = active_tooltip,
         as.character(active_count)
       )
