@@ -561,12 +561,19 @@ render_pr_activity_table <- function(df, days) {
       full_url <- base_url
     }
     tooltip_text <- paste(pending_repos, collapse = "\n")
+    pending_aria <- if (length(pending_repos) > 0) {
+      paste0(pending_count, " PR(s) pending review in: ", paste(pending_repos, collapse = ", "))
+    } else {
+      paste0(pending_count, " PR(s) pending review")
+    }
     pending_cell <- if (!is.na(pending_count) && pending_count > 0L) {
       htmltools::tags$a(
         href = full_url,
         target = "_blank",
         rel = "noopener noreferrer",
         class = "pr-pending-link",
+        `aria-label` = pending_aria,
+        title = tooltip_text,
         `data-tooltip` = tooltip_text,
         as.character(pending_count)
       )
@@ -593,14 +600,19 @@ render_pr_activity_table <- function(df, days) {
       active_full_url <- active_base_url
     }
     active_tooltip <- paste(active_repos, collapse = "\n")
+    active_aria <- if (length(active_repos) > 0) {
+      paste0(active_count, " active open PR(s) in: ", paste(active_repos, collapse = ", "))
+    } else {
+      paste0(active_count, " active open PR(s)")
+    }
     active_part <- if (active_count > 0L) {
       htmltools::tags$a(
         href = active_full_url,
         target = "_blank",
         rel = "noopener noreferrer",
         class = "pr-pending-link",
+        `aria-label` = active_aria,
         title = active_tooltip,
-        `aria-label` = active_tooltip,
         `data-tooltip` = active_tooltip,
         as.character(active_count)
       )
