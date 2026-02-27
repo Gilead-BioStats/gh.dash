@@ -43,6 +43,17 @@ summarize_pr_activity_by_user <- function(
   cache_dir <- resolve_pr_activity_cache_dir(cache_dir)
 
   since_date <- Sys.Date() - days
+
+  append_unique_repo <- function(repos_list, key, owner_repo) {
+    existing <- repos_list[[key]]
+    if (is.null(existing)) {
+      repos_list[[key]] <- owner_repo
+    } else if (!owner_repo %in% existing) {
+      repos_list[[key]] <- c(existing, owner_repo)
+    }
+    repos_list
+  }
+
   opened_counts <- integer(0)
   opened_active_counts <- integer(0)
   opened_active_repos_list <- list()
@@ -83,27 +94,17 @@ summarize_pr_activity_by_user <- function(
       pr_state <- tolower(as.character(pr$state %||% ""))
 
       if (nzchar(author) && !is.na(created_at) && created_at >= since_date &&
-          pr_state == "open") {
+        pr_state == "open") {
         opened_active_counts <- increment_named_count(opened_active_counts, author)
-        existing_active <- opened_active_repos_list[[author]]
-        if (is.null(existing_active)) {
-          opened_active_repos_list[[author]] <- owner_repo
-        } else if (!owner_repo %in% existing_active) {
-          opened_active_repos_list[[author]] <- c(existing_active, owner_repo)
-        }
+        opened_active_repos_list <- append_unique_repo(opened_active_repos_list, author, owner_repo)
       }
 
-      if (pr_state == "open" && length(pr$requested_reviewers)) {
+      if (pr_state == "open" && length(pr$requested_reviewers) > 0L) {
         for (reviewer_obj in pr$requested_reviewers) {
           reviewer_login <- as.character(reviewer_obj$login %||% "")
           if (nzchar(reviewer_login)) {
             pending_counts <- increment_named_count(pending_counts, reviewer_login)
-            existing <- pending_repos_list[[reviewer_login]]
-            if (is.null(existing)) {
-              pending_repos_list[[reviewer_login]] <- owner_repo
-            } else if (!owner_repo %in% existing) {
-              pending_repos_list[[reviewer_login]] <- c(existing, owner_repo)
-            }
+            pending_repos_list <- append_unique_repo(pending_repos_list, reviewer_login, owner_repo)
           }
         }
       }
