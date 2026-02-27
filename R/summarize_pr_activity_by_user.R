@@ -47,6 +47,8 @@ summarize_pr_activity_by_user <- function(
   opened_active_counts <- integer(0)
   opened_active_repos_list <- list()
   reviewed_counts <- integer(0)
+  pending_counts <- integer(0)
+  pending_repos_list <- list()
   pulls_cache <- new.env(parent = emptyenv())
   reviews_cache <- new.env(parent = emptyenv())
 
