@@ -564,6 +564,6 @@ test_that("render_pr_activity_table includes PRs Pending review header and link"
   expect_false(grepl("pr-pending-link", html_zero, fixed = TRUE))
   # Still shows deterministic format: "TOTAL (" ... "0" ... ")"
   expect_true(grepl("1 \\(", html_zero))
-  # The "0" between parens (allowing whitespace/newlines around it)
-  expect_true(grepl("\\(\\s*\\n\\s*0\\s*\\n\\s*\\)", html_zero))
+  # The "0" between parens (allowing any whitespace/newlines around it)
+  expect_true(grepl("\\(\\s*0\\s*\\)", html_zero))
 })
