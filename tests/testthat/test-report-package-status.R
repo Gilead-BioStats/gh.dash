@@ -330,8 +330,8 @@ test_that("summarize_pr_activity_by_user validates lookback days", {
 })
 
 test_that("summarize_pr_activity_by_user aggregates opened and reviewed PRs by user", {
-  now <- Sys.time()
-  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 
   pulls <- list(
     list(
@@ -415,13 +415,14 @@ test_that("summarize_pr_activity_by_user returns empty data frame when no activi
 })
 
 test_that("summarize_pr_activity_by_user counts pending reviews and deduplicates repos per user", {
-  now <- Sys.time()
-  pr20_created <- format(now - 7 * 24 * 60 * 60, "%Y-%m-%dT%H:%M:%SZ")
-  pr20_updated <- format(now - 6 * 24 * 60 * 60, "%Y-%m-%dT%H:%M:%SZ")
-  pr21_created <- format(now - 5 * 24 * 60 * 60, "%Y-%m-%dT%H:%M:%SZ")
-  pr21_updated <- format(now - 4 * 24 * 60 * 60, "%Y-%m-%dT%H:%M:%SZ")
-  pr22_created <- format(now - 3 * 24 * 60 * 60, "%Y-%m-%dT%H:%M:%SZ")
-  pr22_updated <- format(now - 2 * 24 * 60 * 60, "%Y-%m-%dT%H:%M:%SZ")
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+  pr20_created <- ts(7)
+  pr20_updated <- ts(6)
+  pr21_created <- ts(5)
+  pr21_updated <- ts(4)
+  pr22_created <- ts(3)
+  pr22_updated <- ts(2)
 
   pulls <- list(
     list(
@@ -476,8 +477,8 @@ test_that("summarize_pr_activity_by_user counts pending reviews and deduplicates
 })
 
 test_that("summarize_pr_activity_by_user reuses cached review payloads", {
-  now <- Sys.time()
-  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 
   pulls <- list(
     list(
@@ -532,8 +533,8 @@ test_that("summarize_pr_activity_by_user reuses cached review payloads", {
 })
 
 test_that("summarize_pr_activity_by_user reuses API payloads for duplicate repos", {
-  now <- Sys.time()
-  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 
   pulls <- list(
     list(
@@ -577,8 +578,8 @@ test_that("summarize_pr_activity_by_user reuses API payloads for duplicate repos
 
 test_that("summarize_pr_activity_by_user handles PRs with no reviews and no requested reviewers", {
   # Exercises the initialized-but-empty reviewed_counts / pending_counts path
-  now <- Sys.time()
-  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 
   pulls <- list(
     list(
@@ -607,8 +608,8 @@ test_that("summarize_pr_activity_by_user handles PRs with no reviews and no requ
 })
 
 test_that("summarize_pr_activity_by_user excludes PENDING review state", {
-  now <- Sys.time()
-  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 
   pulls <- list(
     list(
@@ -638,8 +639,8 @@ test_that("summarize_pr_activity_by_user excludes PENDING review state", {
 })
 
 test_that("summarize_pr_activity_by_user excludes reviews outside the lookback window", {
-  now <- Sys.time()
-  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 
   pulls <- list(
     list(
@@ -659,7 +660,7 @@ test_that("summarize_pr_activity_by_user excludes reviews outside the lookback w
     fetch_pull_request_reviews = function(...) {
       list(
         list(
-          submitted_at = format(Sys.time() - 60 * 86400, "%Y-%m-%dT%H:%M:%SZ"),
+          submitted_at = ts(60),
           state = "APPROVED",
           user = list(login = "bob")
         )
@@ -672,8 +673,8 @@ test_that("summarize_pr_activity_by_user excludes reviews outside the lookback w
 })
 
 test_that("summarize_pr_activity_by_user skips review fetch for PR with non-numeric number", {
-  now <- Sys.time()
-  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ")
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 
   pulls <- list(
     list(
