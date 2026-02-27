@@ -588,7 +588,9 @@ render_pr_activity_table <- function(df, days) {
     active_repos <- df$opened_active_repos[[i]]
     active_base_url <- paste0(
       "https://github.com/pulls?q=is:open+is:pr+author:",
-      utils::URLencode(df$user[[i]], reserved = FALSE)
+      utils::URLencode(df$user[[i]], reserved = FALSE),
+      "+created:>=",
+      since_date
     )
     if (length(active_repos) > 0) {
       active_repo_qs <- paste0("+repo:", active_repos, collapse = "")
