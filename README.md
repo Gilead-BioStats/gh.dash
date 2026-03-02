@@ -63,12 +63,12 @@ render_dash(
 > Without it, the call falls back to the installed package, ignoring any local edits.
 
 The example script `inst/examples/RenderReport.R` follows this pattern automatically — it walks two directories up from its own location to find the package root and calls `pkgload::load_all()` there before rendering.
-Additionally, you can render a report from the terminal.
 
-```sh
-Rscript inst/examples/RenderReport.R
-```
-The script assumes the `{gh.dash}` package is installed and writes the HTML output to `inst/examples/output/index.html`. Open that file in a browser to preview changes. The document is self-contained, so no additional assets are required when publishing.
+Additional rendering options: 
+From console with `source("inst/examples/RenderReport.R")`
+From the terminal with `Rscript inst/examples/RenderReport.R`
+
+The script writes the HTML output to `inst/examples/output/index.html`. Open that file in a browser to preview changes. The document is self-contained, so no additional assets are required when publishing.
 
 ## Setting up Automated Dashboards
 
