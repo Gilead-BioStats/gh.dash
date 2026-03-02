@@ -330,18 +330,25 @@ test_that("summarize_pr_activity_by_user validates lookback days", {
 })
 
 test_that("summarize_pr_activity_by_user aggregates opened and reviewed PRs by user", {
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+
   pulls <- list(
     list(
       number = 10,
-      created_at = "2026-01-10T10:00:00Z",
-      updated_at = "2026-01-12T11:00:00Z",
-      user = list(login = "alice")
+      state = "open",
+      created_at = ts(10),
+      updated_at = ts(8),
+      user = list(login = "alice"),
+      requested_reviewers = list(list(login = "carol"))
     ),
     list(
       number = 11,
-      created_at = "2026-01-11T10:00:00Z",
-      updated_at = "2026-01-12T12:00:00Z",
-      user = list(login = "bob")
+      state = "closed",
+      created_at = ts(9),
+      updated_at = ts(8),
+      user = list(login = "bob"),
+      requested_reviewers = list(list(login = "alice"))
     )
   )
 
@@ -355,14 +362,14 @@ test_that("summarize_pr_activity_by_user aggregates opened and reviewed PRs by u
     fetch_pull_request_reviews = function(owner, repo, pull_number, token) {
       if (pull_number == 10) {
         return(list(
-          list(submitted_at = "2026-01-13T10:00:00Z", state = "APPROVED", user = list(login = "bob")),
-          list(submitted_at = "2026-01-13T11:00:00Z", state = "COMMENTED", user = list(login = "bob"))
+          list(submitted_at = ts(7), state = "APPROVED", user = list(login = "bob")),
+          list(submitted_at = ts(7), state = "COMMENTED", user = list(login = "bob"))
         ))
       }
 
       list(
-        list(submitted_at = "2026-01-14T09:00:00Z", state = "CHANGES_REQUESTED", user = list(login = "alice")),
-        list(submitted_at = "2026-01-14T09:30:00Z", state = "APPROVED", user = list(login = "carol"))
+        list(submitted_at = ts(6), state = "CHANGES_REQUESTED", user = list(login = "alice")),
+        list(submitted_at = ts(6), state = "APPROVED", user = list(login = "carol"))
       )
     }
   )
@@ -375,16 +382,25 @@ test_that("summarize_pr_activity_by_user aggregates opened and reviewed PRs by u
   carol <- result[result$user == "carol", , drop = FALSE]
 
   expect_equal(alice$prs_opened, 1L)
+  expect_equal(alice$prs_opened_active, 1L)
+  expect_equal(alice$opened_active_repos[[1]], "org/repo")
   expect_equal(alice$prs_reviewed, 1L)
   expect_equal(alice$total_activity, 2L)
+  expect_equal(alice$prs_pending_review, 0L)
 
   expect_equal(bob$prs_opened, 1L)
+  expect_equal(bob$prs_opened_active, 0L)
+  expect_equal(length(bob$opened_active_repos[[1]]), 0L)
   expect_equal(bob$prs_reviewed, 1L)
   expect_equal(bob$total_activity, 2L)
+  expect_equal(bob$prs_pending_review, 0L)
 
   expect_equal(carol$prs_opened, 0L)
+  expect_equal(carol$prs_opened_active, 0L)
   expect_equal(carol$prs_reviewed, 1L)
   expect_equal(carol$total_activity, 1L)
+  expect_equal(carol$prs_pending_review, 1L)
+  expect_equal(carol$pending_review_repos[[1]], "org/repo")
 })
 
 test_that("summarize_pr_activity_by_user returns empty data frame when no activity", {
@@ -395,15 +411,80 @@ test_that("summarize_pr_activity_by_user returns empty data frame when no activi
 
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 0)
-  expect_equal(names(result), c("user", "prs_opened", "prs_reviewed", "total_activity"))
+  expect_equal(names(result), c("user", "prs_opened", "prs_opened_active", "prs_reviewed", "prs_pending_review", "total_activity", "pending_review_repos", "opened_active_repos"))
+})
+
+test_that("summarize_pr_activity_by_user counts pending reviews and deduplicates repos per user", {
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+  pr20_created <- ts(7)
+  pr20_updated <- ts(6)
+  pr21_created <- ts(5)
+  pr21_updated <- ts(4)
+  pr22_created <- ts(3)
+  pr22_updated <- ts(2)
+
+  pulls <- list(
+    list(
+      number = 20,
+      state = "open",
+      created_at = pr20_created,
+      updated_at = pr20_updated,
+      user = list(login = "alice"),
+      requested_reviewers = list(list(login = "bob"), list(login = "carol"))
+    ),
+    list(
+      number = 21,
+      state = "open",
+      created_at = pr21_created,
+      updated_at = pr21_updated,
+      user = list(login = "alice"),
+      requested_reviewers = list(list(login = "bob"))
+    ),
+    list(
+      number = 22,
+      state = "closed",
+      created_at = pr22_created,
+      updated_at = pr22_updated,
+      user = list(login = "alice"),
+      requested_reviewers = list(list(login = "carol"))
+    )
+  )
+
+  result <- with_mocked_bindings(
+    summarize_pr_activity_by_user("org/repo", days = 365, use_cache = FALSE),
+    fetch_pull_requests_since = function(owner, repo, token, since_date) pulls,
+    fetch_pull_request_reviews = function(...) list()
+  )
+
+  bob <- result[result$user == "bob", , drop = FALSE]
+  carol <- result[result$user == "carol", , drop = FALSE]
+
+  # bob is requested on PR #20 and #21 (both open) — count = 2, one unique repo
+  expect_equal(bob$prs_pending_review, 2L)
+  expect_equal(bob$pending_review_repos[[1]], "org/repo")
+  expect_equal(length(bob$pending_review_repos[[1]]), 1L)
+
+  # carol is requested on PR #20 (open) and PR #22 (closed — ignored) — count = 1
+  expect_equal(carol$prs_pending_review, 1L)
+  expect_equal(carol$pending_review_repos[[1]], "org/repo")
+
+  # alice opened all 3 PRs; only #20 and #21 are open => active = 2
+  alice <- result[result$user == "alice", , drop = FALSE]
+  expect_equal(alice$prs_opened, 3L)
+  expect_equal(alice$prs_opened_active, 2L)
+  expect_equal(alice$opened_active_repos[[1]], "org/repo")
 })
 
 test_that("summarize_pr_activity_by_user reuses cached review payloads", {
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+
   pulls <- list(
     list(
       number = 42,
-      created_at = "2026-01-10T10:00:00Z",
-      updated_at = "2026-01-12T11:00:00Z",
+      created_at = ts(10),
+      updated_at = ts(8),
       user = list(login = "alice")
     )
   )
@@ -422,7 +503,7 @@ test_that("summarize_pr_activity_by_user reuses cached review payloads", {
     fetch_pull_request_reviews = function(...) {
       review_calls <<- review_calls + 1L
       list(list(
-        submitted_at = "2026-01-13T10:00:00Z",
+        submitted_at = ts(7),
         state = "APPROVED",
         user = list(login = "bob")
       ))
@@ -440,7 +521,7 @@ test_that("summarize_pr_activity_by_user reuses cached review payloads", {
     fetch_pull_request_reviews = function(...) {
       review_calls <<- review_calls + 1L
       list(list(
-        submitted_at = "2026-01-13T10:00:00Z",
+        submitted_at = ts(7),
         state = "APPROVED",
         user = list(login = "bob")
       ))
@@ -452,11 +533,14 @@ test_that("summarize_pr_activity_by_user reuses cached review payloads", {
 })
 
 test_that("summarize_pr_activity_by_user reuses API payloads for duplicate repos", {
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+
   pulls <- list(
     list(
       number = 42,
-      created_at = "2026-01-10T10:00:00Z",
-      updated_at = "2026-01-12T11:00:00Z",
+      created_at = ts(10),
+      updated_at = ts(8),
       user = list(login = "alice")
     )
   )
@@ -473,7 +557,7 @@ test_that("summarize_pr_activity_by_user reuses API payloads for duplicate repos
     fetch_pull_request_reviews = function(...) {
       review_calls <<- review_calls + 1L
       list(list(
-        submitted_at = "2026-01-13T10:00:00Z",
+        submitted_at = ts(7),
         state = "APPROVED",
         user = list(login = "bob")
       ))
@@ -490,4 +574,163 @@ test_that("summarize_pr_activity_by_user reuses API payloads for duplicate repos
   expect_equal(alice$total_activity, 2L)
   expect_equal(bob$prs_reviewed, 2L)
   expect_equal(bob$total_activity, 2L)
+})
+
+test_that("summarize_pr_activity_by_user handles PRs with no reviews and no requested reviewers", {
+  # Exercises the initialized-but-empty reviewed_counts / pending_counts path
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+
+  pulls <- list(
+    list(
+      number = 5,
+      state = "open",
+      created_at = ts(10),
+      updated_at = ts(8),
+      user = list(login = "alice"),
+      requested_reviewers = list()
+    )
+  )
+
+  result <- with_mocked_bindings(
+    summarize_pr_activity_by_user("org/repo", days = 365, use_cache = FALSE),
+    fetch_pull_requests_since = function(...) pulls,
+    fetch_pull_request_reviews = function(...) list()
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 1L)
+  alice <- result[result$user == "alice", , drop = FALSE]
+  expect_equal(alice$prs_opened, 1L)
+  expect_equal(alice$prs_reviewed, 0L)
+  expect_equal(alice$prs_pending_review, 0L)
+  expect_equal(alice$total_activity, 1L)
+})
+
+test_that("summarize_pr_activity_by_user excludes PENDING review state", {
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+
+  pulls <- list(
+    list(
+      number = 7,
+      state = "open",
+      created_at = ts(10),
+      updated_at = ts(8),
+      user = list(login = "alice"),
+      requested_reviewers = list()
+    )
+  )
+
+  result <- with_mocked_bindings(
+    summarize_pr_activity_by_user("org/repo", days = 365, use_cache = FALSE),
+    fetch_pull_requests_since = function(...) pulls,
+    fetch_pull_request_reviews = function(...) {
+      list(
+        list(submitted_at = ts(7), state = "PENDING", user = list(login = "bob"))
+      )
+    }
+  )
+
+  # "bob" has only a PENDING review — must not appear in reviewed_counts
+  expect_false("bob" %in% result$user)
+  alice <- result[result$user == "alice", , drop = FALSE]
+  expect_equal(alice$prs_reviewed, 0L)
+})
+
+test_that("summarize_pr_activity_by_user excludes reviews outside the lookback window", {
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+
+  pulls <- list(
+    list(
+      number = 8,
+      state = "open",
+      created_at = ts(5),
+      updated_at = ts(3),
+      user = list(login = "alice"),
+      requested_reviewers = list()
+    )
+  )
+
+  result <- with_mocked_bindings(
+    # Use 30-day window; review was submitted 60 days ago
+    summarize_pr_activity_by_user("org/repo", days = 30, use_cache = FALSE),
+    fetch_pull_requests_since = function(...) pulls,
+    fetch_pull_request_reviews = function(...) {
+      list(
+        list(
+          submitted_at = ts(60),
+          state = "APPROVED",
+          user = list(login = "bob")
+        )
+      )
+    }
+  )
+
+  # "bob"'s review is outside the window — must not be counted
+  expect_false("bob" %in% result$user)
+})
+
+test_that("summarize_pr_activity_by_user skips review fetch for PR with non-numeric number", {
+  now <- as.POSIXct(Sys.time(), tz = "UTC")
+  ts <- function(days_ago) format(now - days_ago * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+
+  pulls <- list(
+    list(
+      number = "not-a-number",
+      state = "open",
+      created_at = ts(10),
+      updated_at = ts(8),
+      user = list(login = "alice"),
+      requested_reviewers = list()
+    )
+  )
+
+  review_calls <- 0L
+
+  result <- with_mocked_bindings(
+    summarize_pr_activity_by_user("org/repo", days = 365, use_cache = FALSE),
+    fetch_pull_requests_since = function(...) pulls,
+    fetch_pull_request_reviews = function(...) {
+      review_calls <<- review_calls + 1L
+      list()
+    }
+  )
+
+  # Review fetch must be skipped entirely for bad PR numbers
+  expect_equal(review_calls, 0L)
+  alice <- result[result$user == "alice", , drop = FALSE]
+  expect_equal(alice$prs_opened, 1L)
+  expect_equal(alice$prs_reviewed, 0L)
+})
+
+test_that("summarize_github_repos renders lock icon for private repos", {
+  result <- with_mocked_bindings(
+    summarize_github_repos("org/repo"),
+    fetch_repo_metadata = function(...) list(private = TRUE),
+    fetch_releases = function(...) list(),
+    fetch_open_milestones = function(...) list(),
+    fetch_open_prs = function(...) 0L,
+    fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
+  )
+
+  expect_match(result$repo, "\U0001F512")
+  expect_match(result$repo, "Private repository")
+  expect_match(result$repo, "org/repo")
+})
+
+test_that("summarize_github_repos defaults is_private to FALSE when metadata is NULL", {
+  result <- with_mocked_bindings(
+    summarize_github_repos("org/repo"),
+    fetch_repo_metadata = function(...) NULL,
+    fetch_releases = function(...) list(),
+    fetch_open_milestones = function(...) list(),
+    fetch_open_prs = function(...) 0L,
+    fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
+  )
+
+  # No lock icon — should render as a plain public link
+  expect_false(grepl("\U0001F512", result$repo))
+  expect_match(result$repo, "org/repo")
 })

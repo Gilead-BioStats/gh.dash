@@ -55,13 +55,18 @@ status <- if (length(repos) == 0L) {
 }
 
 pr_activity <- if (length(repos) == 0L) {
-  data.frame(
+  empty <- data.frame(
     user = character(0),
     prs_opened = integer(0),
+    prs_opened_active = integer(0),
     prs_reviewed = integer(0),
+    prs_pending_review = integer(0),
     total_activity = integer(0),
     stringsAsFactors = FALSE
   )
+  empty$pending_review_repos <- I(list())
+  empty$opened_active_repos <- I(list())
+  empty
 } else {
   summarize_pr_activity_by_user(
     repos,
@@ -273,6 +278,42 @@ styles <- c(
   ".info-icon:focus {",
   "  outline: 2px solid #38bdf8;",
   "  outline-offset: 2px;",
+  "}",
+  "",
+  ".pr-activity-link {",
+  "  position: relative;",
+  "  color: #2563eb;",
+  "  text-decoration: none;",
+  "  cursor: pointer;",
+  "}",
+  "",
+  ".pr-activity-link::after {",
+  "  content: attr(data-tooltip);",
+  "  position: absolute;",
+  "  top: calc(100% + 0.5rem);",
+  "  right: 0;",
+  "  left: auto;",
+  "  background: #ffffff;",
+  "  color: #000000;",
+  "  padding: 0.35rem 0.5rem;",
+  "  border-radius: 0.35rem;",
+  "  border: 1px solid #e2e8f0;",
+  "  box-shadow: 0 2px 8px rgba(0,0,0,0.1);",
+  "  font-size: 0.875rem;",
+  "  font-weight: 500;",
+  "  width: min(50ch, 90vw);",
+  "  max-width: 90vw;",
+  "  box-sizing: border-box;",
+  "  white-space: pre-line;",
+  "  opacity: 0;",
+  "  pointer-events: none;",
+  "  transition: opacity 0.15s ease;",
+  "  z-index: 10;",
+  "}",
+  "",
+  ".pr-activity-link:hover::after,",
+  ".pr-activity-link:focus::after {",
+  "  opacity: 1;",
   "}",
   "",
   ".status-table th.status-table__cell--right {",
@@ -503,10 +544,94 @@ render_pr_activity_table <- function(df, days) {
       sprintf("%.2f", opened / reviewed)
     }
 
+    pending_count <- df$prs_pending_review[[i]]
+    pending_repos <- df$pending_review_repos[[i]]
+    since_date <- format(Sys.Date() - days, "%Y-%m-%d")
+    base_url <- paste0(
+      "https://github.com/pulls?q=is:open+is:pr+review-requested:",
+      utils::URLencode(df$user[[i]], reserved = FALSE),
+      "+updated:>=", since_date
+    )
+    if (length(pending_repos) > 0) {
+      repo_qs <- paste0("+repo:", pending_repos, collapse = "")
+      full_url <- if (nchar(paste0(base_url, repo_qs)) <= 2000L) {
+        paste0(base_url, repo_qs)
+      } else {
+        base_url
+      }
+    } else {
+      full_url <- base_url
+    }
+    tooltip_text <- paste(pending_repos, collapse = "\n")
+    pending_aria <- if (length(pending_repos) > 0) {
+      paste0(pending_count, " PR(s) pending review in: ", paste(pending_repos, collapse = ", "))
+    } else {
+      paste0(pending_count, " PR(s) pending review")
+    }
+    pending_cell <- if (!is.na(pending_count) && pending_count > 0L) {
+      htmltools::tags$a(
+        href = full_url,
+        target = "_blank",
+        rel = "noopener noreferrer",
+        class = "pr-activity-link",
+        `aria-label` = pending_aria,
+        `data-tooltip` = tooltip_text,
+        as.character(pending_count)
+      )
+    } else {
+      "0"
+    }
+
+    # -- Opened (Active) cell --
+    active_count <- suppressWarnings(as.integer(df$prs_opened_active[[i]]))
+    if (is.na(active_count)) active_count <- 0L
+    active_repos <- df$opened_active_repos[[i]]
+    active_base_url <- paste0(
+      "https://github.com/pulls?q=is:open+is:pr+author:",
+      utils::URLencode(df$user[[i]], reserved = FALSE),
+      "+created:>=",
+      since_date
+    )
+    if (length(active_repos) > 0) {
+      active_repo_qs <- paste0("+repo:", active_repos, collapse = "")
+      active_full_url <- if (nchar(paste0(active_base_url, active_repo_qs)) <= 2000L) {
+        paste0(active_base_url, active_repo_qs)
+      } else {
+        active_base_url
+      }
+    } else {
+      active_full_url <- active_base_url
+    }
+    active_tooltip <- paste(active_repos, collapse = "\n")
+    active_aria <- if (length(active_repos) > 0) {
+      paste0(active_count, " active open PR(s) in: ", paste(active_repos, collapse = ", "))
+    } else {
+      paste0(active_count, " active open PR(s)")
+    }
+    active_part <- if (active_count > 0L) {
+      htmltools::tags$a(
+        href = active_full_url,
+        target = "_blank",
+        rel = "noopener noreferrer",
+        class = "pr-activity-link",
+        `aria-label` = active_aria,
+        `data-tooltip` = active_tooltip,
+        as.character(active_count)
+      )
+    } else {
+      "0"
+    }
+    opened_cell <- htmltools::tagList(
+      paste0(as.character(df$prs_opened[[i]]), " ("),
+      active_part,
+      ")"
+    )
+
     htmltools::tags$tr(
       htmltools::tags$td(class = "status-table__cell", htmltools::htmlEscape(df$user[[i]])),
-      htmltools::tags$td(class = "status-table__cell status-table__cell--right", as.character(df$prs_opened[[i]])),
+      htmltools::tags$td(class = "status-table__cell status-table__cell--right", opened_cell),
       htmltools::tags$td(class = "status-table__cell status-table__cell--right", as.character(df$prs_reviewed[[i]])),
+      htmltools::tags$td(class = "status-table__cell status-table__cell--right", pending_cell),
       htmltools::tags$td(class = "status-table__cell status-table__cell--right", ratio)
     )
   })
@@ -522,8 +647,9 @@ render_pr_activity_table <- function(df, days) {
         htmltools::tags$thead(
           htmltools::tags$tr(
             htmltools::tags$th(scope = "col", "User"),
-            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Opened"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Opened (Active)"),
             htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Reviewed"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Pending Review"),
             htmltools::tags$th(scope = "col", class = "status-table__cell--right", "Created/Reviewed")
           )
         ),

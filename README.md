@@ -31,6 +31,32 @@ render_dash(
 )
 ```
 
+## Rendering in Development Mode
+
+When actively editing the package (e.g. modifying `inst/report/package_status_report.Rmd` or R source files), rendered reports must be generated from the **source tree** rather than the installed copy of the package. If you run `render_dash()` straight from `library(gh.dash)`, R uses the last-installed version and your in-progress changes will not appear in the output.
+
+Use `pkgload::load_all()` from the package root before calling `render_dash()`:
+
+```r
+pkgload::load_all(".")   # load source files, including inst/report/
+
+render_dash(
+  packages = c("owner/repo1", "owner/repo2"),
+  output_dir = "report",
+  output_file = "index.html",
+  title = "My Dashboard"
+)
+```
+
+`load_all(".")` must be run from (or pointed at) the directory that contains `DESCRIPTION`. This makes `system.file()` inside `render_dash()` resolve to `inst/report/package_status_report.Rmd` in the source tree rather than the installed library path.
+
+> **Why this matters:** `render_dash()` locates the report template with  
+> `system.file("report", "package_status_report.Rmd", package = "gh.dash")`.  
+> After `load_all()`, `system.file()` returns paths inside the source tree.  
+> Without it, the call falls back to the installed package, ignoring any local edits.
+
+The example script `inst/examples/RenderReport.R` follows this pattern automatically — it walks two directories up from its own location to find the package root and calls `pkgload::load_all()` there before rendering.
+
 ## Setting up Automated Dashboards
 
 You can set up a repo that will automatically post the gh.dash report to GitHub Pages by following these steps:
