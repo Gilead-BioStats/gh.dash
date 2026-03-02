@@ -1,10 +1,17 @@
 name: render-package-status-report
+
+concurrency:
+  group: gh-pages-${{ github.repository }}
+  cancel-in-progress: false
+
 on:
   push:
     branches:
       - main
       - dev
   pull_request:
+  schedule:
+    - cron: '0 5 * * *'
   workflow_dispatch:
     inputs:
       target:
@@ -18,11 +25,14 @@ on:
 
 jobs:
   build-main:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      || github.event_name == 'schedule'
+      || (github.event_name == 'workflow_dispatch' && inputs.target == 'main')
     uses: ./.github/workflows/render-report-reusable.yaml
     secrets: inherit
     with:
-      ref: ${{ github.ref }}
+      ref: ${{ github.event_name == 'push' && github.ref || 'main' }}
       title: "Tidyverse"
       pkg-list-path: "inst/extdata/package-list.csv"
       output-subdir: ""
@@ -34,13 +44,22 @@ jobs:
         pr
 
   build-dev:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    needs: [build-main]
+    if: >-
+      always()
+      && (needs.build-main.result == 'success' || needs.build-main.result == 'skipped')
+      && (
+        (github.event_name == 'push' && github.ref == 'refs/heads/dev')
+        || github.event_name == 'schedule'
+        || (github.event_name == 'workflow_dispatch' && inputs.target == 'dev')
+      )
     uses: ./.github/workflows/render-report-reusable.yaml
     secrets: inherit
     with:
-      ref: ${{ github.ref }}
+      ref: ${{ github.event_name == 'push' && github.ref || 'dev' }}
       title: "Tidyverse"
       pkg-list-path: "inst/extdata/package-list.csv"
+      output-subdir: dev
       deploy: true
       deploy-target: dev
       deploy-clean: false
@@ -48,6 +67,9 @@ jobs:
 
   build-pr:
     if: github.event_name == 'pull_request'
+    concurrency:
+      group: gh-pages-pr-${{ github.event.pull_request.number }}-${{ github.repository }}
+      cancel-in-progress: true
     uses: ./.github/workflows/render-report-reusable.yaml
     secrets: inherit
     with:
