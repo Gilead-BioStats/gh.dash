@@ -1,23 +1,3 @@
-#' Fetch latest release information from GitHub API
-#'
-#' Internal function to retrieve the latest release for a GitHub repository.
-#'
-#' @param owner Repository owner (GitHub username or organization)
-#' @param repo Repository name
-#' @param token GitHub personal access token (optional)
-#' @return List with release information or NULL if no release found
-#' @keywords internal
-#' @importFrom gh gh
-fetch_latest_release <- function(owner, repo, token) {
-  safe_gh(
-    gh::gh,
-    "GET /repos/{owner}/{repo}/releases/latest",
-    owner = owner,
-    repo = repo,
-    .token = token
-  )
-}
-
 #' Fetch releases from GitHub API
 #'
 #' Internal function to retrieve published releases for a GitHub repository.
@@ -158,6 +138,127 @@ fetch_branch_comparison <- function(owner, repo, base, head, token) {
     head = head,
     .token = token
   )
+}
+
+#' Fetch pull requests updated within a lookback window
+#'
+#' Internal function to retrieve pull requests sorted by update time and keep
+#' only those updated on/after `since_date`.
+#'
+#' @param owner Repository owner
+#' @param repo Repository name
+#' @param token GitHub personal access token (optional)
+#' @param since_date Date lower bound (inclusive)
+#' @return List of pull request objects
+#' @keywords internal
+#' @importFrom gh gh
+fetch_pull_requests_since <- function(owner, repo, token, since_date) {
+  collected <- list()
+  page <- 1L
+
+  repeat {
+    page_items <- safe_gh(
+      gh::gh,
+      "GET /repos/{owner}/{repo}/pulls",
+      owner = owner,
+      repo = repo,
+      state = "all",
+      sort = "updated",
+      direction = "desc",
+      per_page = 100,
+      page = page,
+      .token = token
+    )
+
+    if (is.null(page_items) || !length(page_items)) {
+      break
+    }
+
+    keep_items <- Filter(function(pr) {
+      updated_at <- parse_github_timestamp(pr$updated_at)
+      !is.na(updated_at) && updated_at >= since_date
+    }, page_items)
+
+    if (length(keep_items)) {
+      collected <- c(collected, keep_items)
+    }
+
+    if (length(keep_items) < length(page_items)) {
+      break
+    }
+
+    page <- page + 1L
+  }
+
+  collected
+}
+
+#' Fetch pull request reviews
+#'
+#' Internal function to retrieve all review events for a pull request.
+#'
+#' @param owner Repository owner
+#' @param repo Repository name
+#' @param pull_number Pull request number
+#' @param token GitHub personal access token (optional)
+#' @return List of review objects
+#' @keywords internal
+#' @importFrom gh gh
+fetch_pull_request_reviews <- function(owner, repo, pull_number, token) {
+  collected <- list()
+  page <- 1L
+
+  repeat {
+    page_items <- safe_gh(
+      gh::gh,
+      "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews",
+      owner = owner,
+      repo = repo,
+      pull_number = pull_number,
+      per_page = 100,
+      page = page,
+      .token = token
+    )
+
+    if (is.null(page_items) || !length(page_items)) {
+      break
+    }
+
+    collected <- c(collected, page_items)
+    if (length(page_items) < 100L) {
+      break
+    }
+
+    page <- page + 1L
+  }
+
+  collected
+}
+
+#' Parse GitHub timestamp to Date
+#'
+#' Internal helper to parse ISO 8601 GitHub timestamp fields (e.g.
+#' `created_at`, `updated_at`, `submitted_at`) into `Date` values.
+#'
+#' @param timestamp Character timestamp from GitHub API
+#' @return Date value, or NA if unparseable
+#' @keywords internal
+parse_github_timestamp <- function(timestamp) {
+  if (is.null(timestamp) || !length(timestamp)) {
+    return(as.Date(NA_character_))
+  }
+
+  timestamp <- as.character(timestamp)
+  if (!nzchar(timestamp)) {
+    return(as.Date(NA_character_))
+  }
+
+  parsed <- suppressWarnings(as.POSIXct(timestamp, tz = "UTC", format = "%Y-%m-%dT%H:%M:%OSZ"))
+  if (is.na(parsed)) {
+    return(as.Date(NA_character_))
+  }
+
+  as.Date(parsed)
 }
 
 #' Safe GitHub API wrapper

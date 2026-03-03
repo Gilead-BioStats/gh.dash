@@ -8,6 +8,7 @@
 #' @param title Title for the report.
 #' @param token GitHub personal access token (optional).
 #' @param qualification_registry_url URL or file path to the qualification registry CSV (optional).
+#' @param pr_activity_days Number of days to include in PR activity summaries (default: 365).
 #' @param clean Whether to clean intermediate files after rendering.
 #'
 #' @return The path to the rendered HTML report (invisibly).
@@ -19,6 +20,7 @@ render_dash <- function(
   title = "Package",
   token = NULL,
   qualification_registry_url = NULL,
+  pr_activity_days = 365,
   clean = TRUE
 ) {
   if (!requireNamespace("rmarkdown", quietly = TRUE)) {
@@ -32,6 +34,7 @@ render_dash <- function(
   packages <- as.character(packages)
   packages <- trimws(packages)
   packages <- packages[nzchar(packages)]
+  pr_activity_days <- validate_lookback_days(pr_activity_days)
 
   report_path <- system.file("report", "package_status_report.Rmd", package = "gh.dash")
   if (!nzchar(report_path)) {
@@ -48,7 +51,8 @@ render_dash <- function(
       token = token,
       title = title,
       packageList = packages,
-      qualification_registry_url = qualification_registry_url
+      qualification_registry_url = qualification_registry_url,
+      pr_activity_days = pr_activity_days
     ),
     clean = clean
   )

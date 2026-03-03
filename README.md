@@ -4,6 +4,7 @@
 
 - Pulls data about package releases, milestones and, optionally qualification status using the GitHub API
 - Creates a report summarizing the status for each package using R Markdown
+- Includes a PR activity tab summarizing PRs opened and reviewed by user over a configurable lookback window (default: 365 days)
 - Uses pre-configured GitHub Actions to automatically push the report to GitHub Pages
 
 The {gh.dash} repo automatically runs a sample report for tidyverse packages, but the package can be configured to work with any GitHub repos using the steps below. 
@@ -30,18 +31,45 @@ render_dash(
 		"tidyverse/dplyr",
 		"tidyverse/tidyr"
 	),
+	pr_activity_days = 365,
 	output_dir = "report",
 	output_file = "index.html",
 	title = "Tidyverse"
 )
 ```
 
-Additionally, you can render a report from the terminal.
+## Rendering in Development Mode
 
-```sh
-Rscript inst/examples/RenderReport.R
+When actively editing the package (e.g. modifying `inst/report/package_status_report.Rmd` or R source files), rendered reports must be generated from the **source tree** rather than the installed copy of the package. If you run `render_dash()` straight from `library(gh.dash)`, R uses the last-installed version and your in-progress changes will not appear in the output.
+
+Use `pkgload::load_all()` from the package root before calling `render_dash()`:
+
+```r
+pkgload::load_all(".")   # load source files, including inst/report/
+
+render_dash(
+  packages = c("owner/repo1", "owner/repo2"),
+  output_dir = "report",
+  output_file = "index.html",
+  title = "My Dashboard"
+)
 ```
-The script assumes the `{gh.dash}` package is installed and writes the HTML output to `inst/examples/output/index.html`. Open that file in a browser to preview changes. The document is self-contained, so no additional assets are required when publishing.
+
+`load_all(".")` must be run from (or pointed at) the directory that contains `DESCRIPTION`. This makes `system.file()` inside `render_dash()` resolve to `inst/report/package_status_report.Rmd` in the source tree rather than the installed library path.
+
+> **Why this matters:** `render_dash()` locates the report template with  
+> `system.file("report", "package_status_report.Rmd", package = "gh.dash")`.  
+> After `load_all()`, `system.file()` returns paths inside the source tree.  
+> Without it, the call falls back to the installed package, ignoring any local edits.
+
+The example script `inst/examples/RenderReport.R` follows this pattern automatically — it walks two directories up from its own location to find the package root and calls `pkgload::load_all()` there before rendering.
+
+Additional rendering options: 
+
+- From console with `source("inst/examples/RenderReport.R")`
+- From the terminal with `Rscript inst/examples/RenderReport.R`
+
+The script writes the HTML output to `inst/examples/output/index.html`. Open that file in a browser to preview changes. The document is self-contained, so no additional assets are required when publishing.
 
 ## Setting up Automated Dashboards
 

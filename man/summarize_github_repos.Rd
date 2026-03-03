@@ -17,8 +17,8 @@ with columns \code{org}, \code{repo}, \code{version}, \code{release.url}, \code{
 \code{qualification.url}, and \code{qualification.date}.}
 }
 \value{
-A data frame with columns \code{repo}, \code{latest_release},
-\code{upcoming_milestones}, \code{dev_branch_status}, and \code{ytd_releases}.
+A data frame with columns \code{repo}, \code{latest_release}, \code{upcoming_milestones}, \code{open_prs},
+\code{dev_branch_status}, and \code{ytd_releases}.
 }
 \description{
 \code{summarize_github_repos()} retrieves release and milestone metadata for a
