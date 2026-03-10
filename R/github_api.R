@@ -64,6 +64,57 @@ fetch_branch_comparison <- function(owner, repo, base, head, token) {
   )
 }
 
+#' Fetch open and closed issue counts from GitHub API
+#'
+#' Internal function to retrieve issue totals for open and closed issues.
+#' Pull request counts are excluded (`is:issue` is used in search queries).
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param token GitHub personal access token (optional)
+#' @return List with `open` and `closed` counts or NULL when unavailable
+#' @keywords internal
+#' @importFrom gh gh
+fetch_issue_counts <- function(owner, repo, token) {
+  open_count <- fetch_issue_count_by_state(owner, repo, state = "open", token = token)
+  closed_count <- fetch_issue_count_by_state(owner, repo, state = "closed", token = token)
+
+  if (is.null(open_count) || is.null(closed_count)) {
+    return(NULL)
+  }
+
+  list(open = open_count, closed = closed_count)
+}
+
+#' Fetch issue count for a single state from GitHub API
+#'
+#' Internal function to retrieve issue count from GitHub search API.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param state Issue state (`open` or `closed`)
+#' @param token GitHub personal access token (optional)
+#' @return Numeric count or NULL when unavailable
+#' @keywords internal
+#' @importFrom gh gh
+fetch_issue_count_by_state <- function(owner, repo, state, token) {
+  query <- sprintf("repo:%s/%s is:issue is:%s", owner, repo, state)
+
+  payload <- safe_gh(
+    gh::gh,
+    "GET /search/issues",
+    q = query,
+    per_page = 1,
+    .token = token
+  )
+
+  if (is.null(payload)) {
+    return(NULL)
+  }
+
+  sanitize_issue_count(payload$total_count)
+}
+
 #' Safe GitHub API wrapper
 #'
 #' Internal function that wraps GitHub API calls to handle 404 errors gracefully.

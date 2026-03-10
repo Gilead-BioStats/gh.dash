@@ -32,6 +32,11 @@ test_that("summarize_github_repos assembles release and milestone summaries", {
       expect_equal(repo, "repo")
       mock_release
     },
+    fetch_issue_counts = function(owner, repo, token) {
+      expect_equal(owner, "org")
+      expect_equal(repo, "repo")
+      list(open = 8, closed = 13)
+    },
     fetch_open_milestones = function(owner, repo, token) {
       expect_equal(owner, "org")
       expect_equal(repo, "repo")
@@ -49,6 +54,10 @@ test_that("summarize_github_repos assembles release and milestone summaries", {
   expect_match(result$latest_release, "<a href=\"https://github.com/org/repo/releases/tag/v1.0.0\">")
   expect_match(result$latest_release, "Released 2025-01-01")
   expect_match(result$latest_release, "span")
+  expect_equal(
+    result$open_vs_closed_issues,
+    "<a href=\"https://github.com/org/repo/issues\"><span class=\"badge badge--sky\" title=\"8 open / 13 closed issues\">8 / 13</span></a>"
+  )
   expect_equal(
     result$dev_branch_status,
     "<a href=\"https://github.com/org/repo/compare/main...dev\">+2, -1</a>"
@@ -78,6 +87,7 @@ test_that("summarize_github_repos appends qualification badge when registry matc
   result <- with_mocked_bindings(
     summarize_github_repos("org/repo", qualification_registry = registry),
     fetch_latest_release = function(...) mock_release,
+    fetch_issue_counts = function(...) list(open = 0, closed = 9),
     fetch_open_milestones = function(...) list(),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
@@ -107,6 +117,7 @@ test_that("summarize_github_repos shows grey badge when older version qualified"
   result <- with_mocked_bindings(
     summarize_github_repos("org/repo", qualification_registry = registry),
     fetch_latest_release = function(...) mock_release,
+    fetch_issue_counts = function(...) list(open = 2, closed = 5),
     fetch_open_milestones = function(...) list(),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
@@ -138,6 +149,10 @@ test_that("summarize_github_repos supports multiple repositories", {
     list(ahead_by = 0, behind_by = 0),
     list(ahead_by = 0, behind_by = 3)
   )
+  issue_counts <- list(
+    list(open = 1, closed = 4),
+    list(open = 0, closed = 0)
+  )
 
   index <- 0
   result <- with_mocked_bindings(
@@ -148,6 +163,9 @@ test_that("summarize_github_repos supports multiple repositories", {
     },
     fetch_open_milestones = function(owner, repo, token) {
       milestones[[index]]
+    },
+    fetch_issue_counts = function(owner, repo, token) {
+      issue_counts[[index]]
     },
     fetch_branch_comparison = function(owner, repo, base, head, token) {
       comparisons[[index]]
@@ -161,6 +179,8 @@ test_that("summarize_github_repos supports multiple repositories", {
   expect_match(result$latest_release[[1]], "2025-02-15")
   expect_match(result$latest_release[[2]], "<a href=\"https://github.com/org2/repo2/releases\">")
   expect_match(result$latest_release[[2]], "No release")
+  expect_match(result$open_vs_closed_issues[[1]], ">1 / 4<")
+  expect_match(result$open_vs_closed_issues[[2]], ">0 / 0<")
   expect_equal(
     result$dev_branch_status[[1]],
     "<a href=\"https://github.com/org/repo/compare/main...dev\">In sync</a>"

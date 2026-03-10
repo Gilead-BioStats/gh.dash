@@ -300,6 +300,40 @@ format_branch_comparison <- function(owner, repo, comparison) {
   as.character(anchor)
 }
 
+#' Format open vs closed issue counts as HTML
+#'
+#' Internal function to format issue totals as a linked label.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param issue_counts List with `open` and `closed` issue counts
+#' @return Character string with HTML anchor tag
+#' @keywords internal
+#' @importFrom htmltools tags HTML
+format_issue_summary <- function(owner, repo, issue_counts) {
+  issues_url <- sprintf("https://github.com/%s/%s/issues", owner, repo)
+
+  if (is.null(issue_counts)) {
+    label <- tailwind_label(
+      "Unavailable",
+      title = "Issue totals unavailable",
+      variant = "slate"
+    )
+    return(as.character(htmltools::tags$a(href = issues_url, htmltools::HTML(label))))
+  }
+
+  open_count <- sanitize_issue_count(issue_counts$open)
+  closed_count <- sanitize_issue_count(issue_counts$closed)
+
+  label <- tailwind_label(
+    sprintf("%s / %s", open_count, closed_count),
+    title = sprintf("%s open / %s closed issues", open_count, closed_count),
+    variant = "sky"
+  )
+
+  as.character(htmltools::tags$a(href = issues_url, htmltools::HTML(label)))
+}
+
 #' Get branch status text
 #'
 #' Internal function to convert GitHub branch comparison into readable status text.
