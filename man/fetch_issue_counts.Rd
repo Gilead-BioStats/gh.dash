@@ -14,16 +14,22 @@ fetch_issue_counts(owner, repo, token)
 \item{token}{GitHub personal access token (optional)}
 }
 \value{
-A named list with elements \code{issues_365day} and
-\code{issues_90day}, each a named list with integer elements
-\code{opened} and \code{closed}. Elements are \code{NA_integer_} when
-data could not be retrieved (e.g., rate limit reached).
+A named list with elements \code{issues_snapshot} and
+\code{issues_90day}. \code{issues_snapshot} has integer elements
+\code{open} (current total open) and \code{closed} (current total closed).
+\code{issues_90day} has integer elements \code{opened} (created in past 90
+days) and \code{closed} (closed in past 90 days). On failure all elements
+are \code{NA_integer_} and an additional \code{reason} character element
+is present: \code{"rate_limited"} when the API returns a rate-limit 403,
+or \code{"unavailable"} for any other failure (permission denied, network
+error, etc.).
 }
 \description{
-Internal function to retrieve opened and closed issue counts for two
-lookback windows (365 days and 90 days) using a single GitHub GraphQL
-request. Pull requests are excluded via the \code{type:issue} qualifier.
-When the API returns a rate-limit error the counts are \code{NA_integer_},
-allowing callers to surface "Unavailable" rather than silently showing zero.
+Internal function to retrieve current open/closed issue totals (snapshot)
+and 90-day activity counts (opened/closed within the last 90 days) using a
+single GitHub GraphQL request. Pull requests are excluded via the
+\code{type:issue} qualifier. When the API returns a rate-limit error the
+counts are \code{NA_integer_}, allowing callers to surface "Unavailable"
+rather than silently showing zero.
 }
 \keyword{internal}

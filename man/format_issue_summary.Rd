@@ -4,32 +4,35 @@
 \alias{format_issue_summary}
 \title{Format issue summary as HTML}
 \usage{
-format_issue_summary(owner, repo, issues_365day, issues_90day)
+format_issue_summary(owner, repo, issues_snapshot, issues_90day)
 }
 \arguments{
 \item{owner}{Repository owner (GitHub username or organization)}
 
 \item{repo}{Repository name}
 
-\item{issues_365day}{Named list with integer elements \code{opened} and
-\code{closed} for the past 365 days, as returned by
-\code{fetch_issue_counts()}. Elements may be \code{NA_integer_} when data
-is unavailable (e.g., rate limit reached).}
+\item{issues_snapshot}{Named list with integer elements \code{open} (current
+total open issues) and \code{closed} (current total closed issues), as
+returned by \code{fetch_issue_counts()}. Elements may be
+\code{NA_integer_} on failure; in that case an optional \code{reason}
+character element (\code{"rate_limited"} or \code{"unavailable"})
+controls the tooltip text.}
 
 \item{issues_90day}{Named list with integer elements \code{opened} and
 \code{closed} for the past 90 days, as returned by
-\code{fetch_issue_counts()}. Elements may be \code{NA_integer_} when data
-is unavailable (e.g., rate limit reached).}
+\code{fetch_issue_counts()}. Elements may be \code{NA_integer_} on
+failure; in that case an optional \code{reason} character element
+(\code{"rate_limited"} or \code{"unavailable"}) controls the tooltip text.}
 }
 \value{
 Character string with HTML anchor tag
 }
 \description{
 Internal function to format GitHub issue counts as a hyperlink pointing to
-the repository's issues page. The link text shows the number of issues opened
-and closed in the past 365 days. The tooltip shows the number of issues
-opened and closed in the past 90 days. When counts are \code{NA_integer_}
-(e.g., due to a rate-limit error) the cell shows "Unavailable" instead of
-a misleading zero.
+the repository's issues page. The link text shows the current total open and
+closed issue counts. The tooltip shows the number of issues opened and closed
+in the past 90 days. When counts are \code{NA_integer_} the cell shows
+"Unavailable" and the tooltip gives a failure-specific reason sourced from
+the \code{reason} element of the input lists.
 }
 \keyword{internal}
