@@ -358,10 +358,10 @@ fetch_issue_counts <- function(owner, repo, token) {
   base_q <- sprintf("repo:%s/%s type:issue", owner, repo)
 
   gql_query <- sprintf(
-    '{ open_total:   search(type: ISSUE, query: "%s state:open")         { issueCount }
-       closed_total: search(type: ISSUE, query: "%s state:closed")       { issueCount }
-       o90:          search(type: ISSUE, query: "%s created:>=%s")       { issueCount }
-       c90:          search(type: ISSUE, query: "%s closed:>=%s")        { issueCount } }',
+    '{ open_total:   search(type: ISSUE, first: 1, query: "%s state:open")         { issueCount }
+       closed_total: search(type: ISSUE, first: 1, query: "%s state:closed")       { issueCount }
+       o90:          search(type: ISSUE, first: 1, query: "%s created:>=%s")       { issueCount }
+       c90:          search(type: ISSUE, first: 1, query: "%s closed:>=%s")        { issueCount } }',
     base_q,
     base_q,
     base_q, since_90,
