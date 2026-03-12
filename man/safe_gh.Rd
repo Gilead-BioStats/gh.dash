@@ -4,7 +4,7 @@
 \alias{safe_gh}
 \title{Safe GitHub API wrapper}
 \usage{
-safe_gh(fun, ...)
+safe_gh(fun, ..., .return_rate_limit_sentinel = FALSE)
 }
 \arguments{
 \item{fun}{Function to call (typically gh::gh)}
