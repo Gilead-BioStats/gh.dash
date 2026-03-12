@@ -305,6 +305,75 @@ safe_gh <- function(fun, ...) {
   )
 }
 
+#' Fetch open issues count from GitHub API
+#'
+#' Internal function to retrieve the count of open issues for a GitHub
+#' repository, excluding pull requests. Uses the GitHub Search API to obtain
+#' an accurate total count without full pagination.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param token GitHub personal access token (optional)
+#' @return Integer count of open issues (not including pull requests), or 0 if
+#'   retrieval fails
+#' @keywords internal
+#' @importFrom gh gh
+fetch_open_issues <- function(owner, repo, token) {
+  query <- sprintf("repo:%s/%s type:issue state:open", owner, repo)
+  result <- safe_gh(
+    gh::gh,
+    "GET /search/issues",
+    q = query,
+    per_page = 1,
+    .token = token
+  )
+
+  if (is.null(result)) {
+    return(0L)
+  }
+
+  as.integer(result$total_count %||% 0L)
+}
+
+#' Fetch issue activity counts for a lookback window
+#'
+#' Internal function to retrieve the number of issues opened and closed within
+#' a given time window. Uses the GitHub Search API for accurate counts without
+#' full pagination. Pull requests are excluded via the `type:issue` qualifier.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param token GitHub personal access token (optional)
+#' @param since_date Date lower bound (inclusive); a \code{Date} object
+#' @return A named list with integer elements \code{opened} and \code{closed}
+#' @keywords internal
+#' @importFrom gh gh
+fetch_issues_since <- function(owner, repo, token, since_date) {
+  since_str <- format(since_date, "%Y-%m-%d")
+  base_query <- sprintf("repo:%s/%s type:issue", owner, repo)
+
+  opened_result <- safe_gh(
+    gh::gh,
+    "GET /search/issues",
+    q = paste0(base_query, " created:>=", since_str),
+    per_page = 1,
+    .token = token
+  )
+
+  closed_result <- safe_gh(
+    gh::gh,
+    "GET /search/issues",
+    q = paste0(base_query, " closed:>=", since_str),
+    per_page = 1,
+    .token = token
+  )
+
+  list(
+    opened = as.integer(if (!is.null(opened_result)) opened_result$total_count %||% 0L else 0L),
+    closed = as.integer(if (!is.null(closed_result)) closed_result$total_count %||% 0L else 0L)
+  )
+}
+
 #' Check if error has specific HTTP status code
 #'
 #' Internal function to check if a GitHub API error has a specific status code.

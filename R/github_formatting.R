@@ -295,6 +295,29 @@ grayscale_milestone_label <- function(text, tooltip, completion) {
   )
 }
 
+#' Format issue summary as HTML
+#'
+#' Internal function to format GitHub issue counts as a hyperlink pointing to
+#' the repository's issues page. The tooltip shows the number of issues opened
+#' and closed in the past 90 days.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param open_count Integer count of currently open issues
+#' @param issues_90day Named list with integer elements \code{opened} and
+#'   \code{closed}, as returned by \code{fetch_issues_since()}
+#' @return Character string with HTML anchor tag
+#' @keywords internal
+#' @importFrom htmltools tags
+format_issue_summary <- function(owner, repo, open_count, issues_90day) {
+  url <- sprintf("https://github.com/%s/%s/issues", owner, repo)
+  link_text <- if (open_count == 0L) "None" else sprintf("%d", open_count)
+  opened <- issues_90day$opened %||% 0L
+  closed <- issues_90day$closed %||% 0L
+  tooltip <- sprintf("%d opened / %d closed in past 90 days", opened, closed)
+  as.character(htmltools::tags$a(href = url, title = tooltip, link_text))
+}
+
 #' Format pull request summary as HTML
 #'
 #' Internal function to format GitHub pull requests count with link as HTML.
