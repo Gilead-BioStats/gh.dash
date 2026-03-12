@@ -355,7 +355,7 @@ safe_gh <- function(fun, ..., .return_rate_limit_sentinel = FALSE) {
 #' @importFrom gh gh
 fetch_issue_counts <- function(owner, repo, token) {
   since_90 <- format(Sys.Date() - 90, "%Y-%m-%d")
-  base_q   <- sprintf("repo:%s/%s type:issue", owner, repo)
+  base_q <- sprintf("repo:%s/%s type:issue", owner, repo)
 
   gql_query <- sprintf(
     '{ open_total:   search(type: ISSUE, query: "%s state:open")         { issueCount }
@@ -399,7 +399,7 @@ fetch_issue_counts <- function(owner, repo, token) {
 
   list(
     issues_snapshot = list(
-      open   = as.integer(result$data$open_total$issueCount   %||% NA_integer_),
+      open   = as.integer(result$data$open_total$issueCount %||% NA_integer_),
       closed = as.integer(result$data$closed_total$issueCount %||% NA_integer_)
     ),
     issues_90day = list(
