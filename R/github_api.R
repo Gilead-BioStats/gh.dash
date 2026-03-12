@@ -297,7 +297,7 @@ safe_gh <- function(fun, ..., .return_rate_limit_sentinel = FALSE) {
           if (!is.null(repo_label)) {
             msg <- paste0(msg, " for ", repo_label)
           }
-          msg <- paste0(msg, "; issue counts will show as Unavailable")
+          msg <- paste0(msg, "; some GitHub-derived metrics may show as Unavailable")
           warning(msg, call. = FALSE)
           if (.return_rate_limit_sentinel) {
             return(structure(list(), class = "gh_rate_limited"))
