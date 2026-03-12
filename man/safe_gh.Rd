@@ -19,10 +19,12 @@ to rate limiting" from a genuine empty result (\code{NULL}). When
 same as for permission 403s.}
 }
 \value{
-Function result, \code{NULL} for 404s and non-rate-limit 403s
-(including permission-denied 403s), or a \code{"gh_rate_limited"}
-sentinel when \code{.return_rate_limit_sentinel} is \code{TRUE} and the
-API reports a rate-limit 403.
+Function result. By default (when
+\code{.return_rate_limit_sentinel} is \code{FALSE}), returns \code{NULL}
+for 404s and all 403s (including permission-denied and rate-limit 403s).
+When \code{.return_rate_limit_sentinel} is \code{TRUE} and the API
+reports a rate-limit 403, returns a \code{"gh_rate_limited"} sentinel
+instead of \code{NULL}.
 }
 \description{
 Internal function that wraps GitHub API calls to handle 404 errors gracefully.

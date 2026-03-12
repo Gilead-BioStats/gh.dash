@@ -1001,10 +1001,12 @@ test_that("summarize_github_repos issue_summary shows Unavailable when fetch_iss
     fetch_releases = function(...) list(),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
-    fetch_issue_counts = function(...) list(
-      issues_snapshot = list(open = NA_integer_, closed = NA_integer_, reason = "unavailable"),
-      issues_90day    = list(opened = NA_integer_, closed = NA_integer_, reason = "unavailable")
-    ),
+    fetch_issue_counts = function(...) {
+      list(
+        issues_snapshot = list(open = NA_integer_, closed = NA_integer_, reason = "unavailable"),
+        issues_90day    = list(opened = NA_integer_, closed = NA_integer_, reason = "unavailable")
+      )
+    },
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
@@ -1020,10 +1022,12 @@ test_that("summarize_github_repos issue_summary shows rate-limit message when fe
     fetch_releases = function(...) list(),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
-    fetch_issue_counts = function(...) list(
-      issues_snapshot = list(open = NA_integer_, closed = NA_integer_, reason = "rate_limited"),
-      issues_90day    = list(opened = NA_integer_, closed = NA_integer_, reason = "rate_limited")
-    ),
+    fetch_issue_counts = function(...) {
+      list(
+        issues_snapshot = list(open = NA_integer_, closed = NA_integer_, reason = "rate_limited"),
+        issues_90day    = list(opened = NA_integer_, closed = NA_integer_, reason = "rate_limited")
+      )
+    },
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
