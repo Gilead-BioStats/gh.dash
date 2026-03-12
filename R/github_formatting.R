@@ -301,19 +301,21 @@ grayscale_milestone_label <- function(text, tooltip, completion) {
 #' the repository's issues page. The link text shows the number of issues opened
 #' and closed in the past 365 days. The tooltip shows the number of issues
 #' opened and closed in the past 90 days. When counts are \code{NA_integer_}
-#' (e.g., due to a rate-limit error) the cell shows "Unavailable" instead of
-#' a misleading zero.
+#' the cell shows "Unavailable" and the tooltip gives a failure-specific reason
+#' sourced from the \code{reason} element of the input lists.
 #'
 #' @param owner Repository owner (GitHub username or organization)
 #' @param repo Repository name
 #' @param issues_365day Named list with integer elements \code{opened} and
 #'   \code{closed} for the past 365 days, as returned by
-#'   \code{fetch_issue_counts()}. Elements may be \code{NA_integer_} when data
-#'   is unavailable (e.g., rate limit reached).
+#'   \code{fetch_issue_counts()}. Elements may be \code{NA_integer_} on
+#'   failure; in that case an optional \code{reason} character element
+#'   (\code{"rate_limited"} or \code{"unavailable"}) controls the tooltip text.
 #' @param issues_90day Named list with integer elements \code{opened} and
 #'   \code{closed} for the past 90 days, as returned by
-#'   \code{fetch_issue_counts()}. Elements may be \code{NA_integer_} when data
-#'   is unavailable (e.g., rate limit reached).
+#'   \code{fetch_issue_counts()}. Elements may be \code{NA_integer_} on
+#'   failure; in that case an optional \code{reason} character element
+#'   (\code{"rate_limited"} or \code{"unavailable"}) controls the tooltip text.
 #' @return Character string with HTML anchor tag
 #' @keywords internal
 #' @importFrom htmltools tags
@@ -329,7 +331,11 @@ format_issue_summary <- function(owner, repo, issues_365day, issues_90day) {
     sprintf("%d / %d", opened_365, closed_365)
   }
   tooltip <- if (is.na(opened_90) || is.na(closed_90)) {
-    "Issue data unavailable (rate limit reached)"
+    if (identical(issues_90day$reason, "rate_limited")) {
+      "Issue data unavailable (rate limit reached)"
+    } else {
+      "Issue data unavailable"
+    }
   } else {
     sprintf("%d opened / %d closed in past 90 days", opened_90, closed_90)
   }

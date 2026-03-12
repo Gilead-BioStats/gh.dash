@@ -10,12 +10,24 @@ safe_gh(fun, ..., .return_rate_limit_sentinel = FALSE)
 \item{fun}{Function to call (typically gh::gh)}
 
 \item{...}{Arguments passed to the function}
+
+\item{.return_rate_limit_sentinel}{Logical. When \code{TRUE} and a
+rate-limit 403 is encountered, returns a zero-length list with class
+\code{"gh_rate_limited"} so callers can distinguish "data unavailable due
+to rate limiting" from a genuine empty result (\code{NULL}). When
+\code{FALSE} (the default), returns \code{NULL} for rate-limit 403s, the
+same as for permission 403s.}
 }
 \value{
-Function result or NULL for 404 errors
+Function result, \code{NULL} for 404s and unrecognised 403s, or a
+\code{"gh_rate_limited"} sentinel when \code{.return_rate_limit_sentinel}
+is \code{TRUE} and the API reports a rate-limit 403.
 }
 \description{
 Internal function that wraps GitHub API calls to handle 404 errors gracefully.
-Returns NULL for 404 errors and re-throws other errors.
+Returns NULL for 404 errors and re-throws other errors. When a 403 response
+is identified as a rate-limit error (message contains "rate limit"), a
+warning is emitted and the return value depends on
+\code{.return_rate_limit_sentinel}.
 }
 \keyword{internal}

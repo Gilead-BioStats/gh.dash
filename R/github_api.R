@@ -264,11 +264,22 @@ parse_github_timestamp <- function(timestamp) {
 #' Safe GitHub API wrapper
 #'
 #' Internal function that wraps GitHub API calls to handle 404 errors gracefully.
-#' Returns NULL for 404 errors and re-throws other errors.
+#' Returns NULL for 404 errors and re-throws other errors. When a 403 response
+#' is identified as a rate-limit error (message contains "rate limit"), a
+#' warning is emitted and the return value depends on
+#' \code{.return_rate_limit_sentinel}.
 #'
 #' @param fun Function to call (typically gh::gh)
 #' @param ... Arguments passed to the function
-#' @return Function result or NULL for 404 errors
+#' @param .return_rate_limit_sentinel Logical. When \code{TRUE} and a
+#'   rate-limit 403 is encountered, returns a zero-length list with class
+#'   \code{"gh_rate_limited"} so callers can distinguish "data unavailable due
+#'   to rate limiting" from a genuine empty result (\code{NULL}). When
+#'   \code{FALSE} (the default), returns \code{NULL} for rate-limit 403s, the
+#'   same as for permission 403s.
+#' @return Function result, \code{NULL} for 404s and unrecognised 403s, or a
+#'   \code{"gh_rate_limited"} sentinel when \code{.return_rate_limit_sentinel}
+#'   is \code{TRUE} and the API reports a rate-limit 403.
 #' @keywords internal
 safe_gh <- function(fun, ..., .return_rate_limit_sentinel = FALSE) {
   args <- list(...)
@@ -331,8 +342,11 @@ safe_gh <- function(fun, ..., .return_rate_limit_sentinel = FALSE) {
 #' @param token GitHub personal access token (optional)
 #' @return A named list with elements \code{issues_365day} and
 #'   \code{issues_90day}, each a named list with integer elements
-#'   \code{opened} and \code{closed}. Elements are \code{NA_integer_} when
-#'   data could not be retrieved (e.g., rate limit reached).
+#'   \code{opened} and \code{closed}. On failure both elements are
+#'   \code{NA_integer_} and an additional \code{reason} character element is
+#'   present: \code{"rate_limited"} when the API returns a rate-limit 403, or
+#'   \code{"unavailable"} for any other failure (permission denied, network
+#'   error, etc.).
 #' @keywords internal
 #' @importFrom gh gh
 fetch_issue_counts <- function(owner, repo, token) {
@@ -351,7 +365,9 @@ fetch_issue_counts <- function(owner, repo, token) {
     base_q, since_90
   )
 
-  na_pair <- list(opened = NA_integer_, closed = NA_integer_)
+  make_na_pair <- function(reason) {
+    list(opened = NA_integer_, closed = NA_integer_, reason = reason)
+  }
 
   result <- safe_gh(
     gh::gh,
@@ -361,8 +377,14 @@ fetch_issue_counts <- function(owner, repo, token) {
     .return_rate_limit_sentinel = TRUE
   )
 
-  if (is.null(result) || inherits(result, "gh_rate_limited")) {
-    return(list(issues_365day = na_pair, issues_90day = na_pair))
+  if (inherits(result, "gh_rate_limited")) {
+    pair <- make_na_pair("rate_limited")
+    return(list(issues_365day = pair, issues_90day = pair))
+  }
+
+  if (is.null(result)) {
+    pair <- make_na_pair("unavailable")
+    return(list(issues_365day = pair, issues_90day = pair))
   }
 
   list(

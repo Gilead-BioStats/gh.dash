@@ -773,10 +773,25 @@ test_that("format_issue_summary shows 0 / 0 when all counts are zero", {
   expect_match(result, ">0 / 0<")
 })
 
-test_that("format_issue_summary shows Unavailable when counts are NA", {
-  result <- gh.dash:::format_issue_summary("org", "repo", list(opened = NA_integer_, closed = NA_integer_), list(opened = NA_integer_, closed = NA_integer_))
+test_that("format_issue_summary shows Unavailable with generic message when reason is absent", {
+  result <- gh.dash:::format_issue_summary(
+    "org", "repo",
+    list(opened = NA_integer_, closed = NA_integer_),
+    list(opened = NA_integer_, closed = NA_integer_)
+  )
   expect_match(result, ">Unavailable<")
-  expect_match(result, "rate limit")
+  expect_match(result, "Issue data unavailable")
+  expect_no_match(result, "rate limit")
+})
+
+test_that("format_issue_summary shows rate-limit message when reason is rate_limited", {
+  result <- gh.dash:::format_issue_summary(
+    "org", "repo",
+    list(opened = NA_integer_, closed = NA_integer_, reason = "rate_limited"),
+    list(opened = NA_integer_, closed = NA_integer_, reason = "rate_limited")
+  )
+  expect_match(result, ">Unavailable<")
+  expect_match(result, "rate limit reached")
 })
 
 test_that("summarize_github_repos includes issue_summary column", {
