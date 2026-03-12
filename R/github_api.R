@@ -270,7 +270,7 @@ parse_github_timestamp <- function(timestamp) {
 #' @param ... Arguments passed to the function
 #' @return Function result or NULL for 404 errors
 #' @keywords internal
-safe_gh <- function(fun, ...) {
+safe_gh <- function(fun, ..., .return_rate_limit_sentinel = FALSE) {
   args <- list(...)
   repo_label <- NULL
   if (!is.null(args$owner) && !is.null(args$repo)) {
@@ -291,6 +291,19 @@ safe_gh <- function(fun, ...) {
         (inherits(err, c("gh_error", "github_error")) && has_status_code(err, 403))
 
       if (is_403) {
+        is_rate_limited <- grepl("rate limit", conditionMessage(err), ignore.case = TRUE)
+        if (is_rate_limited) {
+          msg <- "GitHub API rate limit reached"
+          if (!is.null(repo_label)) {
+            msg <- paste0(msg, " for ", repo_label)
+          }
+          msg <- paste0(msg, "; issue counts will show as Unavailable")
+          warning(msg, call. = FALSE)
+          if (.return_rate_limit_sentinel) {
+            return(structure(list(), class = "gh_rate_limited"))
+          }
+          return(NULL)
+        }
         msg <- "GitHub API returned 403 (permission denied)"
         if (!is.null(repo_label)) {
           msg <- paste0(msg, " for ", repo_label)
@@ -305,72 +318,62 @@ safe_gh <- function(fun, ...) {
   )
 }
 
-#' Fetch open issues count from GitHub API
+#' Fetch issue counts via a single GraphQL request
 #'
-#' Internal function to retrieve the count of open issues for a GitHub
-#' repository, excluding pull requests. Uses the GitHub Search API to obtain
-#' an accurate total count without full pagination.
+#' Internal function to retrieve opened and closed issue counts for two
+#' lookback windows (365 days and 90 days) using a single GitHub GraphQL
+#' request. Pull requests are excluded via the \code{type:issue} qualifier.
+#' When the API returns a rate-limit error the counts are \code{NA_integer_},
+#' allowing callers to surface "Unavailable" rather than silently showing zero.
 #'
 #' @param owner Repository owner (GitHub username or organization)
 #' @param repo Repository name
 #' @param token GitHub personal access token (optional)
-#' @return Integer count of open issues (not including pull requests), or 0 if
-#'   retrieval fails
+#' @return A named list with elements \code{issues_365day} and
+#'   \code{issues_90day}, each a named list with integer elements
+#'   \code{opened} and \code{closed}. Elements are \code{NA_integer_} when
+#'   data could not be retrieved (e.g., rate limit reached).
 #' @keywords internal
 #' @importFrom gh gh
-fetch_open_issues <- function(owner, repo, token) {
-  query <- sprintf("repo:%s/%s type:issue state:open", owner, repo)
+fetch_issue_counts <- function(owner, repo, token) {
+  since_365 <- format(Sys.Date() - 365, "%Y-%m-%d")
+  since_90  <- format(Sys.Date() - 90,  "%Y-%m-%d")
+  base_q    <- sprintf("repo:%s/%s type:issue", owner, repo)
+
+  gql_query <- sprintf(
+    '{ o365: search(type: ISSUE, query: "%s created:>=%s") { issueCount }
+       c365: search(type: ISSUE, query: "%s closed:>=%s")  { issueCount }
+       o90:  search(type: ISSUE, query: "%s created:>=%s") { issueCount }
+       c90:  search(type: ISSUE, query: "%s closed:>=%s")  { issueCount } }',
+    base_q, since_365,
+    base_q, since_365,
+    base_q, since_90,
+    base_q, since_90
+  )
+
+  na_pair <- list(opened = NA_integer_, closed = NA_integer_)
+
   result <- safe_gh(
     gh::gh,
-    "GET /search/issues",
-    q = query,
-    per_page = 1,
-    .token = token
+    "POST /graphql",
+    query = gql_query,
+    .token = token,
+    .return_rate_limit_sentinel = TRUE
   )
 
-  if (is.null(result)) {
-    return(0L)
+  if (is.null(result) || inherits(result, "gh_rate_limited")) {
+    return(list(issues_365day = na_pair, issues_90day = na_pair))
   }
 
-  as.integer(result$total_count %||% 0L)
-}
-
-#' Fetch issue activity counts for a lookback window
-#'
-#' Internal function to retrieve the number of issues opened and closed within
-#' a given time window. Uses the GitHub Search API for accurate counts without
-#' full pagination. Pull requests are excluded via the `type:issue` qualifier.
-#'
-#' @param owner Repository owner (GitHub username or organization)
-#' @param repo Repository name
-#' @param token GitHub personal access token (optional)
-#' @param since_date Date lower bound (inclusive); a \code{Date} object
-#' @return A named list with integer elements \code{opened} and \code{closed}
-#' @keywords internal
-#' @importFrom gh gh
-fetch_issues_since <- function(owner, repo, token, since_date) {
-  since_str <- format(since_date, "%Y-%m-%d")
-  base_query <- sprintf("repo:%s/%s type:issue", owner, repo)
-
-  opened_result <- safe_gh(
-    gh::gh,
-    "GET /search/issues",
-    q = paste0(base_query, " created:>=", since_str),
-    per_page = 1,
-    .token = token
-  )
-
-  closed_result <- safe_gh(
-    gh::gh,
-    "GET /search/issues",
-    q = paste0(base_query, " closed:>=", since_str),
-    per_page = 1,
-    .token = token
-  )
-
   list(
-    opened = as.integer(if (!is.null(opened_result)) opened_result$total_count %||% 0L else 0L),
-    closed = as.integer(if (!is.null(closed_result)) closed_result$total_count %||% 0L else 0L)
+    issues_365day = list(
+      opened = as.integer(result$data$o365$issueCount %||% NA_integer_),
+      closed  = as.integer(result$data$c365$issueCount %||% NA_integer_)
+    ),
+    issues_90day = list(
+      opened = as.integer(result$data$o90$issueCount %||% NA_integer_),
+      closed  = as.integer(result$data$c90$issueCount %||% NA_integer_)
+    )
   )
 }
 

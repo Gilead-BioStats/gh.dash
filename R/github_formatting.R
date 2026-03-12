@@ -298,23 +298,41 @@ grayscale_milestone_label <- function(text, tooltip, completion) {
 #' Format issue summary as HTML
 #'
 #' Internal function to format GitHub issue counts as a hyperlink pointing to
-#' the repository's issues page. The tooltip shows the number of issues opened
-#' and closed in the past 90 days.
+#' the repository's issues page. The link text shows the number of issues opened
+#' and closed in the past 365 days. The tooltip shows the number of issues
+#' opened and closed in the past 90 days. When counts are \code{NA_integer_}
+#' (e.g., due to a rate-limit error) the cell shows "Unavailable" instead of
+#' a misleading zero.
 #'
 #' @param owner Repository owner (GitHub username or organization)
 #' @param repo Repository name
-#' @param open_count Integer count of currently open issues
+#' @param issues_365day Named list with integer elements \code{opened} and
+#'   \code{closed} for the past 365 days, as returned by
+#'   \code{fetch_issue_counts()}. Elements may be \code{NA_integer_} when data
+#'   is unavailable (e.g., rate limit reached).
 #' @param issues_90day Named list with integer elements \code{opened} and
-#'   \code{closed}, as returned by \code{fetch_issues_since()}
+#'   \code{closed} for the past 90 days, as returned by
+#'   \code{fetch_issue_counts()}. Elements may be \code{NA_integer_} when data
+#'   is unavailable (e.g., rate limit reached).
 #' @return Character string with HTML anchor tag
 #' @keywords internal
 #' @importFrom htmltools tags
-format_issue_summary <- function(owner, repo, open_count, issues_90day) {
+format_issue_summary <- function(owner, repo, issues_365day, issues_90day) {
   url <- sprintf("https://github.com/%s/%s/issues", owner, repo)
-  link_text <- if (open_count == 0L) "None" else sprintf("%d", open_count)
-  opened <- issues_90day$opened %||% 0L
-  closed <- issues_90day$closed %||% 0L
-  tooltip <- sprintf("%d opened / %d closed in past 90 days", opened, closed)
+  opened_365 <- issues_365day$opened
+  closed_365 <- issues_365day$closed
+  opened_90  <- issues_90day$opened
+  closed_90  <- issues_90day$closed
+  link_text <- if (is.na(opened_365) || is.na(closed_365)) {
+    "Unavailable"
+  } else {
+    sprintf("%d / %d", opened_365, closed_365)
+  }
+  tooltip <- if (is.na(opened_90) || is.na(closed_90)) {
+    "Issue data unavailable (rate limit reached)"
+  } else {
+    sprintf("%d opened / %d closed in past 90 days", opened_90, closed_90)
+  }
   as.character(htmltools::tags$a(href = url, title = tooltip, link_text))
 }
 

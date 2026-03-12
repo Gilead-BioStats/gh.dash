@@ -491,7 +491,18 @@ render_status_table <- function(df) {
               htmltools::tags$th(scope = "col", class = "col-repo", "Repository"),
               htmltools::tags$th(scope = "col", class = "col-latest-release", "Latest release"),
               htmltools::tags$th(scope = "col", class = "col-open-milestones", "Open milestones"),
-              htmltools::tags$th(scope = "col", class = "col-issues", "Issues (open / closed)"),
+              htmltools::tags$th(scope = "col", class = "col-issues",
+                htmltools::tagList(
+                  "Issues (open / closed)",
+                  htmltools::tags$span(
+                    class = "info-icon",
+                    `data-tooltip` = "Number of issues over the past 365 days",
+                    `aria-label` = "Number of issues over the past 365 days",
+                    tabindex = "0",
+                    "i"
+                  )
+                )
+              ),
               htmltools::tags$th(scope = "col", class = "col-open-prs", "Open PRs"),
               htmltools::tags$th(
                 scope = "col",

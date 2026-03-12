@@ -45,8 +45,7 @@ summarize_github_repos <- function(
       milestones <- fetch_open_milestones(owner, repo, token)
       pr_count <- fetch_open_prs(owner, repo, token)
       comparison <- fetch_branch_comparison(owner, repo, base = "main", head = "dev", token = token)
-      open_issues <- fetch_open_issues(owner, repo, token)
-      issues_90day <- fetch_issues_since(owner, repo, token, since_date = Sys.Date() - 90)
+      issue_counts  <- fetch_issue_counts(owner, repo, token)
 
       snapshot <- list(
         metadata = metadata,
@@ -54,8 +53,8 @@ summarize_github_repos <- function(
         milestones = milestones,
         pr_count = pr_count,
         comparison = comparison,
-        open_issues = open_issues,
-        issues_90day = issues_90day
+        issues_365day = issue_counts$issues_365day,
+        issues_90day  = issue_counts$issues_90day
       )
       assign(cache_key, snapshot, envir = repo_snapshot_cache)
     }
@@ -66,14 +65,14 @@ summarize_github_repos <- function(
     milestones <- snapshot$milestones
     pr_count <- snapshot$pr_count
     comparison <- snapshot$comparison
-    open_issues <- snapshot$open_issues
+    issues_365day <- snapshot$issues_365day
     issues_90day <- snapshot$issues_90day
 
     results[[idx]] <- list(
       repo = format_repo_link(owner, repo, is_private = is_private),
       latest_release = format_release_summary(owner, repo, release, registry),
       upcoming_milestones = format_milestone_summary(owner, repo, milestones),
-      issue_summary = format_issue_summary(owner, repo, open_issues, issues_90day),
+      issue_summary = format_issue_summary(owner, repo, issues_365day, issues_90day),
       open_prs = format_pr_summary(owner, repo, pr_count),
       dev_branch_status = format_branch_comparison(owner, repo, comparison),
       ytd_releases = format_ytd_releases(owner, repo, releases)
