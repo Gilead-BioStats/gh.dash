@@ -813,19 +813,12 @@ test_that("safe_gh does not include rate-limit text in permission-denied warning
     list(message = "Forbidden")
   )
 
-  warn_msg <- NULL
-
-  expect_warning(
-    withCallingHandlers(
-      gh.dash:::safe_gh(function(...) stop(perm_err)),
-      warning = function(w) {
-        warn_msg <<- conditionMessage(w)
-        invokeRestart("muffleWarning")
-      }
-    ),
-    regexp = "permission denied"
+  warn_msg <- tryCatch(
+    gh.dash:::safe_gh(function(...) stop(perm_err)),
+    warning = function(w) conditionMessage(w)
   )
 
+  expect_match(warn_msg, "permission denied", ignore.case = TRUE)
   expect_false(grepl("rate limit", warn_msg, ignore.case = TRUE))
 })
 
