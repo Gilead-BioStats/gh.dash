@@ -12,7 +12,7 @@
 format_repo_link <- function(owner, repo, is_private = FALSE) {
   url <- sprintf("https://github.com/%s/%s", owner, repo)
   repo_text <- sprintf("%s/%s", owner, repo)
-  
+
   if (isTRUE(is_private)) {
     lock_icon <- htmltools::tags$span(
       title = "Private repository",
@@ -22,7 +22,7 @@ format_repo_link <- function(owner, repo, is_private = FALSE) {
   } else {
     link_content <- repo_text
   }
-  
+
   as.character(htmltools::tags$a(href = url, link_content))
 }
 
@@ -330,14 +330,14 @@ format_issue_summary <- function(owner, repo, open_count, issues_90day) {
 #' @importFrom htmltools tags
 format_pr_summary <- function(owner, repo, pr_count) {
   base_url <- sprintf("https://github.com/%s/%s/pulls", owner, repo)
-  
+
   if (pr_count == 0) {
     return(as.character(htmltools::tags$a(href = base_url, "None")))
   }
-  
+
   as.character(
     htmltools::tags$a(
-      href = base_url, 
+      href = base_url,
       sprintf("%d", pr_count)
     )
   )

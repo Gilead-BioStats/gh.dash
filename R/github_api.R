@@ -62,7 +62,7 @@ fetch_open_prs <- function(owner, repo, token) {
     state = "open",
     .token = token
   )
-  
+
   # Extract the count from response headers if available
   if (!is.null(result)) {
     headers <- attr(result, "response")
@@ -92,7 +92,7 @@ fetch_open_prs <- function(owner, repo, token) {
     # If no Link header, just return the count of results
     return(length(result))
   }
-  
+
   0
 }
 
