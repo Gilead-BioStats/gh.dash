@@ -97,7 +97,7 @@ test_that("summarize_github_repos assembles release and milestone summaries", {
       mock_milestones
     },
     fetch_open_prs = function(...) 0L,
-    fetch_issue_counts = function(...) list(issues_365day = list(opened = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(owner, repo, base, head, token) {
       expect_equal(
         list(owner = owner, repo = repo, base = base, head = head),
@@ -136,7 +136,7 @@ test_that("summarize_github_repos includes open PR count", {
       expect_equal(repo, "repo")
       3L
     },
-    fetch_issue_counts = function(...) list(issues_365day = list(opened = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
@@ -169,7 +169,7 @@ test_that("summarize_github_repos appends qualification badge when registry matc
     fetch_releases = function(...) list(mock_release),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
-    fetch_issue_counts = function(...) list(issues_365day = list(opened = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
@@ -203,7 +203,7 @@ test_that("summarize_github_repos shows grey badge when older version qualified"
     fetch_releases = function(...) list(mock_release),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
-    fetch_issue_counts = function(...) list(issues_365day = list(opened = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
@@ -251,7 +251,7 @@ test_that("summarize_github_repos supports multiple repositories", {
       milestones[[index]]
     },
     fetch_open_prs = function(...) 0L,
-    fetch_issue_counts = function(...) list(issues_365day = list(opened = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(owner, repo, base, head, token) {
       comparisons[[index]]
     }
@@ -317,8 +317,8 @@ test_that("summarize_github_repos reuses API payloads for duplicate repos", {
     fetch_issue_counts = function(...) {
       calls$issue_counts <- calls$issue_counts + 1L
       list(
-        issues_365day = list(opened = 0L, closed = 0L),
-        issues_90day  = list(opened = 0L, closed = 0L)
+        issues_snapshot = list(open = 0L, closed = 0L),
+        issues_90day    = list(opened = 0L, closed = 0L)
       )
     },
     fetch_branch_comparison = function(...) {
@@ -726,7 +726,7 @@ test_that("summarize_github_repos renders lock icon for private repos", {
     fetch_releases = function(...) list(),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
-    fetch_issue_counts = function(...) list(issues_365day = list(opened = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
@@ -742,7 +742,7 @@ test_that("summarize_github_repos defaults is_private to FALSE when metadata is 
     fetch_releases = function(...) list(),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
-    fetch_issue_counts = function(...) list(issues_365day = list(opened = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
@@ -754,29 +754,29 @@ test_that("summarize_github_repos defaults is_private to FALSE when metadata is 
 # -- format_issue_summary ------------------------------------------------------
 
 test_that("format_issue_summary returns link to issues page", {
-  result <- gh.dash:::format_issue_summary("org", "repo", list(opened = 5L, closed = 12L), list(opened = 3L, closed = 7L))
+  result <- gh.dash:::format_issue_summary("org", "repo", list(open = 5L, closed = 12L), list(opened = 3L, closed = 7L))
   expect_match(result, 'href="https://github.com/org/repo/issues"')
 })
 
 test_that("format_issue_summary tooltip shows 90-day opened and closed counts", {
-  result <- gh.dash:::format_issue_summary("org", "repo", list(opened = 5L, closed = 12L), list(opened = 3L, closed = 7L))
+  result <- gh.dash:::format_issue_summary("org", "repo", list(open = 5L, closed = 12L), list(opened = 3L, closed = 7L))
   expect_match(result, "3 opened / 7 closed in past 90 days")
 })
 
-test_that("format_issue_summary shows open count / closed count as link text", {
-  result <- gh.dash:::format_issue_summary("org", "repo", list(opened = 5L, closed = 12L), list(opened = 3L, closed = 7L))
+test_that("format_issue_summary shows total open count / total closed count as link text", {
+  result <- gh.dash:::format_issue_summary("org", "repo", list(open = 5L, closed = 12L), list(opened = 3L, closed = 7L))
   expect_match(result, ">5 / 12<")
 })
 
 test_that("format_issue_summary shows 0 / 0 when all counts are zero", {
-  result <- gh.dash:::format_issue_summary("org", "repo", list(opened = 0L, closed = 0L), list(opened = 0L, closed = 0L))
+  result <- gh.dash:::format_issue_summary("org", "repo", list(open = 0L, closed = 0L), list(opened = 0L, closed = 0L))
   expect_match(result, ">0 / 0<")
 })
 
 test_that("format_issue_summary shows Unavailable with generic message when reason is absent", {
   result <- gh.dash:::format_issue_summary(
     "org", "repo",
-    list(opened = NA_integer_, closed = NA_integer_),
+    list(open = NA_integer_, closed = NA_integer_),
     list(opened = NA_integer_, closed = NA_integer_)
   )
   expect_match(result, ">Unavailable<")
@@ -787,7 +787,7 @@ test_that("format_issue_summary shows Unavailable with generic message when reas
 test_that("format_issue_summary shows rate-limit message when reason is rate_limited", {
   result <- gh.dash:::format_issue_summary(
     "org", "repo",
-    list(opened = NA_integer_, closed = NA_integer_, reason = "rate_limited"),
+    list(open = NA_integer_, closed = NA_integer_, reason = "rate_limited"),
     list(opened = NA_integer_, closed = NA_integer_, reason = "rate_limited")
   )
   expect_match(result, ">Unavailable<")
@@ -802,8 +802,8 @@ test_that("summarize_github_repos includes issue_summary column", {
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
     fetch_issue_counts = function(...) list(
-      issues_365day = list(opened = 4L, closed = 17L),
-      issues_90day  = list(opened = 2L, closed = 5L)
+      issues_snapshot = list(open = 4L, closed = 17L),
+      issues_90day    = list(opened = 2L, closed = 5L)
     ),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )

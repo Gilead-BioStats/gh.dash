@@ -331,41 +331,46 @@ safe_gh <- function(fun, ..., .return_rate_limit_sentinel = FALSE) {
 
 #' Fetch issue counts via a single GraphQL request
 #'
-#' Internal function to retrieve opened and closed issue counts for two
-#' lookback windows (365 days and 90 days) using a single GitHub GraphQL
-#' request. Pull requests are excluded via the \code{type:issue} qualifier.
-#' When the API returns a rate-limit error the counts are \code{NA_integer_},
-#' allowing callers to surface "Unavailable" rather than silently showing zero.
+#' Internal function to retrieve current open/closed issue totals (snapshot)
+#' and 90-day activity counts (opened/closed within the last 90 days) using a
+#' single GitHub GraphQL request. Pull requests are excluded via the
+#' \code{type:issue} qualifier. When the API returns a rate-limit error the
+#' counts are \code{NA_integer_}, allowing callers to surface "Unavailable"
+#' rather than silently showing zero.
 #'
 #' @param owner Repository owner (GitHub username or organization)
 #' @param repo Repository name
 #' @param token GitHub personal access token (optional)
-#' @return A named list with elements \code{issues_365day} and
-#'   \code{issues_90day}, each a named list with integer elements
-#'   \code{opened} and \code{closed}. On failure both elements are
-#'   \code{NA_integer_} and an additional \code{reason} character element is
-#'   present: \code{"rate_limited"} when the API returns a rate-limit 403, or
-#'   \code{"unavailable"} for any other failure (permission denied, network
+#' @return A named list with elements \code{issues_snapshot} and
+#'   \code{issues_90day}. \code{issues_snapshot} has integer elements
+#'   \code{open} (current total open) and \code{closed} (current total closed).
+#'   \code{issues_90day} has integer elements \code{opened} (created in past 90
+#'   days) and \code{closed} (closed in past 90 days). On failure all elements
+#'   are \code{NA_integer_} and an additional \code{reason} character element
+#'   is present: \code{"rate_limited"} when the API returns a rate-limit 403,
+#'   or \code{"unavailable"} for any other failure (permission denied, network
 #'   error, etc.).
 #' @keywords internal
 #' @importFrom gh gh
 fetch_issue_counts <- function(owner, repo, token) {
-  since_365 <- format(Sys.Date() - 365, "%Y-%m-%d")
-  since_90  <- format(Sys.Date() - 90,  "%Y-%m-%d")
-  base_q    <- sprintf("repo:%s/%s type:issue", owner, repo)
+  since_90 <- format(Sys.Date() - 90, "%Y-%m-%d")
+  base_q   <- sprintf("repo:%s/%s type:issue", owner, repo)
 
   gql_query <- sprintf(
-    '{ o365: search(type: ISSUE, query: "%s created:>=%s") { issueCount }
-       c365: search(type: ISSUE, query: "%s closed:>=%s")  { issueCount }
-       o90:  search(type: ISSUE, query: "%s created:>=%s") { issueCount }
-       c90:  search(type: ISSUE, query: "%s closed:>=%s")  { issueCount } }',
-    base_q, since_365,
-    base_q, since_365,
+    '{ open_total:   search(type: ISSUE, query: "%s state:open")         { issueCount }
+       closed_total: search(type: ISSUE, query: "%s state:closed")       { issueCount }
+       o90:          search(type: ISSUE, query: "%s created:>=%s")       { issueCount }
+       c90:          search(type: ISSUE, query: "%s closed:>=%s")        { issueCount } }',
+    base_q,
+    base_q,
     base_q, since_90,
     base_q, since_90
   )
 
-  make_na_pair <- function(reason) {
+  make_snapshot_na <- function(reason) {
+    list(open = NA_integer_, closed = NA_integer_, reason = reason)
+  }
+  make_activity_na <- function(reason) {
     list(opened = NA_integer_, closed = NA_integer_, reason = reason)
   }
 
@@ -378,23 +383,27 @@ fetch_issue_counts <- function(owner, repo, token) {
   )
 
   if (inherits(result, "gh_rate_limited")) {
-    pair <- make_na_pair("rate_limited")
-    return(list(issues_365day = pair, issues_90day = pair))
+    return(list(
+      issues_snapshot = make_snapshot_na("rate_limited"),
+      issues_90day    = make_activity_na("rate_limited")
+    ))
   }
 
   if (is.null(result)) {
-    pair <- make_na_pair("unavailable")
-    return(list(issues_365day = pair, issues_90day = pair))
+    return(list(
+      issues_snapshot = make_snapshot_na("unavailable"),
+      issues_90day    = make_activity_na("unavailable")
+    ))
   }
 
   list(
-    issues_365day = list(
-      opened = as.integer(result$data$o365$issueCount %||% NA_integer_),
-      closed  = as.integer(result$data$c365$issueCount %||% NA_integer_)
+    issues_snapshot = list(
+      open   = as.integer(result$data$open_total$issueCount   %||% NA_integer_),
+      closed = as.integer(result$data$closed_total$issueCount %||% NA_integer_)
     ),
     issues_90day = list(
       opened = as.integer(result$data$o90$issueCount %||% NA_integer_),
-      closed  = as.integer(result$data$c90$issueCount %||% NA_integer_)
+      closed = as.integer(result$data$c90$issueCount %||% NA_integer_)
     )
   )
 }

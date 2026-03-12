@@ -298,19 +298,20 @@ grayscale_milestone_label <- function(text, tooltip, completion) {
 #' Format issue summary as HTML
 #'
 #' Internal function to format GitHub issue counts as a hyperlink pointing to
-#' the repository's issues page. The link text shows the number of issues opened
-#' and closed in the past 365 days. The tooltip shows the number of issues
-#' opened and closed in the past 90 days. When counts are \code{NA_integer_}
-#' the cell shows "Unavailable" and the tooltip gives a failure-specific reason
-#' sourced from the \code{reason} element of the input lists.
+#' the repository's issues page. The link text shows the current total open and
+#' closed issue counts. The tooltip shows the number of issues opened and closed
+#' in the past 90 days. When counts are \code{NA_integer_} the cell shows
+#' "Unavailable" and the tooltip gives a failure-specific reason sourced from
+#' the \code{reason} element of the input lists.
 #'
 #' @param owner Repository owner (GitHub username or organization)
 #' @param repo Repository name
-#' @param issues_365day Named list with integer elements \code{opened} and
-#'   \code{closed} for the past 365 days, as returned by
-#'   \code{fetch_issue_counts()}. Elements may be \code{NA_integer_} on
-#'   failure; in that case an optional \code{reason} character element
-#'   (\code{"rate_limited"} or \code{"unavailable"}) controls the tooltip text.
+#' @param issues_snapshot Named list with integer elements \code{open} (current
+#'   total open issues) and \code{closed} (current total closed issues), as
+#'   returned by \code{fetch_issue_counts()}. Elements may be
+#'   \code{NA_integer_} on failure; in that case an optional \code{reason}
+#'   character element (\code{"rate_limited"} or \code{"unavailable"})
+#'   controls the tooltip text.
 #' @param issues_90day Named list with integer elements \code{opened} and
 #'   \code{closed} for the past 90 days, as returned by
 #'   \code{fetch_issue_counts()}. Elements may be \code{NA_integer_} on
@@ -319,16 +320,16 @@ grayscale_milestone_label <- function(text, tooltip, completion) {
 #' @return Character string with HTML anchor tag
 #' @keywords internal
 #' @importFrom htmltools tags
-format_issue_summary <- function(owner, repo, issues_365day, issues_90day) {
-  url <- sprintf("https://github.com/%s/%s/issues", owner, repo)
-  opened_365 <- issues_365day$opened
-  closed_365 <- issues_365day$closed
+format_issue_summary <- function(owner, repo, issues_snapshot, issues_90day) {
+  url        <- sprintf("https://github.com/%s/%s/issues", owner, repo)
+  open_count <- issues_snapshot$open
+  closed_count <- issues_snapshot$closed
   opened_90  <- issues_90day$opened
   closed_90  <- issues_90day$closed
-  link_text <- if (is.na(opened_365) || is.na(closed_365)) {
+  link_text <- if (is.na(open_count) || is.na(closed_count)) {
     "Unavailable"
   } else {
-    sprintf("%d / %d", opened_365, closed_365)
+    sprintf("%d / %d", open_count, closed_count)
   }
   tooltip <- if (is.na(opened_90) || is.na(closed_90)) {
     if (identical(issues_90day$reason, "rate_limited")) {
