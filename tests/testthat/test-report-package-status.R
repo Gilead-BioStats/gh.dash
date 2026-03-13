@@ -97,6 +97,7 @@ test_that("summarize_github_repos assembles release and milestone summaries", {
       mock_milestones
     },
     fetch_open_prs = function(...) 0L,
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(owner, repo, base, head, token) {
       expect_equal(
         list(owner = owner, repo = repo, base = base, head = head),
@@ -135,6 +136,7 @@ test_that("summarize_github_repos includes open PR count", {
       expect_equal(repo, "repo")
       3L
     },
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
@@ -167,6 +169,7 @@ test_that("summarize_github_repos appends qualification badge when registry matc
     fetch_releases = function(...) list(mock_release),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
@@ -200,6 +203,7 @@ test_that("summarize_github_repos shows grey badge when older version qualified"
     fetch_releases = function(...) list(mock_release),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
@@ -247,6 +251,7 @@ test_that("summarize_github_repos supports multiple repositories", {
       milestones[[index]]
     },
     fetch_open_prs = function(...) 0L,
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(owner, repo, base, head, token) {
       comparisons[[index]]
     }
@@ -282,6 +287,7 @@ test_that("summarize_github_repos reuses API payloads for duplicate repos", {
   calls$releases <- 0L
   calls$milestones <- 0L
   calls$prs <- 0L
+  calls$issue_counts <- 0L
   calls$comparison <- 0L
 
   result <- with_mocked_bindings(
@@ -308,6 +314,13 @@ test_that("summarize_github_repos reuses API payloads for duplicate repos", {
       calls$prs <- calls$prs + 1L
       0L
     },
+    fetch_issue_counts = function(...) {
+      calls$issue_counts <- calls$issue_counts + 1L
+      list(
+        issues_snapshot = list(open = 0L, closed = 0L),
+        issues_90day    = list(opened = 0L, closed = 0L)
+      )
+    },
     fetch_branch_comparison = function(...) {
       calls$comparison <- calls$comparison + 1L
       list(ahead_by = 0, behind_by = 0)
@@ -318,6 +331,7 @@ test_that("summarize_github_repos reuses API payloads for duplicate repos", {
   expect_equal(calls$releases, 1L)
   expect_equal(calls$milestones, 1L)
   expect_equal(calls$prs, 1L)
+  expect_equal(calls$issue_counts, 1L)
   expect_equal(calls$comparison, 1L)
   expect_equal(nrow(result), 2L)
   expect_equal(result$repo[[1]], result$repo[[2]])
@@ -712,6 +726,7 @@ test_that("summarize_github_repos renders lock icon for private repos", {
     fetch_releases = function(...) list(),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
@@ -727,10 +742,295 @@ test_that("summarize_github_repos defaults is_private to FALSE when metadata is 
     fetch_releases = function(...) list(),
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
     fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
   )
 
   # No lock icon — should render as a plain public link
   expect_false(grepl("\U0001F512", result$repo))
   expect_match(result$repo, "org/repo")
+})
+
+# -- safe_gh rate-limit sentinel ----------------------------------------------
+
+test_that("safe_gh returns gh_rate_limited sentinel for rate-limit 403 when flag is TRUE", {
+  rate_limit_err <- structure(
+    class = c("http_error_403", "error", "condition"),
+    list(message = "API rate limit exceeded for search")
+  )
+
+  result <- gh.dash:::safe_gh(
+    function(...) stop(rate_limit_err),
+    .return_rate_limit_sentinel = TRUE
+  )
+
+  expect_s3_class(result, "gh_rate_limited")
+})
+
+test_that("safe_gh returns NULL for rate-limit 403 when flag is FALSE (default)", {
+  rate_limit_err <- structure(
+    class = c("http_error_403", "error", "condition"),
+    list(message = "API rate limit exceeded for search")
+  )
+
+  result <- suppressWarnings(
+    gh.dash:::safe_gh(function(...) stop(rate_limit_err))
+  )
+
+  expect_null(result)
+})
+
+test_that("safe_gh emits rate-limit warning for rate-limit 403", {
+  rate_limit_err <- structure(
+    class = c("http_error_403", "error", "condition"),
+    list(message = "API rate limit exceeded for search")
+  )
+
+  expect_warning(
+    gh.dash:::safe_gh(function(...) stop(rate_limit_err)),
+    "rate limit"
+  )
+})
+
+test_that("safe_gh returns NULL with permission warning for non-rate-limit 403", {
+  perm_err <- structure(
+    class = c("http_error_403", "error", "condition"),
+    list(message = "Forbidden")
+  )
+
+  result <- suppressWarnings(gh.dash:::safe_gh(function(...) stop(perm_err)))
+
+  expect_null(result)
+  expect_warning(
+    gh.dash:::safe_gh(function(...) stop(perm_err)),
+    "permission denied"
+  )
+})
+
+test_that("safe_gh does not include rate-limit text in permission-denied warning", {
+  perm_err <- structure(
+    class = c("http_error_403", "error", "condition"),
+    list(message = "Forbidden")
+  )
+
+  warn_msg <- tryCatch(
+    gh.dash:::safe_gh(function(...) stop(perm_err)),
+    warning = function(w) conditionMessage(w)
+  )
+
+  expect_match(warn_msg, "permission denied", ignore.case = TRUE)
+  expect_false(grepl("rate limit", warn_msg, ignore.case = TRUE))
+})
+
+# -- fetch_issue_counts --------------------------------------------------------
+
+test_that("fetch_issue_counts returns correct counts on successful GraphQL response", {
+  mock_response <- list(
+    data = list(
+      open_total   = list(issueCount = 10L),
+      closed_total = list(issueCount = 42L),
+      o90          = list(issueCount = 3L),
+      c90          = list(issueCount = 7L)
+    )
+  )
+
+  result <- with_mocked_bindings(
+    gh.dash:::fetch_issue_counts("org", "repo", token = NULL),
+    safe_gh = function(...) mock_response
+  )
+
+  expect_equal(result$issues_snapshot$open, 10L)
+  expect_equal(result$issues_snapshot$closed, 42L)
+  expect_null(result$issues_snapshot$reason)
+  expect_equal(result$issues_90day$opened, 3L)
+  expect_equal(result$issues_90day$closed, 7L)
+  expect_null(result$issues_90day$reason)
+})
+
+test_that("fetch_issue_counts maps missing issueCount fields to NA_integer_", {
+  mock_response <- list(
+    data = list(
+      open_total   = list(issueCount = 5L),
+      closed_total = list(), # issueCount absent
+      o90          = list(issueCount = 1L),
+      c90          = list() # issueCount absent
+    )
+  )
+
+  result <- with_mocked_bindings(
+    gh.dash:::fetch_issue_counts("org", "repo", token = NULL),
+    safe_gh = function(...) mock_response
+  )
+
+  expect_equal(result$issues_snapshot$open, 5L)
+  expect_true(is.na(result$issues_snapshot$closed))
+  expect_equal(result$issues_90day$opened, 1L)
+  expect_true(is.na(result$issues_90day$closed))
+})
+
+test_that("fetch_issue_counts returns rate_limited reason when sentinel is returned", {
+  result <- with_mocked_bindings(
+    gh.dash:::fetch_issue_counts("org", "repo", token = NULL),
+    safe_gh = function(...) structure(list(), class = "gh_rate_limited")
+  )
+
+  expect_true(is.na(result$issues_snapshot$open))
+  expect_true(is.na(result$issues_snapshot$closed))
+  expect_equal(result$issues_snapshot$reason, "rate_limited")
+  expect_true(is.na(result$issues_90day$opened))
+  expect_true(is.na(result$issues_90day$closed))
+  expect_equal(result$issues_90day$reason, "rate_limited")
+})
+
+test_that("fetch_issue_counts returns unavailable reason when safe_gh returns NULL", {
+  result <- with_mocked_bindings(
+    gh.dash:::fetch_issue_counts("org", "repo", token = NULL),
+    safe_gh = function(...) NULL
+  )
+
+  expect_true(is.na(result$issues_snapshot$open))
+  expect_true(is.na(result$issues_snapshot$closed))
+  expect_equal(result$issues_snapshot$reason, "unavailable")
+  expect_true(is.na(result$issues_90day$opened))
+  expect_true(is.na(result$issues_90day$closed))
+  expect_equal(result$issues_90day$reason, "unavailable")
+})
+
+test_that("fetch_issue_counts passes owner/repo/token through to safe_gh via GraphQL", {
+  captured <- list()
+
+  with_mocked_bindings(
+    gh.dash:::fetch_issue_counts("myorg", "myrepo", token = "tok123"),
+    safe_gh = function(fun, ...) {
+      captured <<- list(...)
+      list(data = list(
+        open_total   = list(issueCount = 0L),
+        closed_total = list(issueCount = 0L),
+        o90          = list(issueCount = 0L),
+        c90          = list(issueCount = 0L)
+      ))
+    }
+  )
+
+  expect_equal(captured[[1]], "POST /graphql")
+  expect_match(captured$query, "repo:myorg/myrepo")
+  expect_equal(captured$.token, "tok123")
+  expect_true(isTRUE(captured$.return_rate_limit_sentinel))
+})
+
+# -- format_issue_summary ------------------------------------------------------
+
+test_that("format_issue_summary returns link to issues page", {
+  result <- gh.dash:::format_issue_summary("org", "repo", list(open = 5L, closed = 12L), list(opened = 3L, closed = 7L))
+  expect_match(result, 'href="https://github.com/org/repo/issues"')
+})
+
+test_that("format_issue_summary tooltip shows 90-day opened and closed counts", {
+  result <- gh.dash:::format_issue_summary("org", "repo", list(open = 5L, closed = 12L), list(opened = 3L, closed = 7L))
+  expect_match(result, "3 opened / 7 closed in past 90 days")
+})
+
+test_that("format_issue_summary shows total open count / total closed count as link text", {
+  result <- gh.dash:::format_issue_summary("org", "repo", list(open = 5L, closed = 12L), list(opened = 3L, closed = 7L))
+  expect_match(result, ">5 / 12<")
+})
+
+test_that("format_issue_summary shows 0 / 0 when all counts are zero", {
+  result <- gh.dash:::format_issue_summary("org", "repo", list(open = 0L, closed = 0L), list(opened = 0L, closed = 0L))
+  expect_match(result, ">0 / 0<")
+})
+
+test_that("format_issue_summary shows Unavailable with generic message when reason is absent", {
+  result <- gh.dash:::format_issue_summary(
+    "org", "repo",
+    list(open = NA_integer_, closed = NA_integer_),
+    list(opened = NA_integer_, closed = NA_integer_)
+  )
+  expect_match(result, ">Unavailable<")
+  expect_match(result, "Issue data unavailable")
+  expect_no_match(result, "rate limit")
+})
+
+test_that("format_issue_summary shows rate-limit message when reason is rate_limited", {
+  result <- gh.dash:::format_issue_summary(
+    "org", "repo",
+    list(open = NA_integer_, closed = NA_integer_, reason = "rate_limited"),
+    list(opened = NA_integer_, closed = NA_integer_, reason = "rate_limited")
+  )
+  expect_match(result, ">Unavailable<")
+  expect_match(result, "rate limit reached")
+})
+
+test_that("summarize_github_repos includes issue_summary column", {
+  result <- with_mocked_bindings(
+    summarize_github_repos("org/repo"),
+    fetch_repo_metadata = function(...) list(private = FALSE),
+    fetch_releases = function(...) list(),
+    fetch_open_milestones = function(...) list(),
+    fetch_open_prs = function(...) 0L,
+    fetch_issue_counts = function(...) {
+      list(
+        issues_snapshot = list(open = 4L, closed = 17L),
+        issues_90day    = list(opened = 2L, closed = 5L)
+      )
+    },
+    fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
+  )
+
+  expect_true("issue_summary" %in% names(result))
+  expect_match(result$issue_summary, 'href="https://github.com/org/repo/issues"')
+  expect_match(result$issue_summary, ">4 / 17<")
+  expect_match(result$issue_summary, "2 opened / 5 closed in past 90 days")
+})
+
+test_that("format_issue_summary shows Unavailable with generic message when reason is unavailable", {
+  result <- gh.dash:::format_issue_summary(
+    "org", "repo",
+    list(open = NA_integer_, closed = NA_integer_, reason = "unavailable"),
+    list(opened = NA_integer_, closed = NA_integer_, reason = "unavailable")
+  )
+  expect_match(result, ">Unavailable<")
+  expect_match(result, "Issue data unavailable")
+  expect_no_match(result, "rate limit")
+})
+
+test_that("summarize_github_repos issue_summary shows Unavailable when fetch_issue_counts fails", {
+  result <- with_mocked_bindings(
+    summarize_github_repos("org/repo"),
+    fetch_repo_metadata = function(...) list(private = FALSE),
+    fetch_releases = function(...) list(),
+    fetch_open_milestones = function(...) list(),
+    fetch_open_prs = function(...) 0L,
+    fetch_issue_counts = function(...) {
+      list(
+        issues_snapshot = list(open = NA_integer_, closed = NA_integer_, reason = "unavailable"),
+        issues_90day    = list(opened = NA_integer_, closed = NA_integer_, reason = "unavailable")
+      )
+    },
+    fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
+  )
+
+  expect_match(result$issue_summary, ">Unavailable<")
+  expect_match(result$issue_summary, "Issue data unavailable")
+  expect_no_match(result$issue_summary, "rate limit")
+})
+
+test_that("summarize_github_repos issue_summary shows rate-limit message when fetch_issue_counts is rate-limited", {
+  result <- with_mocked_bindings(
+    summarize_github_repos("org/repo"),
+    fetch_repo_metadata = function(...) list(private = FALSE),
+    fetch_releases = function(...) list(),
+    fetch_open_milestones = function(...) list(),
+    fetch_open_prs = function(...) 0L,
+    fetch_issue_counts = function(...) {
+      list(
+        issues_snapshot = list(open = NA_integer_, closed = NA_integer_, reason = "rate_limited"),
+        issues_90day    = list(opened = NA_integer_, closed = NA_integer_, reason = "rate_limited")
+      )
+    },
+    fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
+  )
+
+  expect_match(result$issue_summary, ">Unavailable<")
+  expect_match(result$issue_summary, "rate limit reached")
 })

@@ -27,8 +27,19 @@ pull request review payloads. Defaults to \code{TRUE}.}
 appropriate default cache location is used.}
 }
 \value{
-A data frame with columns \code{user}, \code{prs_opened}, \code{prs_reviewed}, and
-\code{total_activity}.
+A data frame with columns \code{user}, \code{prs_opened}, \code{prs_opened_active},
+\code{prs_reviewed}, \code{prs_pending_review}, \code{total_activity},
+\code{pending_review_repos}, and \code{opened_active_repos}.
+\code{prs_opened_active} counts PRs the user created within the lookback
+window that are still open (not closed or merged).
+\code{opened_active_repos} is a list-column where each element is a character
+vector of unique \code{owner/repo} names contributing to that user's active
+opened count.
+\code{prs_pending_review} counts open PRs where the user is currently a
+requested reviewer. \code{pending_review_repos} is a list-column where each
+element is a character vector of unique \code{owner/repo} names contributing
+to that user's pending review count. \code{total_activity} equals
+\code{prs_opened + prs_reviewed} and does not include \code{prs_pending_review}.
 }
 \description{
 \code{summarize_pr_activity_by_user()} retrieves pull requests and reviews for a

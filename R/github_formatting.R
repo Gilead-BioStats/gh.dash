@@ -12,7 +12,7 @@
 format_repo_link <- function(owner, repo, is_private = FALSE) {
   url <- sprintf("https://github.com/%s/%s", owner, repo)
   repo_text <- sprintf("%s/%s", owner, repo)
-  
+
   if (isTRUE(is_private)) {
     lock_icon <- htmltools::tags$span(
       title = "Private repository",
@@ -22,7 +22,7 @@ format_repo_link <- function(owner, repo, is_private = FALSE) {
   } else {
     link_content <- repo_text
   }
-  
+
   as.character(htmltools::tags$a(href = url, link_content))
 }
 
@@ -295,6 +295,54 @@ grayscale_milestone_label <- function(text, tooltip, completion) {
   )
 }
 
+#' Format issue summary as HTML
+#'
+#' Internal function to format GitHub issue counts as a hyperlink pointing to
+#' the repository's issues page. The link text shows the current total open and
+#' closed issue counts. The tooltip shows the number of issues opened and closed
+#' in the past 90 days. When counts are \code{NA_integer_} the cell shows
+#' "Unavailable" and the tooltip gives a failure-specific reason sourced from
+#' the \code{reason} element of the input lists.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param issues_snapshot Named list with integer elements \code{open} (current
+#'   total open issues) and \code{closed} (current total closed issues), as
+#'   returned by \code{fetch_issue_counts()}. Elements may be
+#'   \code{NA_integer_} on failure; in that case an optional \code{reason}
+#'   character element (\code{"rate_limited"} or \code{"unavailable"})
+#'   controls the tooltip text.
+#' @param issues_90day Named list with integer elements \code{opened} and
+#'   \code{closed} for the past 90 days, as returned by
+#'   \code{fetch_issue_counts()}. Elements may be \code{NA_integer_} on
+#'   failure; in that case an optional \code{reason} character element
+#'   (\code{"rate_limited"} or \code{"unavailable"}) controls the tooltip text.
+#' @return Character string with HTML anchor tag
+#' @keywords internal
+#' @importFrom htmltools tags
+format_issue_summary <- function(owner, repo, issues_snapshot, issues_90day) {
+  url        <- sprintf("https://github.com/%s/%s/issues", owner, repo)
+  open_count <- issues_snapshot$open
+  closed_count <- issues_snapshot$closed
+  opened_90  <- issues_90day$opened
+  closed_90  <- issues_90day$closed
+  link_text <- if (is.na(open_count) || is.na(closed_count)) {
+    "Unavailable"
+  } else {
+    sprintf("%d / %d", open_count, closed_count)
+  }
+  tooltip <- if (is.na(opened_90) || is.na(closed_90)) {
+    if (identical(issues_90day$reason, "rate_limited")) {
+      "Issue data unavailable (rate limit reached)"
+    } else {
+      "Issue data unavailable"
+    }
+  } else {
+    sprintf("%d opened / %d closed in past 90 days", opened_90, closed_90)
+  }
+  as.character(htmltools::tags$a(href = url, title = tooltip, link_text))
+}
+
 #' Format pull request summary as HTML
 #'
 #' Internal function to format GitHub pull requests count with link as HTML.
@@ -307,14 +355,14 @@ grayscale_milestone_label <- function(text, tooltip, completion) {
 #' @importFrom htmltools tags
 format_pr_summary <- function(owner, repo, pr_count) {
   base_url <- sprintf("https://github.com/%s/%s/pulls", owner, repo)
-  
+
   if (pr_count == 0) {
     return(as.character(htmltools::tags$a(href = base_url, "None")))
   }
-  
+
   as.character(
     htmltools::tags$a(
-      href = base_url, 
+      href = base_url,
       sprintf("%d", pr_count)
     )
   )
