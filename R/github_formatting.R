@@ -1,15 +1,29 @@
 #' Format repository link as HTML
 #'
 #' Internal function to create an HTML link for a GitHub repository.
+#' Includes a lock icon if the repository is private.
 #'
 #' @param owner Repository owner (GitHub username or organization)
 #' @param repo Repository name
+#' @param is_private Logical indicating if repository is private
 #' @return Character string with HTML anchor tag
 #' @keywords internal
 #' @importFrom htmltools tags
-format_repo_link <- function(owner, repo) {
+format_repo_link <- function(owner, repo, is_private = FALSE) {
   url <- sprintf("https://github.com/%s/%s", owner, repo)
-  as.character(htmltools::tags$a(href = url, sprintf("%s/%s", owner, repo)))
+  repo_text <- sprintf("%s/%s", owner, repo)
+
+  if (isTRUE(is_private)) {
+    lock_icon <- htmltools::tags$span(
+      title = "Private repository",
+      "\U0001F512 "
+    )
+    link_content <- htmltools::tagList(lock_icon, repo_text)
+  } else {
+    link_content <- repo_text
+  }
+
+  as.character(htmltools::tags$a(href = url, link_content))
 }
 
 #' Format release summary with qualification badge
@@ -25,7 +39,6 @@ format_repo_link <- function(owner, repo) {
 #' @keywords internal
 #' @importFrom htmltools tags HTML htmlEscape
 format_release_summary <- function(owner, repo, release, registry) {
-
   base_url <- sprintf("https://github.com/%s/%s", owner, repo)
   releases_url <- paste0(base_url, "/releases")
 
@@ -282,6 +295,79 @@ grayscale_milestone_label <- function(text, tooltip, completion) {
   )
 }
 
+#' Format issue summary as HTML
+#'
+#' Internal function to format GitHub issue counts as a hyperlink pointing to
+#' the repository's issues page. The link text shows the current total open and
+#' closed issue counts. The tooltip shows the number of issues opened and closed
+#' in the past 90 days. When counts are \code{NA_integer_} the cell shows
+#' "Unavailable" and the tooltip gives a failure-specific reason sourced from
+#' the \code{reason} element of the input lists.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param issues_snapshot Named list with integer elements \code{open} (current
+#'   total open issues) and \code{closed} (current total closed issues), as
+#'   returned by \code{fetch_issue_counts()}. Elements may be
+#'   \code{NA_integer_} on failure; in that case an optional \code{reason}
+#'   character element (\code{"rate_limited"} or \code{"unavailable"})
+#'   controls the tooltip text.
+#' @param issues_90day Named list with integer elements \code{opened} and
+#'   \code{closed} for the past 90 days, as returned by
+#'   \code{fetch_issue_counts()}. Elements may be \code{NA_integer_} on
+#'   failure; in that case an optional \code{reason} character element
+#'   (\code{"rate_limited"} or \code{"unavailable"}) controls the tooltip text.
+#' @return Character string with HTML anchor tag
+#' @keywords internal
+#' @importFrom htmltools tags
+format_issue_summary <- function(owner, repo, issues_snapshot, issues_90day) {
+  url        <- sprintf("https://github.com/%s/%s/issues", owner, repo)
+  open_count <- issues_snapshot$open
+  closed_count <- issues_snapshot$closed
+  opened_90  <- issues_90day$opened
+  closed_90  <- issues_90day$closed
+  link_text <- if (is.na(open_count) || is.na(closed_count)) {
+    "Unavailable"
+  } else {
+    sprintf("%d / %d", open_count, closed_count)
+  }
+  tooltip <- if (is.na(opened_90) || is.na(closed_90)) {
+    if (identical(issues_90day$reason, "rate_limited")) {
+      "Issue data unavailable (rate limit reached)"
+    } else {
+      "Issue data unavailable"
+    }
+  } else {
+    sprintf("%d opened / %d closed in past 90 days", opened_90, closed_90)
+  }
+  as.character(htmltools::tags$a(href = url, title = tooltip, link_text))
+}
+
+#' Format pull request summary as HTML
+#'
+#' Internal function to format GitHub pull requests count with link as HTML.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param pr_count Integer count of open pull requests
+#' @return Character string with formatted HTML link
+#' @keywords internal
+#' @importFrom htmltools tags
+format_pr_summary <- function(owner, repo, pr_count) {
+  base_url <- sprintf("https://github.com/%s/%s/pulls", owner, repo)
+
+  if (pr_count == 0) {
+    return(as.character(htmltools::tags$a(href = base_url, "None")))
+  }
+
+  as.character(
+    htmltools::tags$a(
+      href = base_url,
+      sprintf("%d", pr_count)
+    )
+  )
+}
+
 #' Format branch comparison as HTML
 #'
 #' Internal function to format branch comparison results as HTML.
@@ -298,6 +384,108 @@ format_branch_comparison <- function(owner, repo, comparison) {
   repo_url <- sprintf("https://github.com/%s/%s/compare/main...dev", owner, repo)
   anchor <- htmltools::tags$a(href = repo_url, status_text)
   as.character(anchor)
+}
+
+#' Parse release published date
+#'
+#' Internal function to parse the `published_at` field of a GitHub release
+#' object into a `Date`.
+#'
+#' @param published_at ISO 8601 date-time string from GitHub API (e.g.
+#'   `"2025-01-15T12:00:00Z"`)
+#' @return A `Date` value, or `NA` if the input is `NULL`, empty, or
+#'   unparseable.
+#' @keywords internal
+parse_release_date <- function(published_at) {
+  if (is.null(published_at) || length(published_at) == 0L) {
+    return(as.Date(NA_character_))
+  }
+  published_at <- as.character(published_at)
+  if (!nzchar(published_at)) {
+    return(as.Date(NA_character_))
+  }
+  tryCatch(
+    as.Date(substr(published_at, 1L, 10L)),
+    error = function(e) as.Date(NA_character_)
+  )
+}
+
+#' Derive latest published release from a releases list
+#'
+#' Internal function to find the latest non-draft, non-prerelease entry
+#' from the list returned by `fetch_releases()`.
+#'
+#' @param releases List of release objects from `fetch_releases()`
+#' @return A single release list element, or `NULL` if none qualify.
+#' @keywords internal
+#' @importFrom purrr detect
+derive_latest_release <- function(releases) {
+  if (is.null(releases) || !length(releases)) {
+    return(NULL)
+  }
+  purrr::detect(releases, ~ !isTRUE(.x$draft) && !isTRUE(.x$prerelease))
+}
+
+#' Count releases from last N days
+#'
+#' Internal function to count the number of non-draft, non-prerelease
+#' releases published in the last N days (inclusive).
+#'
+#' @param releases List of release objects from `fetch_releases()`
+#' @param days Number of days to look back from today
+#' @return Integer count of qualifying releases.
+#' @keywords internal
+#' @importFrom purrr keep
+count_releases_last_n_days <- function(releases, days) {
+  if (is.null(releases) || !length(releases)) {
+    return(0L)
+  }
+  today <- Sys.Date()
+  start_date <- today - days
+
+  releases |>
+    purrr::keep(~ !isTRUE(.x$draft) && !isTRUE(.x$prerelease)) |>
+    purrr::keep(~ {
+      if (is.null(.x$published_at)) {
+        return(FALSE)
+      }
+      pub_date <- parse_release_date(.x$published_at)
+      !is.na(pub_date) && pub_date >= start_date && pub_date <= today
+    }) |>
+    length() |>
+    as.integer()
+}
+
+#' Count releases from last 365 days
+#'
+#' Internal function to count the number of non-draft, non-prerelease
+#' releases published in the last 365 days (inclusive).
+#'
+#' @param releases List of release objects from `fetch_releases()`
+#' @return Integer count of qualifying releases.
+#' @keywords internal
+count_ytd_releases <- function(releases) {
+  count_releases_last_n_days(releases, 365)
+}
+
+#' Format release count from last 365 days as HTML
+#'
+#' Internal function to format the release count from the last 365 days
+#' as a hyperlink pointing to the repository's releases page. Tooltip shows
+#' the count for the last 90 days.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param releases List of release objects from `fetch_releases()`
+#' @return Character string with HTML anchor tag
+#' @keywords internal
+#' @importFrom htmltools tags
+format_ytd_releases <- function(owner, repo, releases) {
+  count_365 <- count_ytd_releases(releases)
+  count_90 <- count_releases_last_n_days(releases, 90)
+  url <- sprintf("https://github.com/%s/%s/releases", owner, repo)
+  tooltip <- sprintf("%s releases in past 90 days", count_90)
+  as.character(htmltools::tags$a(href = url, title = tooltip, as.character(count_365)))
 }
 
 #' Get branch status text

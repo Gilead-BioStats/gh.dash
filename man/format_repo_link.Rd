@@ -4,17 +4,20 @@
 \alias{format_repo_link}
 \title{Format repository link as HTML}
 \usage{
-format_repo_link(owner, repo)
+format_repo_link(owner, repo, is_private = FALSE)
 }
 \arguments{
 \item{owner}{Repository owner (GitHub username or organization)}
 
 \item{repo}{Repository name}
+
+\item{is_private}{Logical indicating if repository is private}
 }
 \value{
 Character string with HTML anchor tag
 }
 \description{
 Internal function to create an HTML link for a GitHub repository.
+Includes a lock icon if the repository is private.
 }
 \keyword{internal}

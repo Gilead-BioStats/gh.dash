@@ -28,6 +28,40 @@ validate_repo_vector <- function(repos) {
   invisible(repos)
 }
 
+#' Split repository slug into owner and repo
+#'
+#' Internal helper to parse a validated repository slug (`owner/repo`) into
+#' separate `owner` and `repo` components.
+#'
+#' @param owner_repo Character scalar in `owner/repo` format
+#' @return Named list with `owner` and `repo` elements
+#' @keywords internal
+split_repo_slug <- function(owner_repo) {
+  pieces <- strsplit(owner_repo, "/", fixed = TRUE)[[1]]
+  list(owner = pieces[[1]], repo = pieces[[2]])
+}
+
+#' Validate lookback days value
+#'
+#' Internal function to validate a lookback window (in days) used for
+#' time-bounded GitHub summaries.
+#'
+#' @param days Numeric scalar indicating number of days to look back
+#' @return Integer day count
+#' @keywords internal
+validate_lookback_days <- function(days) {
+  if (is.null(days) || length(days) != 1L || is.na(days)) {
+    rlang::abort("`days` must be a single non-missing numeric value.")
+  }
+
+  value <- suppressWarnings(as.integer(days))
+  if (is.na(value) || value <= 0L) {
+    rlang::abort("`days` must be a positive integer.")
+  }
+
+  value
+}
+
 #' Return first non-empty value from a list of candidates
 #'
 #' Internal utility function that returns the first non-NULL, non-empty string

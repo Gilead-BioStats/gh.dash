@@ -1,5 +1,9 @@
 name: cleanup-pr-reports
 
+concurrency:
+  group: gh-pages-${{ github.repository }}
+  cancel-in-progress: false
+
 on:
   pull_request:
     types:

@@ -11,6 +11,7 @@ render_dash(
   title = "Package",
   token = NULL,
   qualification_registry_url = NULL,
+  pr_activity_days = 365,
   clean = TRUE
 )
 }
@@ -26,6 +27,8 @@ render_dash(
 \item{token}{GitHub personal access token (optional).}
 
 \item{qualification_registry_url}{URL or file path to the qualification registry CSV (optional).}
+
+\item{pr_activity_days}{Number of days to include in PR activity summaries (default: 365).}
 
 \item{clean}{Whether to clean intermediate files after rendering.}
 }

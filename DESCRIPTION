@@ -1,12 +1,13 @@
 Package: gh.dash
 Title: Dashboards for tracking GitHub releases and milestones
-Version: 0.1.0
+Version: 1.0.0
 Authors@R: c(
     person("Jeremy", "Wildfire", , "jwildfire@gmail.com", role = c("aut", "cre")),
     person("Laura", "Maxwell", , "laura.maxwell@atorusresearch.com", role = "aut"),
+    person("Natalia", "Andriychuk", , "natalia.andriychuk@gilead.com", role = "aut"),
     person("Gilead Sciences", role = "cph")
   )
-Author: Jeremy Wildfire [aut, cre], Laura Maxwell [aut], Gilead Sciences [cph]
+Author: Jeremy Wildfire [aut, cre], Laura Maxwell [aut], Natalia Andriychuk [aut], Gilead Sciences [cph]
 Maintainer: Jeremy Wildfire <jwildfire@gmail.com>
 Description: Provides dashboard reporting utilities for tracking GitHub repositories,
     including the package status report and related helpers.
@@ -19,7 +20,8 @@ Imports:
     gh,
     htmltools,
     rlang,
-    base64enc
+    base64enc,
+    purrr
 Suggests:
     pkgload,
     rmarkdown,
