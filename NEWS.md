@@ -1,4 +1,4 @@
-# gh.dash 1.0.0
+# gh.dash v1.0.0
 
 ## Overview
 
