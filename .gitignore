@@ -1,0 +1,50 @@
+# R
+.Rhistory
+.Rapp.history
+.RData
+.RDataTmp
+.Ruserdata
+.Rproj.user/
+.Renviron
+
+# Example code in package build process
+*-Ex.R
+
+# R package build artifacts
+*.tar.gz
+*.Rcheck/
+inst/doc/
+/doc/
+/Meta/
+
+# Vignettes
+vignettes/*.html
+vignettes/*.pdf
+
+# knitr and R Markdown cache/temp files
+*_cache/
+/cache/
+*.utf8.md
+*.knit.md
+
+# OAuth2 token
+.httr-oauth
+
+# pkgdown site
+docs/
+
+# Quarto
+.quarto/
+
+# Output / rendered reports
+output/
+inst/examples/output/
+
+# RStudio Connect
+rsconnect/
+
+# Translation temp files
+po/*~
+
+# macOS
+.DS_Store
