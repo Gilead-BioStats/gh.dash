@@ -75,6 +75,20 @@ pr_activity <- if (length(repos) == 0L) {
     days = pr_activity_days
   )
 }
+
+quality <- if (length(repos) == 0L) {
+  data.frame(
+    repo = character(0),
+    test_count = integer(0),
+    qcthat_status = character(0),
+    stringsAsFactors = FALSE
+  )
+} else {
+  gh.dash:::summarize_repo_quality(
+    repos,
+    token = github_token
+  )
+}
 ```
 
 ```{r report_styles, echo = FALSE, results = 'asis'}
@@ -666,7 +680,53 @@ render_pr_activity_table <- function(df, days) {
   )
 }
 
-render_dashboard_tabs <- function(status_df, pr_activity_df, days) {
+render_quality_table <- function(df) {
+  if (!nrow(df)) {
+    return(htmltools::div(
+      class = "empty-state",
+      "No repositories available."
+    ))
+  }
+
+  rows <- lapply(seq_len(nrow(df)), function(i) {
+    htmltools::tags$tr(
+      htmltools::tags$td(
+        class = "status-table__cell status-table__cell--repo",
+        htmltools::HTML(df$repo[[i]])
+      ),
+      htmltools::tags$td(
+        class = "status-table__cell status-table__cell--right",
+        as.character(df$test_count[[i]])
+      ),
+      htmltools::tags$td(
+        class = "status-table__cell",
+        htmltools::htmlEscape(df$qcthat_status[[i]])
+      )
+    )
+  })
+
+  tbody <- htmltools::tagAppendChildren(htmltools::tags$tbody(), rows)
+
+  htmltools::div(
+    class = "status-table-wrapper",
+    htmltools::div(
+      class = "status-table-container",
+      htmltools::tags$table(
+        class = "status-table status-table--compact",
+        htmltools::tags$thead(
+          htmltools::tags$tr(
+            htmltools::tags$th(scope = "col", "Repository"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "# of tests"),
+            htmltools::tags$th(scope = "col", "qcthat status")
+          )
+        ),
+        tbody
+      )
+    )
+  )
+}
+
+render_dashboard_tabs <- function(status_df, pr_activity_df, quality_df, days) {
   htmltools::browsable(
     htmltools::div(
       class = "dash-tabs",
@@ -683,6 +743,12 @@ render_dashboard_tabs <- function(status_df, pr_activity_df, days) {
           type = "button",
           `data-tab-target` = "tab-pr-activity",
           sprintf("PR Activity (Last %d Days)", days)
+        ),
+        htmltools::tags$button(
+          class = "dash-tabs__button",
+          type = "button",
+          `data-tab-target` = "tab-quality",
+          "Quality"
         )
       ),
       htmltools::div(
@@ -694,12 +760,17 @@ render_dashboard_tabs <- function(status_df, pr_activity_df, days) {
         id = "tab-pr-activity",
         class = "dash-tab-panel",
         render_pr_activity_table(pr_activity_df, days)
+      ),
+      htmltools::div(
+        id = "tab-quality",
+        class = "dash-tab-panel",
+        render_quality_table(quality_df)
       )
     )
   )
 }
 
-render_dashboard_tabs(status, pr_activity, pr_activity_days)
+render_dashboard_tabs(status, pr_activity, quality, pr_activity_days)
 ```
 
 ```{r column_settings_js, echo=FALSE, results='asis'}
