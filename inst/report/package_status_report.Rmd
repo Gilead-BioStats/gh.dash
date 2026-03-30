@@ -717,7 +717,7 @@ render_quality_table <- function(df) {
           htmltools::tags$tr(
             htmltools::tags$th(scope = "col", "Repository"),
             htmltools::tags$th(scope = "col", class = "status-table__cell--right", "# of tests"),
-            htmltools::tags$th(scope = "col", "qcthat status")
+            htmltools::tags$th(scope = "col", "uses qcthat")
           )
         ),
         tbody
