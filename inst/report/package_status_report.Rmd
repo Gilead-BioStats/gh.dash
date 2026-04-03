@@ -697,7 +697,7 @@ render_quality_table <- function(df) {
       ),
       htmltools::tags$td(
         class = "status-table__cell status-table__cell--right",
-        as.character(df$test_count[[i]])
+        if (is.na(df$test_count[[i]])) "\u2014" else as.character(df$test_count[[i]])
       ),
       htmltools::tags$td(
         class = "status-table__cell",

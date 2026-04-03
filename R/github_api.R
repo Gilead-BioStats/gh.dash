@@ -93,7 +93,7 @@ fetch_open_prs <- function(owner, repo, token) {
     return(length(result))
   }
 
-  0
+  NULL
 }
 
 #' Fetch repository metadata from GitHub API

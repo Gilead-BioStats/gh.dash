@@ -75,6 +75,17 @@ summarize_repo_quality <- function(repos, token = NULL) {
       next
     }
 
+    if (isTRUE(tree$truncated)) {
+      # Tree was truncated by GitHub (repo too large for a single recursive call);
+      # results would be incomplete so surface NA rather than misleading counts.
+      results[[idx]] <- list(
+        repo = format_repo_link(owner, repo, is_private = is_private),
+        test_count = NA_integer_,
+        qcthat_status = "Unavailable"
+      )
+      next
+    }
+
     tree_entries <- tree$tree
 
     if (is.null(tree_entries) || !length(tree_entries)) {
