@@ -12,8 +12,8 @@ render_dash(
   token = NULL,
   qualification_registry_url = NULL,
   pr_activity_days = 365,
-  include_quality = TRUE,
-  clean = TRUE
+  clean = TRUE,
+  include_quality = TRUE
 )
 }
 \arguments{
@@ -31,11 +31,11 @@ render_dash(
 
 \item{pr_activity_days}{Number of days to include in PR activity summaries (default: 365).}
 
+\item{clean}{Whether to clean intermediate files after rendering.}
+
 \item{include_quality}{Logical. When \code{TRUE} (the default), the Quality tab is
 computed and rendered. Set to \code{FALSE} to skip the Quality tab and avoid the
 additional GitHub API requests it requires.}
-
-\item{clean}{Whether to clean intermediate files after rendering.}
 }
 \value{
 The path to the rendered HTML report (invisibly).

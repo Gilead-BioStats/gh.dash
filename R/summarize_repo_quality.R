@@ -107,9 +107,11 @@ summarize_repo_quality <- function(repos, token = NULL) {
         max_test_files <- 50L
         test_file_paths <- utils::head(test_file_paths, max_test_files)
         test_total <- 0L
+        any_fetch_failed <- FALSE
         for (path in test_file_paths) {
           content <- fetch_repo_file_content(owner, repo, path, default_branch, token)
           if (is.null(content) || is.null(content$content) || !length(content$content)) {
+            any_fetch_failed <- TRUE
             next
           }
           encoded <- content$content
@@ -117,7 +119,8 @@ summarize_repo_quality <- function(repos, token = NULL) {
           decoded <- decode_base64_string(encoded)
           test_total <- test_total + count_test_that_calls(decoded)
         }
-        test_count <- as.integer(test_total)
+        # If any file could not be fetched, the count is incomplete; surface NA.
+        test_count <- if (any_fetch_failed) NA_integer_ else as.integer(test_total)
       }
     }
 

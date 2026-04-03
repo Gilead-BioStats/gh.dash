@@ -55,3 +55,40 @@ test_that("summarize_repo_quality handles missing tree data", {
   expect_equal(result$test_count, NA_integer_)
   expect_equal(result$qcthat_status, "Unavailable")
 })
+
+test_that("summarize_repo_quality handles truncated tree", {
+  result <- with_mocked_bindings(
+    gh.dash:::summarize_repo_quality("org/repo"),
+    .package = "gh.dash",
+    fetch_repo_metadata = function(...) list(private = FALSE, default_branch = "main"),
+    fetch_repo_git_tree = function(...) list(truncated = TRUE, tree = list()),
+    fetch_repo_file_content = function(...) stop("should not be called")
+  )
+
+  expect_equal(result$test_count, NA_integer_)
+  expect_equal(result$qcthat_status, "Unavailable")
+})
+
+test_that("summarize_repo_quality returns NA test_count when a file fetch fails", {
+  result <- with_mocked_bindings(
+    gh.dash:::summarize_repo_quality("org/repo"),
+    .package = "gh.dash",
+    fetch_repo_metadata = function(...) list(private = FALSE, default_branch = "main"),
+    fetch_repo_git_tree = function(...) list(
+      tree = list(
+        list(path = "tests/testthat/test-one.R"),
+        list(path = "tests/testthat/test-two.R")
+      )
+    ),
+    fetch_repo_file_content = function(owner, repo, path, ref, token) {
+      if (path == "tests/testthat/test-one.R") {
+        list(content = base64enc::base64encode(charToRaw("test_that('a', {})\n")))
+      } else {
+        NULL  # simulate API failure for second file
+      }
+    }
+  )
+
+  expect_equal(result$test_count, NA_integer_)
+  expect_equal(result$qcthat_status, "No")
+})
