@@ -55,8 +55,12 @@ summarize_repo_quality <- function(repos, token = NULL) {
     repo <- repo_parts$repo
 
     metadata <- fetch_repo_metadata(owner, repo, token)
-    default_branch <- metadata$default_branch %||% "HEAD"
-    is_private <- metadata$private %||% FALSE
+    default_branch <- "HEAD"
+    is_private <- FALSE
+    if (!is.null(metadata)) {
+      default_branch <- metadata$default_branch %||% "HEAD"
+      is_private <- metadata$private %||% FALSE
+    }
 
     tree <- fetch_repo_git_tree(owner, repo, default_branch, token)
 
@@ -94,10 +98,10 @@ summarize_repo_quality <- function(repos, token = NULL) {
         test_total <- 0L
         for (path in test_file_paths) {
           content <- fetch_repo_file_content(owner, repo, path, default_branch, token)
-          encoded <- content$content
-          if (is.null(encoded) || !length(encoded)) {
+          if (is.null(content) || is.null(content$content) || !length(content$content)) {
             next
           }
+          encoded <- content$content
 
           decoded <- decode_base64_string(encoded)
           test_total <- test_total + count_test_that_calls(decoded)

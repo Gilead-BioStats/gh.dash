@@ -411,12 +411,6 @@ fetch_issue_counts <- function(owner, repo, token) {
   )
 }
 
-#' Check if error has specific HTTP status code
-#'
-#' Internal function to check if a GitHub API error has a specific status code.
-#'
-#' @param err Error object from GitHub API
-#' @param code HTTP status code to check for
 #' Fetch repository git tree from GitHub API
 #'
 #' Internal function to retrieve the full repository tree for a ref.
