@@ -1,71 +1,36 @@
-#' Fetch repository git tree from GitHub API
-#'
-#' Internal function to retrieve the full repository tree for a ref.
-#'
-#' @param owner Repository owner (GitHub username or organization)
-#' @param repo Repository name
-#' @param ref Git ref (branch name, tag, or SHA)
-#' @param token GitHub personal access token (optional)
-#' @return List response from GitHub tree API, or NULL on failure
-#' @keywords internal
-#' @importFrom gh gh
-fetch_repo_git_tree <- function(owner, repo, ref, token) {
-  safe_gh(
-    gh::gh,
-    "GET /repos/{owner}/{repo}/git/trees/{ref}",
-    owner = owner,
-    repo = repo,
-    ref = ref,
-    recursive = 1,
-    .token = token
-  )
-}
-
-#' Fetch file content from GitHub API
-#'
-#' Internal function to retrieve file contents for a specific path/ref.
-#'
-#' @param owner Repository owner (GitHub username or organization)
-#' @param repo Repository name
-#' @param path Repository-relative file path
-#' @param ref Git ref (branch name, tag, or SHA)
-#' @param token GitHub personal access token (optional)
-#' @return List response from GitHub contents API, or NULL on failure
-#' @keywords internal
-#' @importFrom gh gh
-fetch_repo_file_content <- function(owner, repo, path, ref, token) {
-  safe_gh(
-    gh::gh,
-    "GET /repos/{owner}/{repo}/contents/{path}",
-    owner = owner,
-    repo = repo,
-    path = path,
-    ref = ref,
-    .token = token
-  )
-}
-
 #' Count test_that calls in decoded R source
 #'
 #' @param source_text Character string with R code
-#' @return Integer number of `test_that(` occurrences
+#' @return Integer number of actual `test_that()` calls
 #' @keywords internal
+#' @noRd
 count_test_that_calls <- function(source_text) {
   if (is.null(source_text) || !length(source_text)) {
     return(0L)
   }
 
-  source_text <- as.character(source_text)
+  source_text <- paste(as.character(source_text), collapse = "\n")
   if (!nzchar(source_text)) {
     return(0L)
   }
 
-  matches <- gregexpr("test_that\\s*\\(", source_text, perl = TRUE)[[1]]
-  if (length(matches) == 1L && matches[[1]] == -1L) {
+  expr <- tryCatch(
+    parse(text = source_text, keep.source = TRUE),
+    error = function(e) NULL
+  )
+  if (is.null(expr)) {
     return(0L)
   }
 
-  as.integer(length(matches))
+  parse_data <- utils::getParseData(expr)
+  if (is.null(parse_data) || !nrow(parse_data)) {
+    return(0L)
+  }
+
+  as.integer(sum(
+    parse_data$token == "SYMBOL_FUNCTION_CALL" &
+      parse_data$text == "test_that"
+  ))
 }
 
 #' Summarize repository quality signals
@@ -77,6 +42,7 @@ count_test_that_calls <- function(source_text) {
 #' @param token Optional GitHub personal access token.
 #' @return Data frame with columns `repo`, `test_count`, and `qcthat_status`.
 #' @keywords internal
+#' @noRd
 summarize_repo_quality <- function(repos, token = NULL) {
   validate_repo_vector(repos)
 
@@ -93,6 +59,18 @@ summarize_repo_quality <- function(repos, token = NULL) {
     is_private <- metadata$private %||% FALSE
 
     tree <- fetch_repo_git_tree(owner, repo, default_branch, token)
+
+    if (is.null(tree)) {
+      # API failure (rate-limit or permission error) — surface NA rather than
+      # conflating unavailability with a genuinely empty repo.
+      results[[idx]] <- list(
+        repo = format_repo_link(owner, repo, is_private = is_private),
+        test_count = NA_integer_,
+        qcthat_status = "Unavailable"
+      )
+      next
+    }
+
     tree_entries <- tree$tree
 
     if (is.null(tree_entries) || !length(tree_entries)) {
@@ -110,6 +88,9 @@ summarize_repo_quality <- function(repos, token = NULL) {
       if (!length(test_file_paths)) {
         test_count <- 0L
       } else {
+        # Cap at 50 files to limit API usage and avoid rate-limit issues.
+        max_test_files <- 50L
+        test_file_paths <- utils::head(test_file_paths, max_test_files)
         test_total <- 0L
         for (path in test_file_paths) {
           content <- fetch_repo_file_content(owner, repo, path, default_branch, token)

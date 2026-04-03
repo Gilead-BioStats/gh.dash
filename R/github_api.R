@@ -417,6 +417,59 @@ fetch_issue_counts <- function(owner, repo, token) {
 #'
 #' @param err Error object from GitHub API
 #' @param code HTTP status code to check for
+#' Fetch repository git tree from GitHub API
+#'
+#' Internal function to retrieve the full repository tree for a ref.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param ref Git ref (branch name, tag, or SHA)
+#' @param token GitHub personal access token (optional)
+#' @return List response from GitHub tree API, or NULL on failure
+#' @keywords internal
+#' @noRd
+fetch_repo_git_tree <- function(owner, repo, ref, token) {
+  safe_gh(
+    gh::gh,
+    "GET /repos/{owner}/{repo}/git/trees/{ref}",
+    owner = owner,
+    repo = repo,
+    ref = ref,
+    recursive = 1,
+    .token = token
+  )
+}
+
+#' Fetch file content from GitHub API
+#'
+#' Internal function to retrieve file contents for a specific path/ref.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param path Repository-relative file path
+#' @param ref Git ref (branch name, tag, or SHA)
+#' @param token GitHub personal access token (optional)
+#' @return List response from GitHub contents API, or NULL on failure
+#' @keywords internal
+#' @noRd
+fetch_repo_file_content <- function(owner, repo, path, ref, token) {
+  safe_gh(
+    gh::gh,
+    "GET /repos/{owner}/{repo}/contents/{path}",
+    owner = owner,
+    repo = repo,
+    path = path,
+    ref = ref,
+    .token = token
+  )
+}
+
+#' Check if error has specific HTTP status code
+#'
+#' Internal function to check if a GitHub API error has a specific status code.
+#'
+#' @param err Error object from GitHub API
+#' @param code HTTP status code to check for
 #' @return Logical indicating if error has the specified status code
 #' @keywords internal
 has_status_code <- function(err, code) {

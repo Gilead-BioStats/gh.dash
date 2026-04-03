@@ -52,6 +52,6 @@ test_that("summarize_repo_quality handles missing tree data", {
     fetch_repo_file_content = function(...) stop("should not be called")
   )
 
-  expect_equal(result$test_count, 0L)
-  expect_equal(result$qcthat_status, "No")
+  expect_equal(result$test_count, NA_integer_)
+  expect_equal(result$qcthat_status, "Unavailable")
 })
