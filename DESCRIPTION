@@ -19,6 +19,7 @@ Depends:
 Imports:
     gh,
     htmltools,
+    jsonlite,
     rlang,
     base64enc,
     purrr

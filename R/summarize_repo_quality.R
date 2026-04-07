@@ -69,6 +69,7 @@ summarize_repo_quality <- function(repos, token = NULL) {
       # conflating unavailability with a genuinely empty repo.
       results[[idx]] <- list(
         repo = format_repo_link(owner, repo, is_private = is_private),
+        coverage = "Unavailable",
         test_count = NA_integer_,
         qcthat_status = "Unavailable"
       )
@@ -80,6 +81,7 @@ summarize_repo_quality <- function(repos, token = NULL) {
       # results would be incomplete so surface NA rather than misleading counts.
       results[[idx]] <- list(
         repo = format_repo_link(owner, repo, is_private = is_private),
+        coverage = "Unavailable",
         test_count = NA_integer_,
         qcthat_status = "Unavailable"
       )
@@ -124,8 +126,11 @@ summarize_repo_quality <- function(repos, token = NULL) {
       }
     }
 
+    coverage_data <- fetch_coverage_percent(owner, repo, token)
+
     results[[idx]] <- list(
       repo = format_repo_link(owner, repo, is_private = is_private),
+      coverage = format_coverage_summary(coverage_data$coverage_percent, coverage_data$release_url),
       test_count = as.integer(test_count),
       qcthat_status = if (isTRUE(has_qcthat)) "Yes" else "No"
     )
@@ -133,8 +138,99 @@ summarize_repo_quality <- function(repos, token = NULL) {
 
   data.frame(
     repo = vapply(results, `[[`, character(1), "repo"),
+    coverage = vapply(results, `[[`, character(1), "coverage"),
     test_count = vapply(results, `[[`, integer(1), "test_count"),
     qcthat_status = vapply(results, `[[`, character(1), "qcthat_status"),
     stringsAsFactors = FALSE
   )
+}
+
+#' Fetch coverage percentage from latest release asset
+#'
+#' Looks for a `coverage-summary.json` asset in the latest non-draft,
+#' non-prerelease GitHub release and parses `coverage_percent` from it.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param token GitHub personal access token (optional)
+#' @return List with `coverage_percent` (numeric or NA) and `release_url`
+#'   (character or NULL)
+#' @keywords internal
+#' @noRd
+fetch_coverage_percent <- function(owner, repo, token) {
+  na_result <- list(coverage_percent = NA_real_, release_url = NULL)
+
+  releases <- fetch_releases(owner, repo, token)
+  latest <- derive_latest_release(releases)
+
+  if (is.null(latest)) {
+    return(na_result)
+  }
+
+  release_url <- latest$html_url %||% NULL
+  result <- list(coverage_percent = NA_real_, release_url = release_url)
+
+  assets <- latest$assets
+  if (is.null(assets) || !length(assets)) {
+    return(result)
+  }
+
+  asset <- NULL
+  for (a in assets) {
+    if (identical(a$name, "coverage-summary.json")) {
+      asset <- a
+      break
+    }
+  }
+
+  if (is.null(asset)) {
+    return(result)
+  }
+
+  raw <- fetch_release_asset_content(owner, repo, asset$id, token)
+  if (is.null(raw) || !nzchar(raw)) {
+    return(result)
+  }
+
+  parsed <- tryCatch(
+    jsonlite::fromJSON(raw, simplifyVector = TRUE),
+    error = function(e) NULL
+  )
+
+  if (is.null(parsed) || is.null(parsed$coverage_percent)) {
+    return(result)
+  }
+
+  pct <- suppressWarnings(as.numeric(parsed$coverage_percent))
+  result$coverage_percent <- if (is.finite(pct)) pct else NA_real_
+  result
+}
+
+#' Format coverage percentage as HTML
+#'
+#' Returns a linked percentage string (e.g. "84.7%") or "Unavailable" when
+#' no coverage data is available.
+#'
+#' @param coverage_percent Numeric coverage percentage, or NA
+#' @param release_url Character URL of the release page, or NULL
+#' @return Character HTML string
+#' @keywords internal
+#' @noRd
+format_coverage_summary <- function(coverage_percent, release_url) {
+  if (is.na(coverage_percent)) {
+    return("Unavailable")
+  }
+
+  label <- sprintf("%.1f%%", coverage_percent)
+
+  if (!is.null(release_url) && nzchar(release_url)) {
+    as.character(htmltools::tags$a(
+      href = release_url,
+      target = "_blank",
+      rel = "noopener noreferrer",
+      label
+    ))
+  } else {
+    label
+  }
 }

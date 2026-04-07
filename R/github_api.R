@@ -434,6 +434,37 @@ fetch_repo_git_tree <- function(owner, repo, ref, token) {
   )
 }
 
+#' Fetch a release asset as raw text
+#'
+#' Downloads a GitHub release asset by its numeric asset ID and returns the
+#' body as a character string, or NULL if the request fails.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param asset_id Integer asset ID
+#' @param token GitHub personal access token (optional)
+#' @return Character string of asset content, or NULL on failure
+#' @keywords internal
+#' @noRd
+fetch_release_asset_content <- function(owner, repo, asset_id, token) {
+  result <- safe_gh(
+    gh::gh,
+    "GET /repos/{owner}/{repo}/releases/assets/{asset_id}",
+    owner = owner,
+    repo = repo,
+    asset_id = asset_id,
+    .accept = "application/octet-stream",
+    .token = token
+  )
+  if (is.null(result)) {
+    return(NULL)
+  }
+  tryCatch(
+    rawToChar(as.raw(unlist(result))),
+    error = function(e) as.character(result)
+  )
+}
+
 #' Fetch file content from GitHub API
 #'
 #' Internal function to retrieve file contents for a specific path/ref.

@@ -692,15 +692,19 @@ render_quality_table <- function(df) {
   rows <- lapply(seq_len(nrow(df)), function(i) {
     htmltools::tags$tr(
       htmltools::tags$td(
-        class = "status-table__cell status-table__cell--repo",
+        class = "status-table__cell status-table__cell--repo col-quality-repo",
         htmltools::HTML(df$repo[[i]])
       ),
       htmltools::tags$td(
-        class = "status-table__cell status-table__cell--right",
+        class = "status-table__cell status-table__cell--right col-coverage",
+        htmltools::HTML(df$coverage[[i]])
+      ),
+      htmltools::tags$td(
+        class = "status-table__cell status-table__cell--right col-test-count",
         if (is.na(df$test_count[[i]])) "\u2014" else as.character(df$test_count[[i]])
       ),
       htmltools::tags$td(
-        class = "status-table__cell",
+        class = "status-table__cell col-qcthat",
         htmltools::htmlEscape(df$qcthat_status[[i]])
       )
     )
@@ -711,14 +715,46 @@ render_quality_table <- function(df) {
   htmltools::div(
     class = "status-table-wrapper",
     htmltools::div(
+      class = "status-table-toolbar",
+      htmltools::div(
+        class = "column-settings",
+        htmltools::tags$button(
+          type = "button",
+          class = "column-settings__button",
+          `aria-expanded` = "false",
+          `aria-controls` = "quality-column-settings-panel",
+          `aria-label` = "Column settings",
+          "\u2630 Columns"
+        ),
+        htmltools::div(
+          id = "quality-column-settings-panel",
+          class = "column-settings__panel",
+          htmltools::tags$div(class = "column-settings__title", "Table Columns"),
+          htmltools::div(
+            class = "column-settings__actions",
+            htmltools::tags$button(type = "button", class = "column-settings__action", `data-column-action` = "hide-all", "Hide all"),
+            htmltools::tags$button(type = "button", class = "column-settings__action", `data-column-action` = "show-all", "Show all")
+          ),
+          htmltools::tags$ul(
+            class = "column-settings__list",
+            htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-quality-repo", checked = "checked"), "Repository"),
+            htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-coverage", checked = "checked"), "Coverage"),
+            htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-test-count", checked = "checked"), "# of tests"),
+            htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-qcthat", checked = "checked"), "uses qcthat")
+          )
+        )
+      )
+    ),
+    htmltools::div(
       class = "status-table-container",
       htmltools::tags$table(
         class = "status-table status-table--compact",
         htmltools::tags$thead(
           htmltools::tags$tr(
-            htmltools::tags$th(scope = "col", "Repository"),
-            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "# of tests"),
-            htmltools::tags$th(scope = "col", "uses qcthat")
+            htmltools::tags$th(scope = "col", class = "col-quality-repo", "Repository"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right col-coverage", "Coverage"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right col-test-count", "# of tests"),
+            htmltools::tags$th(scope = "col", class = "col-qcthat", "uses qcthat")
           )
         ),
         tbody
