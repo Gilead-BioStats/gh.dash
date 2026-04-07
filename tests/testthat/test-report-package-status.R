@@ -143,6 +143,20 @@ test_that("summarize_github_repos includes open PR count", {
   expect_equal(result$open_prs, "<a href=\"https://github.com/org/repo/pulls\">3</a>")
 })
 
+test_that("summarize_github_repos shows Unavailable when fetch_open_prs returns NULL", {
+  result <- with_mocked_bindings(
+    summarize_github_repos("org/repo"),
+    fetch_repo_metadata = function(...) list(private = FALSE),
+    fetch_releases = function(...) list(),
+    fetch_open_milestones = function(...) list(),
+    fetch_open_prs = function(...) NULL,
+    fetch_issue_counts = function(...) list(issues_snapshot = list(open = 0L, closed = 0L), issues_90day = list(opened = 0L, closed = 0L)),
+    fetch_branch_comparison = function(...) list(ahead_by = 0, behind_by = 0)
+  )
+
+  expect_equal(result$open_prs, "<a href=\"https://github.com/org/repo/pulls\">Unavailable</a>")
+})
+
 test_that("summarize_github_repos appends qualification badge when registry matches", {
   mock_release <- list(
     tag_name = "v1.0.0",

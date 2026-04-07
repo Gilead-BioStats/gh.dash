@@ -10,6 +10,9 @@
 #' @param qualification_registry_url URL or file path to the qualification registry CSV (optional).
 #' @param pr_activity_days Number of days to include in PR activity summaries (default: 365).
 #' @param clean Whether to clean intermediate files after rendering.
+#' @param include_quality Logical. When `TRUE` (the default), the Quality tab is
+#'   computed and rendered. Set to `FALSE` to skip the Quality tab and avoid the
+#'   additional GitHub API requests it requires.
 #'
 #' @return The path to the rendered HTML report (invisibly).
 #' @export
@@ -21,7 +24,8 @@ render_dash <- function(
   token = NULL,
   qualification_registry_url = NULL,
   pr_activity_days = 365,
-  clean = TRUE
+  clean = TRUE,
+  include_quality = TRUE
 ) {
   if (!requireNamespace("rmarkdown", quietly = TRUE)) {
     stop("Package 'rmarkdown' is required to render the report.", call. = FALSE)
@@ -52,7 +56,8 @@ render_dash <- function(
       title = title,
       packageList = packages,
       qualification_registry_url = qualification_registry_url,
-      pr_activity_days = pr_activity_days
+      pr_activity_days = pr_activity_days,
+      include_quality = include_quality
     ),
     clean = clean
   )

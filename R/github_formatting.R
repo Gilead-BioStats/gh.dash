@@ -356,6 +356,10 @@ format_issue_summary <- function(owner, repo, issues_snapshot, issues_90day) {
 format_pr_summary <- function(owner, repo, pr_count) {
   base_url <- sprintf("https://github.com/%s/%s/pulls", owner, repo)
 
+  if (is.null(pr_count)) {
+    return(as.character(htmltools::tags$a(href = base_url, "Unavailable")))
+  }
+
   if (pr_count == 0) {
     return(as.character(htmltools::tags$a(href = base_url, "None")))
   }

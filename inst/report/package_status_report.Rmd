@@ -10,6 +10,7 @@ params:
   repo: "gh.dash"
   qualification_registry_url: NULL
   pr_activity_days: 365
+  include_quality: TRUE
 ---
 
 This report summarizes the current release and milestone status for a selection of `r params$title` packages hosted on GitHub.
@@ -73,6 +74,20 @@ pr_activity <- if (length(repos) == 0L) {
     repos,
     token = github_token,
     days = pr_activity_days
+  )
+}
+
+quality <- if (!isTRUE(params$include_quality) || length(repos) == 0L) {
+  data.frame(
+    repo = character(0),
+    test_count = integer(0),
+    qcthat_status = character(0),
+    stringsAsFactors = FALSE
+  )
+} else {
+  gh.dash:::summarize_repo_quality(
+    repos,
+    token = github_token
   )
 }
 ```
@@ -666,40 +681,114 @@ render_pr_activity_table <- function(df, days) {
   )
 }
 
-render_dashboard_tabs <- function(status_df, pr_activity_df, days) {
-  htmltools::browsable(
+render_quality_table <- function(df) {
+  if (!nrow(df)) {
+    return(htmltools::div(
+      class = "empty-state",
+      "No repositories available."
+    ))
+  }
+
+  rows <- lapply(seq_len(nrow(df)), function(i) {
+    htmltools::tags$tr(
+      htmltools::tags$td(
+        class = "status-table__cell status-table__cell--repo",
+        htmltools::HTML(df$repo[[i]])
+      ),
+      htmltools::tags$td(
+        class = "status-table__cell status-table__cell--right",
+        if (is.na(df$test_count[[i]])) "\u2014" else as.character(df$test_count[[i]])
+      ),
+      htmltools::tags$td(
+        class = "status-table__cell",
+        htmltools::htmlEscape(df$qcthat_status[[i]])
+      )
+    )
+  })
+
+  tbody <- htmltools::tagAppendChildren(htmltools::tags$tbody(), rows)
+
+  htmltools::div(
+    class = "status-table-wrapper",
     htmltools::div(
-      class = "dash-tabs",
-      htmltools::div(
-        class = "dash-tabs__list",
-        htmltools::tags$button(
-          class = "dash-tabs__button is-active",
-          type = "button",
-          `data-tab-target` = "tab-repo-status",
-          "Repository Status"
+      class = "status-table-container",
+      htmltools::tags$table(
+        class = "status-table status-table--compact",
+        htmltools::tags$thead(
+          htmltools::tags$tr(
+            htmltools::tags$th(scope = "col", "Repository"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "# of tests"),
+            htmltools::tags$th(scope = "col", "uses qcthat")
+          )
         ),
-        htmltools::tags$button(
-          class = "dash-tabs__button",
-          type = "button",
-          `data-tab-target` = "tab-pr-activity",
-          sprintf("PR Activity (Last %d Days)", days)
-        )
-      ),
-      htmltools::div(
-        id = "tab-repo-status",
-        class = "dash-tab-panel is-active",
-        render_status_table(status_df)
-      ),
-      htmltools::div(
-        id = "tab-pr-activity",
-        class = "dash-tab-panel",
-        render_pr_activity_table(pr_activity_df, days)
+        tbody
       )
     )
   )
 }
 
-render_dashboard_tabs(status, pr_activity, pr_activity_days)
+render_dashboard_tabs <- function(status_df, pr_activity_df, quality_df, days, include_quality) {
+  tab_buttons <- list(
+    htmltools::tags$button(
+      class = "dash-tabs__button is-active",
+      type = "button",
+      `data-tab-target` = "tab-repo-status",
+      "Repository Status"
+    ),
+    htmltools::tags$button(
+      class = "dash-tabs__button",
+      type = "button",
+      `data-tab-target` = "tab-pr-activity",
+      sprintf("PR Activity (Last %d Days)", days)
+    )
+  )
+
+  tab_panels <- list(
+    htmltools::div(
+      id = "tab-repo-status",
+      class = "dash-tab-panel is-active",
+      render_status_table(status_df)
+    ),
+    htmltools::div(
+      id = "tab-pr-activity",
+      class = "dash-tab-panel",
+      render_pr_activity_table(pr_activity_df, days)
+    )
+  )
+
+  if (isTRUE(include_quality)) {
+    tab_buttons <- c(
+      tab_buttons,
+      list(htmltools::tags$button(
+        class = "dash-tabs__button",
+        type = "button",
+        `data-tab-target` = "tab-quality",
+        "Quality"
+      ))
+    )
+    tab_panels <- c(
+      tab_panels,
+      list(htmltools::div(
+        id = "tab-quality",
+        class = "dash-tab-panel",
+        render_quality_table(quality_df)
+      ))
+    )
+  }
+
+  htmltools::browsable(
+    htmltools::div(
+      class = "dash-tabs",
+      htmltools::div(
+        class = "dash-tabs__list",
+        tab_buttons
+      ),
+      tab_panels
+    )
+  )
+}
+
+render_dashboard_tabs(status, pr_activity, quality, pr_activity_days, params$include_quality)
 ```
 
 ```{r column_settings_js, echo=FALSE, results='asis'}
