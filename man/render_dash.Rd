@@ -13,7 +13,7 @@ render_dash(
   qualification_registry_url = NULL,
   pr_activity_days = 365,
   clean = TRUE,
-  include_quality = TRUE
+  tabs = c("repo-status", "pr-activity", "quality")
 )
 }
 \arguments{
@@ -33,9 +33,11 @@ render_dash(
 
 \item{clean}{Whether to clean intermediate files after rendering.}
 
-\item{include_quality}{Logical. When \code{TRUE} (the default), the Quality tab is
-computed and rendered. Set to \code{FALSE} to skip the Quality tab and avoid the
-additional GitHub API requests it requires.}
+\item{tabs}{Character vector specifying which tabs to include and their order.
+Valid values are \code{"repo-status"}, \code{"pr-activity"}, and \code{"quality"}. The first
+tab in the vector becomes the initially-active tab. Defaults to all three
+tabs. If \code{"quality"} is included, the Quality API calls are performed;
+otherwise they are skipped.}
 }
 \value{
 The path to the rendered HTML report (invisibly).
