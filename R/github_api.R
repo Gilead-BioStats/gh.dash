@@ -446,13 +446,10 @@ fetch_repo_git_tree <- function(owner, repo, ref, token) {
 #' @return Character string of asset content, or NULL on failure
 #' @keywords internal
 #' @noRd
-fetch_release_asset_content <- function(owner, repo, asset_id, token) {
+fetch_release_asset_content <- function(url, token) {
   result <- safe_gh(
     gh::gh,
-    "GET /repos/{owner}/{repo}/releases/assets/{asset_id}",
-    owner = owner,
-    repo = repo,
-    asset_id = asset_id,
+    url,
     .accept = "application/octet-stream",
     .token = token
   )

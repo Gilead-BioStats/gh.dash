@@ -187,7 +187,7 @@ fetch_coverage_percent <- function(owner, repo, token) {
     return(result)
   }
 
-  raw <- fetch_release_asset_content(owner, repo, asset$id, token)
+  raw <- fetch_release_asset_content(asset$url, token)
   if (is.null(raw) || !nzchar(raw)) {
     return(result)
   }

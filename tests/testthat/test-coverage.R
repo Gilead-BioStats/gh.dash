@@ -11,11 +11,11 @@ test_that("fetch_coverage_percent returns coverage_percent and release_url #28",
         draft = FALSE,
         prerelease = FALSE,
         assets = list(
-          list(id = 123L, name = "coverage-summary.json")
+          list(url = "https://api.github.com/repos/org/repo/releases/assets/123", name = "coverage-summary.json")
         )
       )
     ),
-    fetch_release_asset_content = function(owner, repo, asset_id, token) {
+    fetch_release_asset_content = function(url, token) {
       '{"coverage_percent": 84.7}'
     }
   )
@@ -44,7 +44,7 @@ test_that("fetch_coverage_percent returns NA when no coverage-summary.json asset
         html_url = "https://github.com/org/repo/releases/tag/v1.0.0",
         draft = FALSE,
         prerelease = FALSE,
-        assets = list(list(id = 456L, name = "other-asset.zip"))
+        assets = list(list(url = "https://api.github.com/repos/org/repo/releases/assets/456", name = "other-asset.zip"))
       )
     ),
     fetch_release_asset_content = function(...) stop("should not be called")
@@ -63,7 +63,7 @@ test_that("fetch_coverage_percent returns NA for unparseable asset content #28",
         html_url = "https://github.com/org/repo/releases/tag/v1.0.0",
         draft = FALSE,
         prerelease = FALSE,
-        assets = list(list(id = 789L, name = "coverage-summary.json"))
+        assets = list(list(url = "https://api.github.com/repos/org/repo/releases/assets/789", name = "coverage-summary.json"))
       )
     ),
     fetch_release_asset_content = function(...) "not valid json {{{"
@@ -82,7 +82,7 @@ test_that("fetch_coverage_percent returns NA when asset download fails #28", {
         html_url = "https://github.com/org/repo/releases/tag/v1.0.0",
         draft = FALSE,
         prerelease = FALSE,
-        assets = list(list(id = 789L, name = "coverage-summary.json"))
+        assets = list(list(url = "https://api.github.com/repos/org/repo/releases/assets/789", name = "coverage-summary.json"))
       )
     ),
     fetch_release_asset_content = function(...) NULL

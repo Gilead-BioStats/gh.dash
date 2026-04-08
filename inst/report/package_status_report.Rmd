@@ -738,7 +738,7 @@ render_quality_table <- function(df) {
           htmltools::tags$ul(
             class = "column-settings__list",
             htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-quality-repo", checked = "checked"), "Repository"),
-            htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-coverage", checked = "checked"), "Coverage"),
+            htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-coverage", checked = "checked"), "Test Coverage"),
             htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-test-count", checked = "checked"), "# of tests"),
             htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-qcthat", checked = "checked"), "uses qcthat")
           )
@@ -752,7 +752,7 @@ render_quality_table <- function(df) {
         htmltools::tags$thead(
           htmltools::tags$tr(
             htmltools::tags$th(scope = "col", class = "col-quality-repo", "Repository"),
-            htmltools::tags$th(scope = "col", class = "status-table__cell--right col-coverage", "Coverage"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right col-coverage", "Test Coverage"),
             htmltools::tags$th(scope = "col", class = "status-table__cell--right col-test-count", "# of tests"),
             htmltools::tags$th(scope = "col", class = "col-qcthat", "uses qcthat")
           )
