@@ -469,14 +469,16 @@ render_status_table <- function(df) {
         htmltools::div(
           class = "column-settings",
           htmltools::tags$button(
-            class = "column-settings__button",
             type = "button",
+            class = "column-settings__button",
             `aria-expanded` = "false",
             `aria-haspopup` = "true",
+            `aria-controls` = "repo-status-column-settings-panel",
             `aria-label` = "Column settings",
-            "⚙ Settings"
+            "\u2699 Columns"
           ),
           htmltools::div(
+            id = "repo-status-column-settings-panel",
             class = "column-settings__panel",
             htmltools::tags$div(class = "column-settings__title", "Table Columns"),
             htmltools::tags$div(
@@ -670,20 +672,21 @@ render_pr_activity_table <- function(df, days) {
           type = "button",
           class = "column-settings__button",
           `aria-expanded` = "false",
+          `aria-haspopup` = "true",
           `aria-controls` = "pr-activity-column-settings-panel",
           `aria-label` = "Column settings",
-          "\u2630 Columns"
+          "\u2699 Columns"
         ),
         htmltools::div(
           id = "pr-activity-column-settings-panel",
           class = "column-settings__panel",
           htmltools::tags$div(class = "column-settings__title", "Table Columns"),
-          htmltools::div(
+          htmltools::tags$div(
             class = "column-settings__actions",
             htmltools::tags$button(type = "button", class = "column-settings__action", `data-column-action` = "hide-all", "Hide all"),
             htmltools::tags$button(type = "button", class = "column-settings__action", `data-column-action` = "show-all", "Show all")
           ),
-          htmltools::tags$ul(
+          htmltools::tags$div(
             class = "column-settings__list",
             htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-pr-user", checked = "checked"), "User"),
             htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-pr-opened", checked = "checked"), "PRs Opened (Active)"),
@@ -754,20 +757,21 @@ render_quality_table <- function(df) {
           type = "button",
           class = "column-settings__button",
           `aria-expanded` = "false",
+          `aria-haspopup` = "true",
           `aria-controls` = "quality-column-settings-panel",
           `aria-label` = "Column settings",
-          "\u2630 Columns"
+          "\u2699 Columns"
         ),
         htmltools::div(
           id = "quality-column-settings-panel",
           class = "column-settings__panel",
           htmltools::tags$div(class = "column-settings__title", "Table Columns"),
-          htmltools::div(
+          htmltools::tags$div(
             class = "column-settings__actions",
             htmltools::tags$button(type = "button", class = "column-settings__action", `data-column-action` = "hide-all", "Hide all"),
             htmltools::tags$button(type = "button", class = "column-settings__action", `data-column-action` = "show-all", "Show all")
           ),
-          htmltools::tags$ul(
+          htmltools::tags$div(
             class = "column-settings__list",
             htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-quality-repo", checked = "checked"), "Repository"),
             htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-coverage", checked = "checked"), "Test Coverage"),
