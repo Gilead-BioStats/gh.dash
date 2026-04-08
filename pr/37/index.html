@@ -351,7 +351,7 @@ display: none;
 
 <h1 class="title toc-ignore">Tidyverse Package Status Report</h1>
 <h4 class="author"><a href="https://github.com/Gilead-BioStats/gh.dash">Gilead-BioStats/gh.dash</a></h4>
-<h4 class="date">April 08, 2026 19:59 UTC</h4>
+<h4 class="date">April 08, 2026 20:16 UTC</h4>
 
 </div>
 
@@ -649,8 +649,8 @@ border-color: rgba(12, 74, 110, 0.25);
 <div class="status-table-wrapper">
 <div class="status-table-toolbar">
 <div class="column-settings">
-<button class="column-settings__button" type="button" aria-expanded="false" aria-haspopup="true" aria-label="Column settings">⚙ Settings</button>
-<div class="column-settings__panel">
+<button type="button" class="column-settings__button" aria-expanded="false" aria-haspopup="true" aria-controls="repo-status-column-settings-panel" aria-label="Column settings">⚙ Columns</button>
+<div id="repo-status-column-settings-panel" class="column-settings__panel">
 <div class="column-settings__title">Table Columns</div>
 <div class="column-settings__actions">
 <button type="button" class="column-settings__action" data-column-action="hide-all">Hide all</button>
@@ -802,14 +802,14 @@ Dev status
 <div class="status-table-wrapper">
 <div class="status-table-toolbar">
 <div class="column-settings">
-<button type="button" class="column-settings__button" aria-expanded="false" aria-controls="pr-activity-column-settings-panel" aria-label="Column settings">☰ Columns</button>
+<button type="button" class="column-settings__button" aria-expanded="false" aria-haspopup="true" aria-controls="pr-activity-column-settings-panel" aria-label="Column settings">⚙ Columns</button>
 <div id="pr-activity-column-settings-panel" class="column-settings__panel">
 <div class="column-settings__title">Table Columns</div>
 <div class="column-settings__actions">
 <button type="button" class="column-settings__action" data-column-action="hide-all">Hide all</button>
 <button type="button" class="column-settings__action" data-column-action="show-all">Show all</button>
 </div>
-<ul class="column-settings__list">
+<div class="column-settings__list">
 <label class="column-settings__item">
 <input type="checkbox" data-column="col-pr-user" checked="checked"></input>
 User
@@ -830,7 +830,7 @@ PRs Pending Review
 <input type="checkbox" data-column="col-pr-ratio" checked="checked"></input>
 Created/Reviewed
 </label>
-</ul>
+</div>
 </div>
 </div>
 </div>
@@ -1968,14 +1968,14 @@ Created/Reviewed
 <div class="status-table-wrapper">
 <div class="status-table-toolbar">
 <div class="column-settings">
-<button type="button" class="column-settings__button" aria-expanded="false" aria-controls="quality-column-settings-panel" aria-label="Column settings">☰ Columns</button>
+<button type="button" class="column-settings__button" aria-expanded="false" aria-haspopup="true" aria-controls="quality-column-settings-panel" aria-label="Column settings">⚙ Columns</button>
 <div id="quality-column-settings-panel" class="column-settings__panel">
 <div class="column-settings__title">Table Columns</div>
 <div class="column-settings__actions">
 <button type="button" class="column-settings__action" data-column-action="hide-all">Hide all</button>
 <button type="button" class="column-settings__action" data-column-action="show-all">Show all</button>
 </div>
-<ul class="column-settings__list">
+<div class="column-settings__list">
 <label class="column-settings__item">
 <input type="checkbox" data-column="col-quality-repo" checked="checked"></input>
 Repository
@@ -1992,7 +1992,7 @@ Test Coverage
 <input type="checkbox" data-column="col-qcthat" checked="checked"></input>
 uses qcthat
 </label>
-</ul>
+</div>
 </div>
 </div>
 </div>
