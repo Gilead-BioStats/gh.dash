@@ -351,7 +351,7 @@ display: none;
 
 <h1 class="title toc-ignore">Tidyverse Package Status Report</h1>
 <h4 class="author"><a href="https://github.com/Gilead-BioStats/gh.dash">Gilead-BioStats/gh.dash</a></h4>
-<h4 class="date">April 08, 2026 21:27 UTC</h4>
+<h4 class="date">April 08, 2026 21:47 UTC</h4>
 
 </div>
 
@@ -2113,12 +2113,9 @@ uses qcthat
 
     function ensureAtLeastOneVisible() {
       var anyChecked = checkboxes.some(function(cb) { return cb.checked; });
-      if (!anyChecked) {
-        var repoCb = checkboxes.find(function(cb) { return cb.getAttribute('data-column') === 'col-repo'; });
-        if (repoCb) {
-          repoCb.checked = true;
-          setColumnVisible('col-repo', true);
-        }
+      if (!anyChecked && checkboxes.length > 0) {
+        checkboxes[0].checked = true;
+        setColumnVisible(checkboxes[0].getAttribute('data-column'), true);
       }
     }
 
