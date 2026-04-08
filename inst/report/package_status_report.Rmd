@@ -112,6 +112,7 @@ styles <- c(
   "  gap: 0.5rem;",
   "  border-bottom: 1px solid #e2e8f0;",
   "  padding-bottom: 0.5rem;",
+  "  align-items: center;",
   "}",
   "",
   ".dash-tabs__button {",
@@ -475,7 +476,7 @@ render_status_table <- function(df) {
             `aria-haspopup` = "true",
             `aria-controls` = "repo-status-column-settings-panel",
             `aria-label` = "Column settings",
-            "\u2699 Settings"
+            "\u2699 Column Settings"
           ),
           htmltools::div(
             id = "repo-status-column-settings-panel",
@@ -675,7 +676,7 @@ render_pr_activity_table <- function(df, days) {
           `aria-haspopup` = "true",
           `aria-controls` = "pr-activity-column-settings-panel",
           `aria-label` = "Column settings",
-          "\u2699 Settings"
+          "\u2699 Column Settings"
         ),
         htmltools::div(
           id = "pr-activity-column-settings-panel",
@@ -760,7 +761,7 @@ render_quality_table <- function(df) {
           `aria-haspopup` = "true",
           `aria-controls` = "quality-column-settings-panel",
           `aria-label` = "Column settings",
-          "\u2699 Settings"
+          "\u2699 Column Settings"
         ),
         htmltools::div(
           id = "quality-column-settings-panel",
@@ -842,12 +843,54 @@ render_dashboard_tabs <- function(status_df, pr_activity_df, quality_df, days, t
     )
   })
 
+  tab_settings_items <- lapply(tabs, function(tab) {
+    def <- all_tab_defs[[tab]]
+    htmltools::tags$label(
+      class = "column-settings__item",
+      htmltools::tags$input(
+        type = "checkbox",
+        `data-tab-toggle` = def$id,
+        checked = "checked"
+      ),
+      def$label
+    )
+  })
+
+  tab_settings <- htmltools::div(
+    class = "column-settings",
+    style = "margin-left: auto;",
+    htmltools::tags$button(
+      type = "button",
+      class = "column-settings__button",
+      `aria-expanded` = "false",
+      `aria-haspopup` = "true",
+      `aria-controls` = "tab-settings-panel",
+      `aria-label` = "Dashboard settings",
+      "\u2699 Dashboard Settings"
+    ),
+    htmltools::div(
+      id = "tab-settings-panel",
+      class = "column-settings__panel",
+      htmltools::tags$div(class = "column-settings__title", "Visible Tabs"),
+      htmltools::tags$div(
+        class = "column-settings__actions",
+        htmltools::tags$button(type = "button", class = "column-settings__action", `data-tab-action` = "hide-all", "Hide all"),
+        htmltools::tags$button(type = "button", class = "column-settings__action", `data-tab-action` = "show-all", "Show all")
+      ),
+      htmltools::tags$div(
+        class = "column-settings__list",
+        tab_settings_items
+      )
+    )
+  )
+
   htmltools::browsable(
     htmltools::div(
       class = "dash-tabs",
       htmltools::div(
         class = "dash-tabs__list",
-        tab_buttons
+        tab_buttons,
+        tab_settings
       ),
       tab_panels
     )
@@ -945,6 +988,73 @@ column_settings_js <- c(
   "    tabPanels.forEach(function(panel) {",
   "      panel.classList.toggle('is-active', panel.id === targetId);",
   "    });",
+  "  }",
+  "",
+  "  var tabSettingsButton = document.querySelector('#tab-settings-panel');",
+  "  var tabSettingsTrigger = tabSettingsButton ? tabSettingsButton.previousElementSibling : null;",
+  "  if (tabSettingsTrigger && tabSettingsButton) {",
+  "    tabSettingsTrigger.addEventListener('click', function(event) {",
+  "      event.stopPropagation();",
+  "      var isOpen = tabSettingsButton.classList.toggle('is-open');",
+  "      tabSettingsTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');",
+  "    });",
+  "    tabSettingsButton.addEventListener('click', function(event) { event.stopPropagation(); });",
+  "    document.addEventListener('click', function() {",
+  "      if (tabSettingsButton.classList.contains('is-open')) {",
+  "        tabSettingsButton.classList.remove('is-open');",
+  "        tabSettingsTrigger.setAttribute('aria-expanded', 'false');",
+  "      }",
+  "    });",
+  "",
+  "    var tabToggleCheckboxes = Array.prototype.slice.call(tabSettingsButton.querySelectorAll('input[data-tab-toggle]'));",
+  "    var tabHideAll = tabSettingsButton.querySelector('[data-tab-action=\"hide-all\"]');",
+  "    var tabShowAll = tabSettingsButton.querySelector('[data-tab-action=\"show-all\"]');",
+  "",
+  "    function setTabVisible(targetId, visible) {",
+  "      var btn = document.querySelector('.dash-tabs__button[data-tab-target=\"' + targetId + '\"]');",
+  "      if (!btn) return;",
+  "      btn.style.display = visible ? '' : 'none';",
+  "      if (!visible && btn.classList.contains('is-active')) {",
+  "        var firstVisible = tabButtons.find(function(b) { return b.style.display !== 'none'; });",
+  "        if (firstVisible) activateTab(firstVisible.getAttribute('data-tab-target'));",
+  "      }",
+  "    }",
+  "",
+  "    function ensureOneTabVisible() {",
+  "      var anyChecked = tabToggleCheckboxes.some(function(cb) { return cb.checked; });",
+  "      if (!anyChecked && tabToggleCheckboxes.length > 0) {",
+  "        tabToggleCheckboxes[0].checked = true;",
+  "        var targetId = tabToggleCheckboxes[0].getAttribute('data-tab-toggle');",
+  "        setTabVisible(targetId, true);",
+  "        activateTab(targetId);",
+  "      }",
+  "    }",
+  "",
+  "    tabToggleCheckboxes.forEach(function(cb) {",
+  "      cb.addEventListener('change', function() {",
+  "        setTabVisible(cb.getAttribute('data-tab-toggle'), cb.checked);",
+  "        ensureOneTabVisible();",
+  "      });",
+  "    });",
+  "",
+  "    if (tabHideAll) {",
+  "      tabHideAll.addEventListener('click', function() {",
+  "        tabToggleCheckboxes.forEach(function(cb) {",
+  "          cb.checked = false;",
+  "          setTabVisible(cb.getAttribute('data-tab-toggle'), false);",
+  "        });",
+  "        ensureOneTabVisible();",
+  "      });",
+  "    }",
+  "",
+  "    if (tabShowAll) {",
+  "      tabShowAll.addEventListener('click', function() {",
+  "        tabToggleCheckboxes.forEach(function(cb) {",
+  "          cb.checked = true;",
+  "          setTabVisible(cb.getAttribute('data-tab-toggle'), true);",
+  "        });",
+  "      });",
+  "    }",
   "  }",
   "",
   "  tabButtons.forEach(function(button) {",
