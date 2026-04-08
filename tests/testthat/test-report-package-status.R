@@ -1,3 +1,47 @@
+# -- render_dash tabs parameter ------------------------------------------------
+
+test_that("render_dash errors on invalid tab names", {
+  expect_error(
+    render_dash(packages = "org/repo", tabs = c("repo-status", "bad-tab")),
+    "Invalid tab"
+  )
+})
+
+test_that("render_dash errors when all tab names are invalid", {
+  expect_error(
+    render_dash(packages = "org/repo", tabs = "unknown"),
+    "Invalid tab"
+  )
+})
+
+test_that("render_dash passes tabs to rmarkdown params", {
+  captured_params <- NULL
+  local_mocked_bindings(
+    render = function(...) {
+      captured_params <<- list(...)$params
+      invisible(NULL)
+    },
+    .package = "rmarkdown"
+  )
+  render_dash(packages = "org/repo", tabs = c("repo-status", "pr-activity", "quality"))
+  expect_equal(unlist(captured_params$tabs), c("repo-status", "pr-activity", "quality"))
+})
+
+test_that("render_dash default tabs includes all three tabs", {
+  captured_params <- NULL
+  local_mocked_bindings(
+    render = function(...) {
+      captured_params <<- list(...)$params
+      invisible(NULL)
+    },
+    .package = "rmarkdown"
+  )
+  render_dash(packages = "org/repo")
+  expect_equal(unlist(captured_params$tabs), c("repo-status", "pr-activity", "quality"))
+})
+
+# -- summarize_github_repos ----------------------------------------------------
+
 test_that("summarize_github_repos validates repository format", {
   expect_error(summarize_github_repos(42), "character vector")
   expect_error(summarize_github_repos(character(0)), "at least one")

@@ -10,7 +10,7 @@ params:
   repo: "gh.dash"
   qualification_registry_url: NULL
   pr_activity_days: 365
-  include_quality: TRUE
+  tabs: !r c("repo-status", "pr-activity", "quality")
 ---
 
 This report summarizes the current release and milestone status for a selection of `r params$title` packages hosted on GitHub.
@@ -77,7 +77,7 @@ pr_activity <- if (length(repos) == 0L) {
   )
 }
 
-quality <- if (!isTRUE(params$include_quality) || length(repos) == 0L) {
+quality <- if (!"quality" %in% params$tabs || length(repos) == 0L) {
   data.frame(
     repo = character(0),
     test_count = integer(0),
@@ -650,11 +650,11 @@ render_pr_activity_table <- function(df, days) {
     )
 
     htmltools::tags$tr(
-      htmltools::tags$td(class = "status-table__cell", htmltools::htmlEscape(df$user[[i]])),
-      htmltools::tags$td(class = "status-table__cell status-table__cell--right", opened_cell),
-      htmltools::tags$td(class = "status-table__cell status-table__cell--right", as.character(df$prs_reviewed[[i]])),
-      htmltools::tags$td(class = "status-table__cell status-table__cell--right", pending_cell),
-      htmltools::tags$td(class = "status-table__cell status-table__cell--right", ratio)
+      htmltools::tags$td(class = "status-table__cell col-pr-user", htmltools::htmlEscape(df$user[[i]])),
+      htmltools::tags$td(class = "status-table__cell status-table__cell--right col-pr-opened", opened_cell),
+      htmltools::tags$td(class = "status-table__cell status-table__cell--right col-pr-reviewed", as.character(df$prs_reviewed[[i]])),
+      htmltools::tags$td(class = "status-table__cell status-table__cell--right col-pr-pending", pending_cell),
+      htmltools::tags$td(class = "status-table__cell status-table__cell--right col-pr-ratio", ratio)
     )
   })
 
@@ -663,16 +663,48 @@ render_pr_activity_table <- function(df, days) {
   htmltools::div(
     class = "status-table-wrapper",
     htmltools::div(
+      class = "status-table-toolbar",
+      htmltools::div(
+        class = "column-settings",
+        htmltools::tags$button(
+          type = "button",
+          class = "column-settings__button",
+          `aria-expanded` = "false",
+          `aria-controls` = "pr-activity-column-settings-panel",
+          `aria-label` = "Column settings",
+          "\u2630 Columns"
+        ),
+        htmltools::div(
+          id = "pr-activity-column-settings-panel",
+          class = "column-settings__panel",
+          htmltools::tags$div(class = "column-settings__title", "Table Columns"),
+          htmltools::div(
+            class = "column-settings__actions",
+            htmltools::tags$button(type = "button", class = "column-settings__action", `data-column-action` = "hide-all", "Hide all"),
+            htmltools::tags$button(type = "button", class = "column-settings__action", `data-column-action` = "show-all", "Show all")
+          ),
+          htmltools::tags$ul(
+            class = "column-settings__list",
+            htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-pr-user", checked = "checked"), "User"),
+            htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-pr-opened", checked = "checked"), "PRs Opened (Active)"),
+            htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-pr-reviewed", checked = "checked"), "PRs Reviewed"),
+            htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-pr-pending", checked = "checked"), "PRs Pending Review"),
+            htmltools::tags$label(class = "column-settings__item", htmltools::tags$input(type = "checkbox", `data-column` = "col-pr-ratio", checked = "checked"), "Created/Reviewed")
+          )
+        )
+      )
+    ),
+    htmltools::div(
       class = "status-table-container",
       htmltools::tags$table(
         class = "status-table status-table--compact",
         htmltools::tags$thead(
           htmltools::tags$tr(
-            htmltools::tags$th(scope = "col", "User"),
-            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Opened (Active)"),
-            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Reviewed"),
-            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "PRs Pending Review"),
-            htmltools::tags$th(scope = "col", class = "status-table__cell--right", "Created/Reviewed")
+            htmltools::tags$th(scope = "col", class = "col-pr-user", "User"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right col-pr-opened", "PRs Opened (Active)"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right col-pr-reviewed", "PRs Reviewed"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right col-pr-pending", "PRs Pending Review"),
+            htmltools::tags$th(scope = "col", class = "status-table__cell--right col-pr-ratio", "Created/Reviewed")
           )
         ),
         tbody
@@ -763,54 +795,48 @@ render_quality_table <- function(df) {
   )
 }
 
-render_dashboard_tabs <- function(status_df, pr_activity_df, quality_df, days, include_quality) {
-  tab_buttons <- list(
-    htmltools::tags$button(
-      class = "dash-tabs__button is-active",
-      type = "button",
-      `data-tab-target` = "tab-repo-status",
-      "Repository Status"
-    ),
-    htmltools::tags$button(
-      class = "dash-tabs__button",
-      type = "button",
-      `data-tab-target` = "tab-pr-activity",
-      sprintf("PR Activity (Last %d Days)", days)
-    )
-  )
+render_dashboard_tabs <- function(status_df, pr_activity_df, quality_df, days, tabs) {
+  valid_tabs <- c("repo-status", "pr-activity", "quality")
+  tabs <- tabs[tabs %in% valid_tabs]
+  if (length(tabs) == 0L) tabs <- "repo-status"
+  first_tab <- tabs[[1L]]
 
-  tab_panels <- list(
-    htmltools::div(
+  all_tab_defs <- list(
+    "repo-status" = list(
       id = "tab-repo-status",
-      class = "dash-tab-panel is-active",
-      render_status_table(status_df)
+      label = "Repository Status",
+      panel_fn = function() render_status_table(status_df)
     ),
-    htmltools::div(
+    "pr-activity" = list(
       id = "tab-pr-activity",
-      class = "dash-tab-panel",
-      render_pr_activity_table(pr_activity_df, days)
+      label = sprintf("PR Activity (Last %d Days)", days),
+      panel_fn = function() render_pr_activity_table(pr_activity_df, days)
+    ),
+    "quality" = list(
+      id = "tab-quality",
+      label = "Quality",
+      panel_fn = function() render_quality_table(quality_df)
     )
   )
 
-  if (isTRUE(include_quality)) {
-    tab_buttons <- c(
-      tab_buttons,
-      list(htmltools::tags$button(
-        class = "dash-tabs__button",
-        type = "button",
-        `data-tab-target` = "tab-quality",
-        "Quality"
-      ))
+  tab_buttons <- lapply(tabs, function(tab) {
+    def <- all_tab_defs[[tab]]
+    htmltools::tags$button(
+      class = if (identical(tab, first_tab)) "dash-tabs__button is-active" else "dash-tabs__button",
+      type = "button",
+      `data-tab-target` = def$id,
+      def$label
     )
-    tab_panels <- c(
-      tab_panels,
-      list(htmltools::div(
-        id = "tab-quality",
-        class = "dash-tab-panel",
-        render_quality_table(quality_df)
-      ))
+  })
+
+  tab_panels <- lapply(tabs, function(tab) {
+    def <- all_tab_defs[[tab]]
+    htmltools::div(
+      id = def$id,
+      class = if (identical(tab, first_tab)) "dash-tab-panel is-active" else "dash-tab-panel",
+      def$panel_fn()
     )
-  }
+  })
 
   htmltools::browsable(
     htmltools::div(
@@ -824,7 +850,7 @@ render_dashboard_tabs <- function(status_df, pr_activity_df, quality_df, days, i
   )
 }
 
-render_dashboard_tabs(status, pr_activity, quality, pr_activity_days, params$include_quality)
+render_dashboard_tabs(status, pr_activity, quality, pr_activity_days, params$tabs)
 ```
 
 ```{r column_settings_js, echo=FALSE, results='asis'}
