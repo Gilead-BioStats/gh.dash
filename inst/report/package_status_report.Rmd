@@ -77,7 +77,9 @@ pr_activity <- if (length(repos) == 0L) {
   )
 }
 
-quality <- if (!"quality" %in% params$tabs || length(repos) == 0L) {
+tabs <- as.character(unlist(params$tabs, use.names = FALSE))
+
+quality <- if (!"quality" %in% tabs || length(repos) == 0L) {
   data.frame(
     repo = character(0),
     test_count = integer(0),
@@ -897,7 +899,7 @@ render_dashboard_tabs <- function(status_df, pr_activity_df, quality_df, days, t
   )
 }
 
-render_dashboard_tabs(status, pr_activity, quality, pr_activity_days, params$tabs)
+render_dashboard_tabs(status, pr_activity, quality, pr_activity_days, tabs)
 ```
 
 ```{r column_settings_js, echo=FALSE, results='asis'}
@@ -923,12 +925,9 @@ column_settings_js <- c(
   "",
   "    function ensureAtLeastOneVisible() {",
   "      var anyChecked = checkboxes.some(function(cb) { return cb.checked; });",
-  "      if (!anyChecked) {",
-  "        var repoCb = checkboxes.find(function(cb) { return cb.getAttribute('data-column') === 'col-repo'; });",
-  "        if (repoCb) {",
-  "          repoCb.checked = true;",
-  "          setColumnVisible('col-repo', true);",
-  "        }",
+  "      if (!anyChecked && checkboxes.length > 0) {",
+  "        checkboxes[0].checked = true;",
+  "        setColumnVisible(checkboxes[0].getAttribute('data-column'), true);",
   "      }",
   "    }",
   "",

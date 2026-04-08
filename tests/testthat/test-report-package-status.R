@@ -14,7 +14,27 @@ test_that("render_dash errors when all tab names are invalid", {
   )
 })
 
-test_that("render_dash passes tabs to rmarkdown params", {
+test_that("render_dash errors on empty tabs vector", {
+  expect_error(
+    render_dash(packages = "org/repo", tabs = character(0)),
+    "non-empty"
+  )
+})
+
+test_that("render_dash deduplicates tabs silently", {
+  captured_params <- NULL
+  local_mocked_bindings(
+    render = function(...) {
+      captured_params <<- list(...)$params
+      invisible(NULL)
+    },
+    .package = "rmarkdown"
+  )
+  render_dash(packages = "org/repo", tabs = c("repo-status", "repo-status", "pr-activity"))
+  expect_equal(captured_params$tabs, c("repo-status", "pr-activity"))
+})
+
+test_that("render_dash passes tabs as character vector to rmarkdown params", {
   captured_params <- NULL
   local_mocked_bindings(
     render = function(...) {
@@ -24,7 +44,8 @@ test_that("render_dash passes tabs to rmarkdown params", {
     .package = "rmarkdown"
   )
   render_dash(packages = "org/repo", tabs = c("repo-status", "pr-activity", "quality"))
-  expect_equal(unlist(captured_params$tabs), c("repo-status", "pr-activity", "quality"))
+  expect_equal(captured_params$tabs, c("repo-status", "pr-activity", "quality"))
+  expect_type(captured_params$tabs, "character")
 })
 
 test_that("render_dash default tabs includes all three tabs", {
@@ -37,7 +58,7 @@ test_that("render_dash default tabs includes all three tabs", {
     .package = "rmarkdown"
   )
   render_dash(packages = "org/repo")
-  expect_equal(unlist(captured_params$tabs), c("repo-status", "pr-activity", "quality"))
+  expect_equal(captured_params$tabs, c("repo-status", "pr-activity", "quality"))
 })
 
 # -- summarize_github_repos ----------------------------------------------------

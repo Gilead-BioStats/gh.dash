@@ -43,6 +43,11 @@ render_dash <- function(
   pr_activity_days <- validate_lookback_days(pr_activity_days)
 
   valid_tabs <- c("repo-status", "pr-activity", "quality")
+  tabs <- as.character(tabs)
+  tabs <- unique(tabs)
+  if (length(tabs) == 0L) {
+    stop("'tabs' must be a non-empty character vector.", call. = FALSE)
+  }
   invalid_tabs <- setdiff(tabs, valid_tabs)
   if (length(invalid_tabs) > 0L) {
     stop(sprintf(
@@ -69,7 +74,7 @@ render_dash <- function(
       packageList = packages,
       qualification_registry_url = qualification_registry_url,
       pr_activity_days = pr_activity_days,
-      tabs = as.list(tabs)
+      tabs = tabs
     ),
     clean = clean
   )
