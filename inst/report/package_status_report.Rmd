@@ -475,7 +475,7 @@ render_status_table <- function(df) {
             `aria-haspopup` = "true",
             `aria-controls` = "repo-status-column-settings-panel",
             `aria-label` = "Column settings",
-            "\u2699 Columns"
+            "\u2699 Settings"
           ),
           htmltools::div(
             id = "repo-status-column-settings-panel",
@@ -675,7 +675,7 @@ render_pr_activity_table <- function(df, days) {
           `aria-haspopup` = "true",
           `aria-controls` = "pr-activity-column-settings-panel",
           `aria-label` = "Column settings",
-          "\u2699 Columns"
+          "\u2699 Settings"
         ),
         htmltools::div(
           id = "pr-activity-column-settings-panel",
@@ -760,7 +760,7 @@ render_quality_table <- function(df) {
           `aria-haspopup` = "true",
           `aria-controls` = "quality-column-settings-panel",
           `aria-label` = "Column settings",
-          "\u2699 Columns"
+          "\u2699 Settings"
         ),
         htmltools::div(
           id = "quality-column-settings-panel",
