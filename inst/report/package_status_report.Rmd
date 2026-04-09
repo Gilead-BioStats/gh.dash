@@ -804,8 +804,20 @@ render_quality_table <- function(df) {
 
 render_dashboard_tabs <- function(status_df, pr_activity_df, quality_df, days, tabs) {
   valid_tabs <- c("repo-status", "pr-activity", "quality")
-  tabs <- tabs[tabs %in% valid_tabs]
-  if (length(tabs) == 0L) tabs <- "repo-status"
+  invalid_tabs <- setdiff(tabs, valid_tabs)
+  if (length(invalid_tabs) > 0L) {
+    stop(
+      sprintf(
+        "Invalid `tabs` value(s): %s. Valid values are: %s.",
+        paste(invalid_tabs, collapse = ", "),
+        paste(valid_tabs, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  if (length(tabs) == 0L) {
+    stop("`tabs` must contain at least one valid tab value.", call. = FALSE)
+  }
   first_tab <- tabs[[1L]]
 
   all_tab_defs <- list(

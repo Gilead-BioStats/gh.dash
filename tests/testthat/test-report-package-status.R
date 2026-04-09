@@ -25,6 +25,7 @@ test_that("render_dash errors on empty tabs vector", {
 })
 
 test_that("render_dash deduplicates tabs silently", {
+  skip_if_not_installed("rmarkdown")
   captured_params <- NULL
   local_mocked_bindings(
     render = function(...) {
@@ -38,6 +39,7 @@ test_that("render_dash deduplicates tabs silently", {
 })
 
 test_that("render_dash passes tabs as character vector to rmarkdown params", {
+  skip_if_not_installed("rmarkdown")
   captured_params <- NULL
   local_mocked_bindings(
     render = function(...) {
@@ -52,6 +54,7 @@ test_that("render_dash passes tabs as character vector to rmarkdown params", {
 })
 
 test_that("render_dash default tabs includes all three tabs", {
+  skip_if_not_installed("rmarkdown")
   captured_params <- NULL
   local_mocked_bindings(
     render = function(...) {
