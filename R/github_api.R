@@ -436,7 +436,7 @@ fetch_repo_git_tree <- function(owner, repo, ref, token) {
 
 #' Fetch a release asset as raw text
 #'
-#' Downloads a GitHub release asset by its numeric asset ID and returns the
+#' Downloads a GitHub release asset by its API URL and returns the
 #' body as a character string, or NULL if the request fails.
 #'
 #' @param url The API URL for the release asset (from the asset's `url` field)

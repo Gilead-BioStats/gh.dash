@@ -37,7 +37,9 @@ repos <- if (is.null(params$packageList)) {
   as.character(params$packageList)
 }
 
-status <- if (length(repos) == 0L) {
+tabs <- as.character(unlist(params$tabs, use.names = FALSE))
+
+status <- if (length(repos) == 0L || !"repo-status" %in% tabs) {
   data.frame(
     repo = character(0),
     latest_release = character(0),
@@ -56,7 +58,7 @@ status <- if (length(repos) == 0L) {
   )
 }
 
-pr_activity <- if (length(repos) == 0L) {
+pr_activity <- if (length(repos) == 0L || !"pr-activity" %in% tabs) {
   empty <- data.frame(
     user = character(0),
     prs_opened = integer(0),
@@ -76,8 +78,6 @@ pr_activity <- if (length(repos) == 0L) {
     days = pr_activity_days
   )
 }
-
-tabs <- as.character(unlist(params$tabs, use.names = FALSE))
 
 quality <- if (!"quality" %in% tabs || length(repos) == 0L) {
   data.frame(

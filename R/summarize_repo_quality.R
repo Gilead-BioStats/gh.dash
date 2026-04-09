@@ -78,10 +78,12 @@ summarize_repo_quality <- function(repos, token = NULL) {
 
     if (isTRUE(tree$truncated)) {
       # Tree was truncated by GitHub (repo too large for a single recursive call);
-      # results would be incomplete so surface NA rather than misleading counts.
+      # tree-based results (test count, qcthat) are incomplete, but coverage is
+      # fetched from releases via a separate API endpoint and is still available.
+      coverage_data <- fetch_coverage_percent(owner, repo, token)
       results[[idx]] <- list(
         repo = format_repo_link(owner, repo, is_private = is_private),
-        coverage = "Unavailable",
+        coverage = format_coverage_summary(coverage_data$coverage_percent, coverage_data$release_url),
         test_count = NA_integer_,
         qcthat_status = "Unavailable"
       )
@@ -202,7 +204,7 @@ fetch_coverage_percent <- function(owner, repo, token) {
   }
 
   pct <- suppressWarnings(as.numeric(parsed$coverage_percent))
-  result$coverage_percent <- if (is.finite(pct)) pct else NA_real_
+  result$coverage_percent <- if (length(pct) == 1L && is.finite(pct)) pct else NA_real_
   result
 }
 
