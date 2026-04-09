@@ -1,6 +1,7 @@
 # -- render_dash tabs parameter ------------------------------------------------
 
 test_that("render_dash errors on invalid tab names", {
+  skip_if_not_installed("rmarkdown")
   expect_error(
     render_dash(packages = "org/repo", tabs = c("repo-status", "bad-tab")),
     "Invalid tab"
@@ -8,6 +9,7 @@ test_that("render_dash errors on invalid tab names", {
 })
 
 test_that("render_dash errors when all tab names are invalid", {
+  skip_if_not_installed("rmarkdown")
   expect_error(
     render_dash(packages = "org/repo", tabs = "unknown"),
     "Invalid tab"
@@ -15,6 +17,7 @@ test_that("render_dash errors when all tab names are invalid", {
 })
 
 test_that("render_dash errors on empty tabs vector", {
+  skip_if_not_installed("rmarkdown")
   expect_error(
     render_dash(packages = "org/repo", tabs = character(0)),
     "non-empty"
