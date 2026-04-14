@@ -177,3 +177,30 @@ test_that("summarize_repo_quality shows Unavailable when coverage data is missin
   )
   expect_equal(result$coverage, "Unavailable")
 })
+
+# --- fetch_coverage_percent: releases argument (#39) ---
+
+test_that("fetch_coverage_percent uses provided releases arg and skips fetch_releases #39", {
+  pre_fetched <- list(
+    list(
+      tag_name = "v2.0.0",
+      html_url = "https://github.com/org/repo/releases/tag/v2.0.0",
+      draft = FALSE,
+      prerelease = FALSE,
+      assets = list(
+        list(
+          url = "https://api.github.com/repos/org/repo/releases/assets/999",
+          name = "coverage-summary.json"
+        )
+      )
+    )
+  )
+  result <- with_mocked_bindings(
+    gh.dash:::fetch_coverage_percent("org", "repo", token = NULL, releases = pre_fetched),
+    .package = "gh.dash",
+    fetch_releases = function(...) stop("fetch_releases must not be called when releases provided #39"),
+    fetch_release_asset_content = function(url, token) '{"coverage_percent": 90.5}'
+  )
+  expect_equal(result$coverage_percent, 90.5)
+  expect_equal(result$release_url, "https://github.com/org/repo/releases/tag/v2.0.0")
+})

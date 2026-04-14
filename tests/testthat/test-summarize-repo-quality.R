@@ -92,3 +92,34 @@ test_that("summarize_repo_quality returns NA test_count when a file fetch fails"
   expect_equal(result$test_count, NA_integer_)
   expect_equal(result$qcthat_status, "No")
 })
+
+# --- summarize_repo_quality: releases_cache argument (#39) ---
+
+test_that("summarize_repo_quality skips fetch_releases when releases_cache provided #39", {
+  pre_fetched_releases <- list(
+    "org/repo" = list(
+      list(
+        tag_name = "v2.0.0",
+        html_url = "https://github.com/org/repo/releases/tag/v2.0.0",
+        draft = FALSE,
+        prerelease = FALSE,
+        assets = list(
+          list(
+            url = "https://api.github.com/repos/org/repo/releases/assets/999",
+            name = "coverage-summary.json"
+          )
+        )
+      )
+    )
+  )
+  result <- with_mocked_bindings(
+    gh.dash:::summarize_repo_quality("org/repo", releases_cache = pre_fetched_releases),
+    .package = "gh.dash",
+    fetch_repo_metadata = function(...) list(private = FALSE, default_branch = "main"),
+    fetch_repo_git_tree = function(...) list(tree = list()),
+    fetch_repo_file_content = function(...) NULL,
+    fetch_releases = function(...) stop("fetch_releases must not be called when releases_cache provided #39"),
+    fetch_release_asset_content = function(url, token) '{"coverage_percent": 88.0}'
+  )
+  expect_match(result$coverage, "88.0%")
+})
