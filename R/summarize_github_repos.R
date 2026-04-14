@@ -8,6 +8,9 @@
 #' @param qualification_registry Optional data frame of qualification metadata
 #'   with columns `org`, `repo`, `version`, `release.url`, `release.date`,
 #'   `qualification.url`, and `qualification.date`.
+#' @param releases_cache Optional named list of pre-fetched releases, keyed by
+#'   `"owner/repo"`. When an entry is present for a repo, the internal
+#'   `fetch_releases()` call is skipped.
 #'
 #' @return A data frame with columns `repo`, `latest_release`, `upcoming_milestones`,
 #'   `issue_summary`, `open_prs`, `dev_branch_status`, and `ytd_releases`.
@@ -21,7 +24,8 @@
 summarize_github_repos <- function(
   repos,
   token = NULL,
-  qualification_registry = NULL
+  qualification_registry = NULL,
+  releases_cache = NULL
 ) {
   validate_repo_vector(repos)
 
@@ -41,7 +45,7 @@ summarize_github_repos <- function(
       snapshot <- get(cache_key, envir = repo_snapshot_cache, inherits = FALSE)
     } else {
       metadata <- fetch_repo_metadata(owner, repo, token)
-      releases <- fetch_releases(owner, repo, token)
+      releases <- releases_cache[[cache_key]] %||% fetch_releases(owner, repo, token)
       milestones <- fetch_open_milestones(owner, repo, token)
       pr_count <- fetch_open_prs(owner, repo, token)
       comparison <- fetch_branch_comparison(owner, repo, base = "main", head = "dev", token = token)

@@ -40,10 +40,13 @@ count_test_that_calls <- function(source_text) {
 #'
 #' @param repos Character vector of repositories in the form `owner/repo`.
 #' @param token Optional GitHub personal access token.
+#' @param releases_cache Optional named list of pre-fetched releases, keyed by
+#'   `"owner/repo"`. When an entry is present for a repo, the internal
+#'   `fetch_releases()` call is skipped.
 #' @return Data frame with columns `repo`, `test_count`, and `qcthat_status`.
 #' @keywords internal
 #' @noRd
-summarize_repo_quality <- function(repos, token = NULL) {
+summarize_repo_quality <- function(repos, token = NULL, releases_cache = NULL) {
   validate_repo_vector(repos)
 
   results <- vector("list", length(repos))
@@ -80,7 +83,7 @@ summarize_repo_quality <- function(repos, token = NULL) {
       # Tree was truncated by GitHub (repo too large for a single recursive call);
       # tree-based results (test count, qcthat) are incomplete, but coverage is
       # fetched from releases via a separate API endpoint and is still available.
-      coverage_data <- fetch_coverage_percent(owner, repo, token)
+      coverage_data <- fetch_coverage_percent(owner, repo, token, releases = releases_cache[[owner_repo]])
       results[[idx]] <- list(
         repo = format_repo_link(owner, repo, is_private = is_private),
         coverage = format_coverage_summary(coverage_data$coverage_percent, coverage_data$release_url),
@@ -128,7 +131,7 @@ summarize_repo_quality <- function(repos, token = NULL) {
       }
     }
 
-    coverage_data <- fetch_coverage_percent(owner, repo, token)
+    coverage_data <- fetch_coverage_percent(owner, repo, token, releases = releases_cache[[owner_repo]])
 
     results[[idx]] <- list(
       repo = format_repo_link(owner, repo, is_private = is_private),
@@ -155,14 +158,18 @@ summarize_repo_quality <- function(repos, token = NULL) {
 #' @param owner Repository owner (GitHub username or organization)
 #' @param repo Repository name
 #' @param token GitHub personal access token (optional)
+#' @param releases Optional pre-fetched releases list for this repo. When
+#'   supplied, skips the internal `fetch_releases()` call.
 #' @return List with `coverage_percent` (numeric or NA) and `release_url`
 #'   (character or NULL)
 #' @keywords internal
 #' @noRd
-fetch_coverage_percent <- function(owner, repo, token) {
+fetch_coverage_percent <- function(owner, repo, token, releases = NULL) {
   na_result <- list(coverage_percent = NA_real_, release_url = NULL)
 
-  releases <- fetch_releases(owner, repo, token)
+  if (is.null(releases)) {
+    releases <- fetch_releases(owner, repo, token)
+  }
   latest <- derive_latest_release(releases)
 
   if (is.null(latest)) {

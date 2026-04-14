@@ -21,7 +21,10 @@ test_that("summarize_github_repos skips fetch_releases when releases_cache provi
     fetch_open_milestones = function(...) list(),
     fetch_open_prs = function(...) 0L,
     fetch_branch_comparison = function(...) NULL,
-    fetch_issue_counts = function(...) list(issues_snapshot = list(), issues_90day = list())
+    fetch_issue_counts = function(...) list(
+      issues_snapshot = list(open = 0L, closed = 0L),
+      issues_90day = list(opened = 0L, closed = 0L)
+    )
   )
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 1L)
