@@ -10,9 +10,11 @@
 #' @param qualification_registry_url URL or file path to the qualification registry CSV (optional).
 #' @param pr_activity_days Number of days to include in PR activity summaries (default: 365).
 #' @param clean Whether to clean intermediate files after rendering.
-#' @param include_quality Logical. When `TRUE` (the default), the Quality tab is
-#'   computed and rendered. Set to `FALSE` to skip the Quality tab and avoid the
-#'   additional GitHub API requests it requires.
+#' @param tabs Character vector specifying which tabs to include and their order.
+#'   Valid values are `"repo-status"`, `"pr-activity"`, and `"quality"`. The first
+#'   tab in the vector becomes the initially-active tab. Defaults to all three
+#'   tabs. If `"quality"` is included, the Quality API calls are performed;
+#'   otherwise they are skipped.
 #'
 #' @return The path to the rendered HTML report (invisibly).
 #' @export
@@ -25,7 +27,7 @@ render_dash <- function(
   qualification_registry_url = NULL,
   pr_activity_days = 365,
   clean = TRUE,
-  include_quality = TRUE
+  tabs = c("repo-status", "pr-activity", "quality")
 ) {
   if (!requireNamespace("rmarkdown", quietly = TRUE)) {
     stop("Package 'rmarkdown' is required to render the report.", call. = FALSE)
@@ -39,6 +41,21 @@ render_dash <- function(
   packages <- trimws(packages)
   packages <- packages[nzchar(packages)]
   pr_activity_days <- validate_lookback_days(pr_activity_days)
+
+  valid_tabs <- c("repo-status", "pr-activity", "quality")
+  tabs <- as.character(tabs)
+  tabs <- unique(tabs)
+  if (length(tabs) == 0L) {
+    stop("'tabs' must be a non-empty character vector.", call. = FALSE)
+  }
+  invalid_tabs <- setdiff(tabs, valid_tabs)
+  if (length(invalid_tabs) > 0L) {
+    stop(sprintf(
+      "Invalid tab(s): %s. Valid values are: %s.",
+      paste(invalid_tabs, collapse = ", "),
+      paste(valid_tabs, collapse = ", ")
+    ), call. = FALSE)
+  }
 
   report_path <- system.file("report", "package_status_report.Rmd", package = "gh.dash")
   if (!nzchar(report_path)) {
@@ -57,7 +74,7 @@ render_dash <- function(
       packageList = packages,
       qualification_registry_url = qualification_registry_url,
       pr_activity_days = pr_activity_days,
-      include_quality = include_quality
+      tabs = tabs
     ),
     clean = clean
   )

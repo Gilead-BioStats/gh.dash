@@ -1,3 +1,74 @@
+# -- render_dash tabs parameter ------------------------------------------------
+
+test_that("render_dash errors on invalid tab names", {
+  skip_if_not_installed("rmarkdown")
+  expect_error(
+    render_dash(packages = "org/repo", tabs = c("repo-status", "bad-tab")),
+    "Invalid tab"
+  )
+})
+
+test_that("render_dash errors when all tab names are invalid", {
+  skip_if_not_installed("rmarkdown")
+  expect_error(
+    render_dash(packages = "org/repo", tabs = "unknown"),
+    "Invalid tab"
+  )
+})
+
+test_that("render_dash errors on empty tabs vector", {
+  skip_if_not_installed("rmarkdown")
+  expect_error(
+    render_dash(packages = "org/repo", tabs = character(0)),
+    "non-empty"
+  )
+})
+
+test_that("render_dash deduplicates tabs silently", {
+  skip_if_not_installed("rmarkdown")
+  captured_params <- NULL
+  local_mocked_bindings(
+    render = function(...) {
+      captured_params <<- list(...)$params
+      invisible(NULL)
+    },
+    .package = "rmarkdown"
+  )
+  render_dash(packages = "org/repo", tabs = c("repo-status", "repo-status", "pr-activity"))
+  expect_equal(captured_params$tabs, c("repo-status", "pr-activity"))
+})
+
+test_that("render_dash passes tabs as character vector to rmarkdown params", {
+  skip_if_not_installed("rmarkdown")
+  captured_params <- NULL
+  local_mocked_bindings(
+    render = function(...) {
+      captured_params <<- list(...)$params
+      invisible(NULL)
+    },
+    .package = "rmarkdown"
+  )
+  render_dash(packages = "org/repo", tabs = c("repo-status", "pr-activity", "quality"))
+  expect_equal(captured_params$tabs, c("repo-status", "pr-activity", "quality"))
+  expect_type(captured_params$tabs, "character")
+})
+
+test_that("render_dash default tabs includes all three tabs", {
+  skip_if_not_installed("rmarkdown")
+  captured_params <- NULL
+  local_mocked_bindings(
+    render = function(...) {
+      captured_params <<- list(...)$params
+      invisible(NULL)
+    },
+    .package = "rmarkdown"
+  )
+  render_dash(packages = "org/repo")
+  expect_equal(captured_params$tabs, c("repo-status", "pr-activity", "quality"))
+})
+
+# -- summarize_github_repos ----------------------------------------------------
+
 test_that("summarize_github_repos validates repository format", {
   expect_error(summarize_github_repos(42), "character vector")
   expect_error(summarize_github_repos(character(0)), "at least one")
