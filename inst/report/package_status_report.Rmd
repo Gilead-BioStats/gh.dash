@@ -47,8 +47,8 @@ releases_cache <- if (
     any(c("repo-status", "quality") %in% tabs)
 ) {
   rl <- lapply(repos, function(r) {
-    parts <- strsplit(r, "/", fixed = TRUE)[[1]]
-    gh.dash:::fetch_releases(parts[[1]], parts[[2]], github_token)
+    parts <- gh.dash:::split_repo_slug(r)
+    gh.dash:::fetch_releases(parts$owner, parts$repo, github_token)
   })
   setNames(rl, repos)
 } else {

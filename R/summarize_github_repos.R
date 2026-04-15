@@ -45,7 +45,11 @@ summarize_github_repos <- function(
       snapshot <- get(cache_key, envir = repo_snapshot_cache, inherits = FALSE)
     } else {
       metadata <- fetch_repo_metadata(owner, repo, token)
-      releases <- releases_cache[[cache_key]] %||% fetch_releases(owner, repo, token)
+      releases <- if (cache_key %in% names(releases_cache)) {
+        releases_cache[[cache_key]] %||% list()
+      } else {
+        fetch_releases(owner, repo, token)
+      }
       milestones <- fetch_open_milestones(owner, repo, token)
       pr_count <- fetch_open_prs(owner, repo, token)
       comparison <- fetch_branch_comparison(owner, repo, base = "main", head = "dev", token = token)

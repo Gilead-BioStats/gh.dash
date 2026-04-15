@@ -43,7 +43,7 @@ count_test_that_calls <- function(source_text) {
 #' @param releases_cache Optional named list of pre-fetched releases, keyed by
 #'   `"owner/repo"`. When an entry is present for a repo, the internal
 #'   `fetch_releases()` call is skipped.
-#' @return Data frame with columns `repo`, `test_count`, and `qcthat_status`.
+#' @return Data frame with columns `repo`, `coverage`, `test_count`, and `qcthat_status`.
 #' @keywords internal
 #' @noRd
 summarize_repo_quality <- function(repos, token = NULL, releases_cache = NULL) {
@@ -56,6 +56,16 @@ summarize_repo_quality <- function(repos, token = NULL, releases_cache = NULL) {
     repo_parts <- split_repo_slug(owner_repo)
     owner <- repo_parts$owner
     repo <- repo_parts$repo
+
+    # Resolve the cached releases for this repo. Distinguish "key present but
+    # NULL" (prior fetch failed/rate-limited) from "key absent" (no cache):
+    # a cached NULL is coerced to an empty list so fetch_coverage_percent()
+    # does not issue a second fetch_releases() call.
+    repo_releases <- if (owner_repo %in% names(releases_cache)) {
+      releases_cache[[owner_repo]] %||% list()
+    } else {
+      NULL
+    }
 
     metadata <- fetch_repo_metadata(owner, repo, token)
     default_branch <- "HEAD"
@@ -83,7 +93,7 @@ summarize_repo_quality <- function(repos, token = NULL, releases_cache = NULL) {
       # Tree was truncated by GitHub (repo too large for a single recursive call);
       # tree-based results (test count, qcthat) are incomplete, but coverage is
       # fetched from releases via a separate API endpoint and is still available.
-      coverage_data <- fetch_coverage_percent(owner, repo, token, releases = releases_cache[[owner_repo]])
+      coverage_data <- fetch_coverage_percent(owner, repo, token, releases = repo_releases)
       results[[idx]] <- list(
         repo = format_repo_link(owner, repo, is_private = is_private),
         coverage = format_coverage_summary(coverage_data$coverage_percent, coverage_data$release_url),
@@ -131,7 +141,7 @@ summarize_repo_quality <- function(repos, token = NULL, releases_cache = NULL) {
       }
     }
 
-    coverage_data <- fetch_coverage_percent(owner, repo, token, releases = releases_cache[[owner_repo]])
+    coverage_data <- fetch_coverage_percent(owner, repo, token, releases = repo_releases)
 
     results[[idx]] <- list(
       repo = format_repo_link(owner, repo, is_private = is_private),
