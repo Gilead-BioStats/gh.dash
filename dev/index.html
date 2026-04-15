@@ -351,7 +351,7 @@ display: none;
 
 <h1 class="title toc-ignore">Tidyverse Package Status Report</h1>
 <h4 class="author"><a href="https://github.com/Gilead-BioStats/gh.dash">Gilead-BioStats/gh.dash</a></h4>
-<h4 class="date">April 15, 2026 05:52 UTC</h4>
+<h4 class="date">April 15, 2026 20:17 UTC</h4>
 
 </div>
 
@@ -374,6 +374,7 @@ display: flex;
 gap: 0.5rem;
 border-bottom: 1px solid #e2e8f0;
 padding-bottom: 0.5rem;
+align-items: center;
 }
 .dash-tabs__button {
 border: 1px solid #cbd5e1;
@@ -644,13 +645,37 @@ border-color: rgba(12, 74, 110, 0.25);
 <button class="dash-tabs__button is-active" type="button" data-tab-target="tab-repo-status">Repository Status</button>
 <button class="dash-tabs__button" type="button" data-tab-target="tab-pr-activity">PR Activity (Last 365 Days)</button>
 <button class="dash-tabs__button" type="button" data-tab-target="tab-quality">Quality</button>
+<div class="column-settings" style="margin-left: auto;">
+<button type="button" class="column-settings__button" aria-expanded="false" aria-haspopup="true" aria-controls="tab-settings-panel" aria-label="Dashboard settings">⚙ Dashboard Settings</button>
+<div id="tab-settings-panel" class="column-settings__panel">
+<div class="column-settings__title">Visible Tabs</div>
+<div class="column-settings__actions">
+<button type="button" class="column-settings__action" data-tab-action="hide-all">Hide all</button>
+<button type="button" class="column-settings__action" data-tab-action="show-all">Show all</button>
+</div>
+<div class="column-settings__list">
+<label class="column-settings__item">
+<input type="checkbox" data-tab-toggle="tab-repo-status" checked="checked"></input>
+Repository Status
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-tab-toggle="tab-pr-activity" checked="checked"></input>
+PR Activity (Last 365 Days)
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-tab-toggle="tab-quality" checked="checked"></input>
+Quality
+</label>
+</div>
+</div>
+</div>
 </div>
 <div id="tab-repo-status" class="dash-tab-panel is-active">
 <div class="status-table-wrapper">
 <div class="status-table-toolbar">
 <div class="column-settings">
-<button class="column-settings__button" type="button" aria-expanded="false" aria-haspopup="true" aria-label="Column settings">⚙ Settings</button>
-<div class="column-settings__panel">
+<button type="button" class="column-settings__button" aria-expanded="false" aria-haspopup="true" aria-controls="repo-status-column-settings-panel" aria-label="Column settings">⚙ Column Settings</button>
+<div id="repo-status-column-settings-panel" class="column-settings__panel">
 <div class="column-settings__title">Table Columns</div>
 <div class="column-settings__actions">
 <button type="button" class="column-settings__action" data-column-action="hide-all">Hide all</button>
@@ -716,7 +741,7 @@ Dev status
 <td class="status-table__cell status-table__cell--repo col-repo"><a href="https://github.com/tidyverse/ggplot2">tidyverse/ggplot2</a></td>
 <td class="status-table__cell col-latest-release"><a href="https://github.com/tidyverse/ggplot2/releases/tag/v4.0.2"><span class="badge badge--emerald" title="Released 2026-02-03">v4.0.2</span></a></td>
 <td class="status-table__cell col-open-milestones"><a href="https://github.com/tidyverse/ggplot2/milestone/27"><span class="badge badge--milestone" title="Editioning: 6 open of 8" style="background:linear-gradient(90deg, #38bdf8 0%, #38bdf8 25.0%, #e0f2fe 25.0%, #e0f2fe 100%);">Editioning</span></a></td>
-<td class="status-table__cell col-issues"><a href="https://github.com/tidyverse/ggplot2/issues" title="36 opened / 19 closed in past 90 days">74 / 4358</a></td>
+<td class="status-table__cell col-issues"><a href="https://github.com/tidyverse/ggplot2/issues" title="37 opened / 19 closed in past 90 days">75 / 4358</a></td>
 <td class="status-table__cell col-open-prs"><a href="https://github.com/tidyverse/ggplot2/pulls">30</a></td>
 <td class="status-table__cell col-dev-status"><a href="https://github.com/tidyverse/ggplot2/compare/main...dev">Unavailable</a></td>
 <td class="status-table__cell status-table__cell--right col-releases"><a href="https://github.com/tidyverse/ggplot2/releases" title="1 releases in past 90 days">3</a></td>
@@ -800,111 +825,145 @@ Dev status
 </div>
 <div id="tab-pr-activity" class="dash-tab-panel">
 <div class="status-table-wrapper">
+<div class="status-table-toolbar">
+<div class="column-settings">
+<button type="button" class="column-settings__button" aria-expanded="false" aria-haspopup="true" aria-controls="pr-activity-column-settings-panel" aria-label="Column settings">⚙ Column Settings</button>
+<div id="pr-activity-column-settings-panel" class="column-settings__panel">
+<div class="column-settings__title">Table Columns</div>
+<div class="column-settings__actions">
+<button type="button" class="column-settings__action" data-column-action="hide-all">Hide all</button>
+<button type="button" class="column-settings__action" data-column-action="show-all">Show all</button>
+</div>
+<div class="column-settings__list">
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-pr-user" checked="checked"></input>
+User
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-pr-opened" checked="checked"></input>
+PRs Opened (Active)
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-pr-reviewed" checked="checked"></input>
+PRs Reviewed
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-pr-pending" checked="checked"></input>
+PRs Pending Review
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-pr-ratio" checked="checked"></input>
+Created/Reviewed
+</label>
+</div>
+</div>
+</div>
+</div>
 <div class="status-table-container">
 <table class="status-table status-table--compact">
 <thead>
 <tr>
-<th scope="col">User</th>
-<th scope="col" class="status-table__cell--right">PRs Opened (Active)</th>
-<th scope="col" class="status-table__cell--right">PRs Reviewed</th>
-<th scope="col" class="status-table__cell--right">PRs Pending Review</th>
-<th scope="col" class="status-table__cell--right">Created/Reviewed</th>
+<th scope="col" class="col-pr-user">User</th>
+<th scope="col" class="status-table__cell--right col-pr-opened">PRs Opened (Active)</th>
+<th scope="col" class="status-table__cell--right col-pr-reviewed">PRs Reviewed</th>
+<th scope="col" class="status-table__cell--right col-pr-pending">PRs Pending Review</th>
+<th scope="col" class="status-table__cell--right col-pr-ratio">Created/Reviewed</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="status-table__cell">teunbrand</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">teunbrand</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 89 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:teunbrand+created:&gt;=2025-04-15+repo:tidyverse/ggplot2" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="9 active open PR(s) in: tidyverse/ggplot2" data-tooltip="tidyverse/ggplot2">9</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">68</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">1.31</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">68</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">1.31</td>
 </tr>
 <tr>
-<td class="status-table__cell">thomasp85</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">thomasp85</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 7 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">97</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0.07</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">97</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">0.07</td>
 </tr>
 <tr>
-<td class="status-table__cell">DavisVaughan</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">DavisVaughan</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 59 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:DavisVaughan+created:&gt;=2025-04-15+repo:tidyverse/dplyr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/dplyr" data-tooltip="tidyverse/dplyr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">34</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">1.74</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">34</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">1.74</td>
 </tr>
 <tr>
-<td class="status-table__cell">hadley</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">hadley</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 16 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:hadley+created:&gt;=2025-04-15+repo:tidyverse/dplyr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/dplyr" data-tooltip="tidyverse/dplyr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">39</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0.41</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">39</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">0.41</td>
 </tr>
 <tr>
-<td class="status-table__cell">krlmlr</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">krlmlr</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 29 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">2</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">2</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">
 <a href="https://github.com/pulls?q=is:open+is:pr+review-requested:krlmlr+updated:&gt;=2025-04-15+repo:tidyverse/dplyr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 PR(s) pending review in: tidyverse/dplyr" data-tooltip="tidyverse/dplyr">1</a>
 </td>
-<td class="status-table__cell status-table__cell--right">14.50</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">14.50</td>
 </tr>
 <tr>
-<td class="status-table__cell">shikokuchuo</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">shikokuchuo</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 14 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">5</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">2.80</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">5</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">2.80</td>
 </tr>
 <tr>
-<td class="status-table__cell">lionel-</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">lionel-</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:lionel-+created:&gt;=2025-04-15+repo:tidyverse/ggplot2" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/ggplot2" data-tooltip="tidyverse/ggplot2">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">17</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0.12</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">17</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">0.12</td>
 </tr>
 <tr>
-<td class="status-table__cell">github-actions[bot]</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">github-actions[bot]</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 16 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:github-actions[bot]+created:&gt;=2025-04-15+repo:tidyverse/tibble" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/tibble" data-tooltip="tidyverse/tibble">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">2</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">8.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">2</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">8.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">jeroenjanssens</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">jeroenjanssens</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 17 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:jeroenjanssens+created:&gt;=2025-04-15+repo:tidyverse/ggplot2+repo:tidyverse/dplyr+repo:tidyverse/tidyr+repo:tidyverse/purrr+repo:tidyverse/stringr+repo:tidyverse/forcats+repo:tidyverse/lubridate" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="7 active open PR(s) in: tidyverse/ggplot2, tidyverse/dplyr, tidyverse/tidyr, tidyverse/purrr, tidyverse/stringr, tidyverse/forcats, tidyverse/lubridate" data-tooltip="tidyverse/ggplot2
 tidyverse/dplyr
@@ -915,1021 +974,1021 @@ tidyverse/forcats
 tidyverse/lubridate">7</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">jennybc</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">jennybc</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 11 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">2</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">5.50</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">2</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">5.50</td>
 </tr>
 <tr>
-<td class="status-table__cell">MichaelChirico</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">MichaelChirico</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 7 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:MichaelChirico+created:&gt;=2025-04-15+repo:tidyverse/stringr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/stringr" data-tooltip="tidyverse/stringr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">ErdaradunGaztea</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">ErdaradunGaztea</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 6 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:ErdaradunGaztea+created:&gt;=2025-04-15+repo:tidyverse/purrr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="5 active open PR(s) in: tidyverse/purrr" data-tooltip="tidyverse/purrr">5</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">6.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">6.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">gaborcsardi</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">gaborcsardi</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 6 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:gaborcsardi+created:&gt;=2025-04-15+repo:tidyverse/ggplot2" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/ggplot2" data-tooltip="tidyverse/ggplot2">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">Copilot</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">Copilot</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 5 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:Copilot+created:&gt;=2025-04-15+repo:tidyverse/dplyr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/dplyr" data-tooltip="tidyverse/dplyr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">luisDVA</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">luisDVA</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 5 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:luisDVA+created:&gt;=2025-04-15+repo:tidyverse/ggplot2" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/ggplot2" data-tooltip="tidyverse/ggplot2">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">Yunuuuu</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">Yunuuuu</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 5 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">yutannihilation</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">yutannihilation</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 5 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">VisruthSK</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">VisruthSK</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">3</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0.67</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">3</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">0.67</td>
 </tr>
 <tr>
-<td class="status-table__cell">copilot-pull-request-reviewer[bot]</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">copilot-pull-request-reviewer[bot]</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 0 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">5</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">5</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">0.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">arcresu</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">arcresu</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 3 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:arcresu+created:&gt;=2025-04-15+repo:tidyverse/ggplot2" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/ggplot2" data-tooltip="tidyverse/ggplot2">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">3.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">3.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">Meghansaha</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">Meghansaha</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 3 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">3.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">3.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">schloerke</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">schloerke</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 3 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:schloerke+created:&gt;=2025-04-15+repo:tidyverse/ggplot2" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/ggplot2" data-tooltip="tidyverse/ggplot2">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">3.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">3.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">hrryt</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">hrryt</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 3 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:hrryt+created:&gt;=2025-04-15+repo:tidyverse/tidyr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="3 active open PR(s) in: tidyverse/tidyr" data-tooltip="tidyverse/tidyr">3</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">juliasilge</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">juliasilge</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 3 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">tanmaydimriGSOC</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">tanmaydimriGSOC</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 3 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">etiennebacher</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">etiennebacher</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">2.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">2.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">williamlai2</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">williamlai2</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">2.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">2.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">chrislongros</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">chrislongros</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:chrislongros+created:&gt;=2025-04-15+repo:tidyverse/forcats" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/forcats" data-tooltip="tidyverse/forcats">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">EvaMaeRey</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">EvaMaeRey</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:EvaMaeRey+created:&gt;=2025-04-15+repo:tidyverse/ggplot2" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/ggplot2" data-tooltip="tidyverse/ggplot2">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">jeroen</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">jeroen</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">Jesssullivan</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">Jesssullivan</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:Jesssullivan+created:&gt;=2025-04-15+repo:tidyverse/ggplot2" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/ggplot2" data-tooltip="tidyverse/ggplot2">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">kylieainslie</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">kylieainslie</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">olivroy</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">olivroy</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:olivroy+created:&gt;=2025-04-15+repo:tidyverse/tidyr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/tidyr" data-tooltip="tidyverse/tidyr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">rcannood</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">rcannood</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:rcannood+created:&gt;=2025-04-15+repo:tidyverse/purrr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/purrr" data-tooltip="tidyverse/purrr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">sierrajohnson</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">sierrajohnson</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">yjunechoe</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">yjunechoe</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 2 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">fmarotta</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">fmarotta</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">1.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">1.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">jan-glx</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">jan-glx</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">1.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">1.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">jonovik</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">jonovik</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">1.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">1.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">laderast</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">laderast</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">1.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">1.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">MarkPaulin</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">MarkPaulin</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">1.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">1.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">wahalulu</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">wahalulu</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">1.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">1.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">abhro</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">abhro</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">ahcyip</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">ahcyip</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:ahcyip+created:&gt;=2025-04-15+repo:tidyverse/tidyr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/tidyr" data-tooltip="tidyverse/tidyr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">alexmcsw</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">alexmcsw</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">andrewshibata</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">andrewshibata</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">Anukool-pixel</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">Anukool-pixel</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">arnaudgallou</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">arnaudgallou</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">arturcarvalho</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">arturcarvalho</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">ashishtiwari03</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">ashishtiwari03</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">brancengregory</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">brancengregory</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">Breeze-Hu</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">Breeze-Hu</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">BrentWHR</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">BrentWHR</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">ccani007</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">ccani007</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">cgiachalis</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">cgiachalis</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">cpenaloza</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">cpenaloza</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">debruine</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">debruine</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">eitsupi</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">eitsupi</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">gguyver</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">gguyver</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">grasshoppermouse</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">grasshoppermouse</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:grasshoppermouse+created:&gt;=2025-04-15+repo:tidyverse/tidyr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/tidyr" data-tooltip="tidyverse/tidyr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">Hzanib</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">Hzanib</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">iamYannC</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">iamYannC</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">iofarm</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">iofarm</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:iofarm+created:&gt;=2025-04-15+repo:tidyverse/readr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/readr" data-tooltip="tidyverse/readr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">JacobBumgarner</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">JacobBumgarner</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:JacobBumgarner+created:&gt;=2025-04-15+repo:tidyverse/ggplot2" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/ggplot2" data-tooltip="tidyverse/ggplot2">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">jbengler</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">jbengler</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">JBrandenburg02</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">JBrandenburg02</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">jcolt45</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">jcolt45</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">jmbarbone</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">jmbarbone</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">JosephBARBIERDARNAL</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">JosephBARBIERDARNAL</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">jrwinget</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">jrwinget</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:jrwinget+created:&gt;=2025-04-15+repo:tidyverse/purrr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/purrr" data-tooltip="tidyverse/purrr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">juliaapolonio</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">juliaapolonio</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">kieran-mace</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">kieran-mace</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:kieran-mace+created:&gt;=2025-04-15+repo:tidyverse/ggplot2" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/ggplot2" data-tooltip="tidyverse/ggplot2">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">klin333</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">klin333</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">koheiw</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">koheiw</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">Layalchristine24</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">Layalchristine24</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">lbm364dl</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">lbm364dl</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:lbm364dl+created:&gt;=2025-04-15+repo:tidyverse/tidyr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/tidyr" data-tooltip="tidyverse/tidyr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">lgaborini</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">lgaborini</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">mahjabinoyshi</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">mahjabinoyshi</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">markwestcott34</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">markwestcott34</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">math-mcshane</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">math-mcshane</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">michaelgrund</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">michaelgrund</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:michaelgrund+created:&gt;=2025-04-15+repo:tidyverse/stringr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/stringr" data-tooltip="tidyverse/stringr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">mikmart</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">mikmart</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">mitchelloharawild</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">mitchelloharawild</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">mtcarsalot</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">mtcarsalot</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">munoztd0</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">munoztd0</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">musvaage</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">musvaage</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">og2293</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">og2293</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">ppoyk</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">ppoyk</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">raffaelemancuso</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">raffaelemancuso</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">salim-b</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">salim-b</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">sashahafner</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">sashahafner</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">sekoube</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">sekoube</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">smach</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">smach</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">tanho63</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">tanho63</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:tanho63+created:&gt;=2025-04-15+repo:tidyverse/dplyr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/dplyr" data-tooltip="tidyverse/dplyr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">tinarozsos</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">tinarozsos</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:tinarozsos+created:&gt;=2025-04-15+repo:tidyverse/tidyr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/tidyr" data-tooltip="tidyverse/tidyr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">trevorld</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">trevorld</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">wilkox</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">wilkox</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">wurli</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">wurli</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 1 (
 <a href="https://github.com/pulls?q=is:open+is:pr+author:wurli+created:&gt;=2025-04-15+repo:tidyverse/dplyr" target="_blank" rel="noopener noreferrer" class="pr-activity-link" aria-label="1 active open PR(s) in: tidyverse/dplyr" data-tooltip="tidyverse/dplyr">1</a>
 )
 </td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">∞</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">∞</td>
 </tr>
 <tr>
-<td class="status-table__cell">copilot-swe-agent[bot]</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">copilot-swe-agent[bot]</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 0 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">0.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">mine-cetinkaya-rundel</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">mine-cetinkaya-rundel</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 0 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">0.00</td>
 </tr>
 <tr>
-<td class="status-table__cell">uaesooraj08-cpu</td>
-<td class="status-table__cell status-table__cell--right">
+<td class="status-table__cell col-pr-user">uaesooraj08-cpu</td>
+<td class="status-table__cell status-table__cell--right col-pr-opened">
 0 (
 0
 )
 </td>
-<td class="status-table__cell status-table__cell--right">1</td>
-<td class="status-table__cell status-table__cell--right">0</td>
-<td class="status-table__cell status-table__cell--right">0.00</td>
+<td class="status-table__cell status-table__cell--right col-pr-reviewed">1</td>
+<td class="status-table__cell status-table__cell--right col-pr-pending">0</td>
+<td class="status-table__cell status-table__cell--right col-pr-ratio">0.00</td>
 </tr>
 </tbody>
 </table>
@@ -1938,60 +1997,100 @@ tidyverse/lubridate">7</a>
 </div>
 <div id="tab-quality" class="dash-tab-panel">
 <div class="status-table-wrapper">
+<div class="status-table-toolbar">
+<div class="column-settings">
+<button type="button" class="column-settings__button" aria-expanded="false" aria-haspopup="true" aria-controls="quality-column-settings-panel" aria-label="Column settings">⚙ Column Settings</button>
+<div id="quality-column-settings-panel" class="column-settings__panel">
+<div class="column-settings__title">Table Columns</div>
+<div class="column-settings__actions">
+<button type="button" class="column-settings__action" data-column-action="hide-all">Hide all</button>
+<button type="button" class="column-settings__action" data-column-action="show-all">Show all</button>
+</div>
+<div class="column-settings__list">
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-quality-repo" checked="checked"></input>
+Repository
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-coverage" checked="checked"></input>
+Test Coverage
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-test-count" checked="checked"></input>
+# of tests
+</label>
+<label class="column-settings__item">
+<input type="checkbox" data-column="col-qcthat" checked="checked"></input>
+uses qcthat
+</label>
+</div>
+</div>
+</div>
+</div>
 <div class="status-table-container">
 <table class="status-table status-table--compact">
 <thead>
 <tr>
-<th scope="col">Repository</th>
-<th scope="col" class="status-table__cell--right"># of tests</th>
-<th scope="col">uses qcthat</th>
+<th scope="col" class="col-quality-repo">Repository</th>
+<th scope="col" class="status-table__cell--right col-coverage">Test Coverage</th>
+<th scope="col" class="status-table__cell--right col-test-count"># of tests</th>
+<th scope="col" class="col-qcthat">uses qcthat</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/ggplot2">tidyverse/ggplot2</a></td>
-<td class="status-table__cell status-table__cell--right">308</td>
-<td class="status-table__cell">No</td>
+<td class="status-table__cell status-table__cell--repo col-quality-repo"><a href="https://github.com/tidyverse/ggplot2">tidyverse/ggplot2</a></td>
+<td class="status-table__cell status-table__cell--right col-coverage">Unavailable</td>
+<td class="status-table__cell status-table__cell--right col-test-count">308</td>
+<td class="status-table__cell col-qcthat">No</td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/dplyr">tidyverse/dplyr</a></td>
-<td class="status-table__cell status-table__cell--right">726</td>
-<td class="status-table__cell">No</td>
+<td class="status-table__cell status-table__cell--repo col-quality-repo"><a href="https://github.com/tidyverse/dplyr">tidyverse/dplyr</a></td>
+<td class="status-table__cell status-table__cell--right col-coverage">Unavailable</td>
+<td class="status-table__cell status-table__cell--right col-test-count">726</td>
+<td class="status-table__cell col-qcthat">No</td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/tidyr">tidyverse/tidyr</a></td>
-<td class="status-table__cell status-table__cell--right">697</td>
-<td class="status-table__cell">No</td>
+<td class="status-table__cell status-table__cell--repo col-quality-repo"><a href="https://github.com/tidyverse/tidyr">tidyverse/tidyr</a></td>
+<td class="status-table__cell status-table__cell--right col-coverage">Unavailable</td>
+<td class="status-table__cell status-table__cell--right col-test-count">697</td>
+<td class="status-table__cell col-qcthat">No</td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/readr">tidyverse/readr</a></td>
-<td class="status-table__cell status-table__cell--right">321</td>
-<td class="status-table__cell">No</td>
+<td class="status-table__cell status-table__cell--repo col-quality-repo"><a href="https://github.com/tidyverse/readr">tidyverse/readr</a></td>
+<td class="status-table__cell status-table__cell--right col-coverage">Unavailable</td>
+<td class="status-table__cell status-table__cell--right col-test-count">321</td>
+<td class="status-table__cell col-qcthat">No</td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/purrr">tidyverse/purrr</a></td>
-<td class="status-table__cell status-table__cell--right">383</td>
-<td class="status-table__cell">No</td>
+<td class="status-table__cell status-table__cell--repo col-quality-repo"><a href="https://github.com/tidyverse/purrr">tidyverse/purrr</a></td>
+<td class="status-table__cell status-table__cell--right col-coverage">Unavailable</td>
+<td class="status-table__cell status-table__cell--right col-test-count">383</td>
+<td class="status-table__cell col-qcthat">No</td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/tibble">tidyverse/tibble</a></td>
-<td class="status-table__cell status-table__cell--right">297</td>
-<td class="status-table__cell">No</td>
+<td class="status-table__cell status-table__cell--repo col-quality-repo"><a href="https://github.com/tidyverse/tibble">tidyverse/tibble</a></td>
+<td class="status-table__cell status-table__cell--right col-coverage">Unavailable</td>
+<td class="status-table__cell status-table__cell--right col-test-count">297</td>
+<td class="status-table__cell col-qcthat">No</td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/stringr">tidyverse/stringr</a></td>
-<td class="status-table__cell status-table__cell--right">213</td>
-<td class="status-table__cell">No</td>
+<td class="status-table__cell status-table__cell--repo col-quality-repo"><a href="https://github.com/tidyverse/stringr">tidyverse/stringr</a></td>
+<td class="status-table__cell status-table__cell--right col-coverage">Unavailable</td>
+<td class="status-table__cell status-table__cell--right col-test-count">213</td>
+<td class="status-table__cell col-qcthat">No</td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/forcats">tidyverse/forcats</a></td>
-<td class="status-table__cell status-table__cell--right">149</td>
-<td class="status-table__cell">No</td>
+<td class="status-table__cell status-table__cell--repo col-quality-repo"><a href="https://github.com/tidyverse/forcats">tidyverse/forcats</a></td>
+<td class="status-table__cell status-table__cell--right col-coverage">Unavailable</td>
+<td class="status-table__cell status-table__cell--right col-test-count">149</td>
+<td class="status-table__cell col-qcthat">No</td>
 </tr>
 <tr>
-<td class="status-table__cell status-table__cell--repo"><a href="https://github.com/tidyverse/lubridate">tidyverse/lubridate</a></td>
-<td class="status-table__cell status-table__cell--right">571</td>
-<td class="status-table__cell">No</td>
+<td class="status-table__cell status-table__cell--repo col-quality-repo"><a href="https://github.com/tidyverse/lubridate">tidyverse/lubridate</a></td>
+<td class="status-table__cell status-table__cell--right col-coverage">Unavailable</td>
+<td class="status-table__cell status-table__cell--right col-test-count">571</td>
+<td class="status-table__cell col-qcthat">No</td>
 </tr>
 </tbody>
 </table>
@@ -2020,12 +2119,9 @@ tidyverse/lubridate">7</a>
 
     function ensureAtLeastOneVisible() {
       var anyChecked = checkboxes.some(function(cb) { return cb.checked; });
-      if (!anyChecked) {
-        var repoCb = checkboxes.find(function(cb) { return cb.getAttribute('data-column') === 'col-repo'; });
-        if (repoCb) {
-          repoCb.checked = true;
-          setColumnVisible('col-repo', true);
-        }
+      if (!anyChecked && checkboxes.length > 0) {
+        checkboxes[0].checked = true;
+        setColumnVisible(checkboxes[0].getAttribute('data-column'), true);
       }
     }
 
@@ -2085,6 +2181,73 @@ tidyverse/lubridate">7</a>
     tabPanels.forEach(function(panel) {
       panel.classList.toggle('is-active', panel.id === targetId);
     });
+  }
+
+  var tabSettingsButton = document.querySelector('#tab-settings-panel');
+  var tabSettingsTrigger = tabSettingsButton ? tabSettingsButton.previousElementSibling : null;
+  if (tabSettingsTrigger && tabSettingsButton) {
+    tabSettingsTrigger.addEventListener('click', function(event) {
+      event.stopPropagation();
+      var isOpen = tabSettingsButton.classList.toggle('is-open');
+      tabSettingsTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    tabSettingsButton.addEventListener('click', function(event) { event.stopPropagation(); });
+    document.addEventListener('click', function() {
+      if (tabSettingsButton.classList.contains('is-open')) {
+        tabSettingsButton.classList.remove('is-open');
+        tabSettingsTrigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    var tabToggleCheckboxes = Array.prototype.slice.call(tabSettingsButton.querySelectorAll('input[data-tab-toggle]'));
+    var tabHideAll = tabSettingsButton.querySelector('[data-tab-action="hide-all"]');
+    var tabShowAll = tabSettingsButton.querySelector('[data-tab-action="show-all"]');
+
+    function setTabVisible(targetId, visible) {
+      var btn = document.querySelector('.dash-tabs__button[data-tab-target="' + targetId + '"]');
+      if (!btn) return;
+      btn.style.display = visible ? '' : 'none';
+      if (!visible && btn.classList.contains('is-active')) {
+        var firstVisible = tabButtons.find(function(b) { return b.style.display !== 'none'; });
+        if (firstVisible) activateTab(firstVisible.getAttribute('data-tab-target'));
+      }
+    }
+
+    function ensureOneTabVisible() {
+      var anyChecked = tabToggleCheckboxes.some(function(cb) { return cb.checked; });
+      if (!anyChecked && tabToggleCheckboxes.length > 0) {
+        tabToggleCheckboxes[0].checked = true;
+        var targetId = tabToggleCheckboxes[0].getAttribute('data-tab-toggle');
+        setTabVisible(targetId, true);
+        activateTab(targetId);
+      }
+    }
+
+    tabToggleCheckboxes.forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        setTabVisible(cb.getAttribute('data-tab-toggle'), cb.checked);
+        ensureOneTabVisible();
+      });
+    });
+
+    if (tabHideAll) {
+      tabHideAll.addEventListener('click', function() {
+        tabToggleCheckboxes.forEach(function(cb) {
+          cb.checked = false;
+          setTabVisible(cb.getAttribute('data-tab-toggle'), false);
+        });
+        ensureOneTabVisible();
+      });
+    }
+
+    if (tabShowAll) {
+      tabShowAll.addEventListener('click', function() {
+        tabToggleCheckboxes.forEach(function(cb) {
+          cb.checked = true;
+          setTabVisible(cb.getAttribute('data-tab-toggle'), true);
+        });
+      });
+    }
   }
 
   tabButtons.forEach(function(button) {
