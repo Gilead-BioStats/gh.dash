@@ -46,11 +46,13 @@ releases_cache <- if (
   length(repos) > 0L &&
     any(c("repo-status", "quality") %in% tabs)
 ) {
-  rl <- lapply(repos, function(r) {
+  gh.dash:::validate_repo_vector(repos)
+  unique_repos <- unique(repos)
+  rl <- lapply(unique_repos, function(r) {
     parts <- gh.dash:::split_repo_slug(r)
     gh.dash:::fetch_releases(parts$owner, parts$repo, github_token)
   })
-  setNames(rl, repos)
+  setNames(rl, unique_repos)
 } else {
   NULL
 }
