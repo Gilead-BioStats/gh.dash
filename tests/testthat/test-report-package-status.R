@@ -844,9 +844,11 @@ test_that("safe_gh returns gh_rate_limited sentinel for rate-limit 403 when flag
     list(message = "API rate limit exceeded for search")
   )
 
-  result <- gh.dash:::safe_gh(
-    function(...) stop(rate_limit_err),
-    .return_rate_limit_sentinel = TRUE
+  result <- suppressWarnings(
+    gh.dash:::safe_gh(
+      function(...) stop(rate_limit_err),
+      .return_rate_limit_sentinel = TRUE
+    )
   )
 
   expect_s3_class(result, "gh_rate_limited")

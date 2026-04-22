@@ -39,6 +39,24 @@ repos <- if (is.null(params$packageList)) {
 
 tabs <- as.character(unlist(params$tabs, use.names = FALSE))
 
+# Pre-fetch releases once for all repos when at least one releases-dependent
+# tab is active. Both repo-status and quality pipelines consume releases; this
+# cache is passed to each, avoiding duplicate fetch_releases() API calls.
+releases_cache <- if (
+  length(repos) > 0L &&
+    any(c("repo-status", "quality") %in% tabs)
+) {
+  gh.dash:::validate_repo_vector(repos)
+  unique_repos <- unique(repos)
+  rl <- lapply(unique_repos, function(r) {
+    parts <- gh.dash:::split_repo_slug(r)
+    gh.dash:::fetch_releases(parts$owner, parts$repo, github_token)
+  })
+  setNames(rl, unique_repos)
+} else {
+  NULL
+}
+
 status <- if (length(repos) == 0L || !"repo-status" %in% tabs) {
   data.frame(
     repo = character(0),
@@ -54,7 +72,8 @@ status <- if (length(repos) == 0L || !"repo-status" %in% tabs) {
   summarize_github_repos(
     repos,
     token = github_token,
-    qualification_registry = qualification_registry
+    qualification_registry = qualification_registry,
+    releases_cache = releases_cache
   )
 }
 
@@ -89,7 +108,8 @@ quality <- if (!"quality" %in% tabs || length(repos) == 0L) {
 } else {
   gh.dash:::summarize_repo_quality(
     repos,
-    token = github_token
+    token = github_token,
+    releases_cache = releases_cache
   )
 }
 ```
