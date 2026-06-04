@@ -690,6 +690,30 @@ render_pr_activity_table <- function(df, days) {
 
   tbody <- htmltools::tagAppendChildren(htmltools::tags$tbody(), rows)
 
+  total_opened <- sum(suppressWarnings(as.numeric(df$prs_opened)), na.rm = TRUE)
+  total_active <- sum(suppressWarnings(as.integer(df$prs_opened_active)), na.rm = TRUE)
+  total_reviewed <- sum(suppressWarnings(as.numeric(df$prs_reviewed)), na.rm = TRUE)
+  total_pending <- sum(suppressWarnings(as.integer(df$prs_pending_review)), na.rm = TRUE)
+  total_ratio <- if (total_reviewed <= 0) {
+    if (total_opened > 0) "\u221e" else "0.00"
+  } else {
+    sprintf("%.2f", total_opened / total_reviewed)
+  }
+
+  tfoot <- htmltools::tags$tfoot(
+    htmltools::tags$tr(
+      style = "font-weight: 700; border-top: 2px solid #cbd5e1;",
+      htmltools::tags$td(class = "status-table__cell", "Totals"),
+      htmltools::tags$td(
+        class = "status-table__cell status-table__cell--right",
+        sprintf("%d (%d)", as.integer(total_opened), total_active)
+      ),
+      htmltools::tags$td(class = "status-table__cell status-table__cell--right", as.character(as.integer(total_reviewed))),
+      htmltools::tags$td(class = "status-table__cell status-table__cell--right", as.character(total_pending)),
+      htmltools::tags$td(class = "status-table__cell status-table__cell--right", total_ratio)
+    )
+  )
+
   htmltools::div(
     class = "status-table-wrapper",
     htmltools::div(
@@ -705,7 +729,8 @@ render_pr_activity_table <- function(df, days) {
             htmltools::tags$th(scope = "col", class = "status-table__cell--right", "Created/Reviewed")
           )
         ),
-        tbody
+        tbody,
+        tfoot
       )
     )
   )
