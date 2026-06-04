@@ -447,22 +447,42 @@ render_status_table <- function(df) {
 
   tbody <- htmltools::tagAppendChildren(htmltools::tags$tbody(), rows)
 
-  total_releases <- sum(vapply(df$ytd_releases, function(html) {
+  extract_number <- function(html) {
     m <- regmatches(html, regexpr(">([0-9]+)<", html))
     if (length(m) > 0) as.integer(gsub("[><]", "", m)) else 0L
-  }, integer(1)))
+  }
+
+  total_releases <- sum(vapply(df$ytd_releases, extract_number, integer(1)))
+
+  total_open_issues <- 0L
+  total_closed_issues <- 0L
+  for (html in df$issue_summary) {
+    m <- regmatches(html, regexec(">([0-9]+) / ([0-9]+)<", html))[[1]]
+    if (length(m) == 3L) {
+      total_open_issues <- total_open_issues + as.integer(m[[2]])
+      total_closed_issues <- total_closed_issues + as.integer(m[[3]])
+    }
+  }
+
+  total_prs <- sum(vapply(df$open_prs, extract_number, integer(1)))
 
   tfoot <- htmltools::tags$tfoot(
     htmltools::tags$tr(
       style = "font-weight: 700; border-top: 2px solid #cbd5e1;",
       htmltools::tags$td(
         class = "status-table__cell status-table__cell--repo col-repo",
-        "Total Releases"
+        "Totals"
       ),
       htmltools::tags$td(class = "status-table__cell col-latest-release", ""),
       htmltools::tags$td(class = "status-table__cell col-open-milestones", ""),
-      htmltools::tags$td(class = "status-table__cell col-issues", ""),
-      htmltools::tags$td(class = "status-table__cell col-open-prs", ""),
+      htmltools::tags$td(
+        class = "status-table__cell col-issues",
+        sprintf("%d / %d", total_open_issues, total_closed_issues)
+      ),
+      htmltools::tags$td(
+        class = "status-table__cell col-open-prs",
+        as.character(total_prs)
+      ),
       htmltools::tags$td(class = "status-table__cell col-dev-status", ""),
       htmltools::tags$td(
         class = "status-table__cell status-table__cell--right col-releases",
