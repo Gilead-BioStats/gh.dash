@@ -6,6 +6,12 @@ on:
       GH_DASH_REPOS:
         description: 'PAT with repo access for fetching private repository data (optional, falls back to github.token)'
         required: false
+      CM_BOT_APP_ID:
+        description: 'GitHub App ID for cm-operations-bot (optional, takes precedence over GH_DASH_REPOS when provided with CM_BOT_PRIVATE_KEY)'
+        required: false
+      CM_BOT_PRIVATE_KEY:
+        description: 'GitHub App private key for cm-operations-bot (optional, takes precedence over GH_DASH_REPOS when provided with CM_BOT_APP_ID)'
+        required: false
     inputs:
       ref:
         description: Git reference or SHA to check out
@@ -70,6 +76,20 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GH_DASH_REPOS || github.token }}
     steps:
+      - name: Mint cm-operations-bot App token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        continue-on-error: true
+        with:
+          app-id: ${{ secrets.CM_BOT_APP_ID }}
+          private-key: ${{ secrets.CM_BOT_PRIVATE_KEY }}
+          owner: Gilead-BioStats
+
+      - name: Set effective token
+        if: steps.app-token.outcome == 'success'
+        shell: bash
+        run: echo "GITHUB_PAT=${{ steps.app-token.outputs.token }}" >> "$GITHUB_ENV"
+
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
@@ -112,7 +132,7 @@ jobs:
         with:
           repository: ${{ inputs.qual-repo }}
           ref: main
-          token: ${{ secrets.GH_DASH_REPOS || github.token }}
+          token: ${{ steps.app-token.outputs.token || secrets.GH_DASH_REPOS || github.token }}
           sparse-checkout: |
             ${{ inputs.qual-path }}
           path: registry
