@@ -77,16 +77,16 @@ jobs:
       GITHUB_PAT: ${{ secrets.GH_DASH_REPOS || github.token }}
     steps:
       - name: Mint cm-operations-bot App token
-        if: ${{ secrets.CM_BOT_APP_ID != '' && secrets.CM_BOT_PRIVATE_KEY != '' }}
         uses: actions/create-github-app-token@v1
         id: app-token
+        continue-on-error: true
         with:
           app-id: ${{ secrets.CM_BOT_APP_ID }}
           private-key: ${{ secrets.CM_BOT_PRIVATE_KEY }}
           owner: Gilead-BioStats
 
       - name: Set effective token
-        if: ${{ secrets.CM_BOT_APP_ID != '' && secrets.CM_BOT_PRIVATE_KEY != '' }}
+        if: steps.app-token.outcome == 'success'
         shell: bash
         run: echo "GITHUB_PAT=${{ steps.app-token.outputs.token }}" >> "$GITHUB_ENV"
 
