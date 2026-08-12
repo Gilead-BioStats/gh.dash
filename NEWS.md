@@ -1,3 +1,24 @@
+# gh.dash v1.1.0
+
+## Overview
+
+This release adds a new Quality tab, improves repository summary reporting, and updates the reusable workflow authentication model to support GitHub App tokens.
+
+## New features
+
+- Added a **Quality** tab to the dashboard.
+- Added a **Coverage** column to the Quality tab.
+- Added totals columns in the PR tab and a total releases row to improve portfolio-level visibility.
+
+## Improvements
+
+- Added caching of releases per repository to reduce duplicate API calls and improve render efficiency.
+- Updated repository summarization logic and report output to support the new quality and totals information.
+
+## CI/CD
+
+- Updated `.github/workflows/render-report-reusable.yaml` to support using a `cm-operations-bot` GitHub App token flow.
+
 # gh.dash v1.0.0
 
 ## Overview
