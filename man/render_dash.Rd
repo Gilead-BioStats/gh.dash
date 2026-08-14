@@ -12,7 +12,8 @@ render_dash(
   token = NULL,
   qualification_registry_url = NULL,
   pr_activity_days = 365,
-  clean = TRUE
+  clean = TRUE,
+  tabs = c("repo-status", "pr-activity", "quality")
 )
 }
 \arguments{
@@ -31,6 +32,12 @@ render_dash(
 \item{pr_activity_days}{Number of days to include in PR activity summaries (default: 365).}
 
 \item{clean}{Whether to clean intermediate files after rendering.}
+
+\item{tabs}{Character vector specifying which tabs to include and their order.
+Valid values are \code{"repo-status"}, \code{"pr-activity"}, and \code{"quality"}. The first
+tab in the vector becomes the initially-active tab. Defaults to all three
+tabs. If \code{"quality"} is included, the Quality API calls are performed;
+otherwise they are skipped.}
 }
 \value{
 The path to the rendered HTML report (invisibly).

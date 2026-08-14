@@ -93,7 +93,7 @@ fetch_open_prs <- function(owner, repo, token) {
     return(length(result))
   }
 
-  0
+  NULL
 }
 
 #' Fetch repository metadata from GitHub API
@@ -408,6 +408,79 @@ fetch_issue_counts <- function(owner, repo, token) {
       opened = as.integer(result$data$o90$issueCount %||% NA_integer_),
       closed = as.integer(result$data$c90$issueCount %||% NA_integer_)
     )
+  )
+}
+
+#' Fetch repository git tree from GitHub API
+#'
+#' Internal function to retrieve the full repository tree for a ref.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param ref Git ref (branch name, tag, or SHA)
+#' @param token GitHub personal access token (optional)
+#' @return List response from GitHub tree API, or NULL on failure
+#' @keywords internal
+#' @noRd
+fetch_repo_git_tree <- function(owner, repo, ref, token) {
+  safe_gh(
+    gh::gh,
+    "GET /repos/{owner}/{repo}/git/trees/{ref}",
+    owner = owner,
+    repo = repo,
+    ref = ref,
+    recursive = 1,
+    .token = token
+  )
+}
+
+#' Fetch a release asset as raw text
+#'
+#' Downloads a GitHub release asset by its API URL and returns the
+#' body as a character string, or NULL if the request fails.
+#'
+#' @param url The API URL for the release asset (from the asset's `url` field)
+#' @param token GitHub personal access token (optional)
+#' @return Character string of asset content, or NULL on failure
+#' @keywords internal
+#' @noRd
+fetch_release_asset_content <- function(url, token) {
+  result <- safe_gh(
+    gh::gh,
+    url,
+    .accept = "application/octet-stream",
+    .token = token
+  )
+  if (is.null(result)) {
+    return(NULL)
+  }
+  tryCatch(
+    rawToChar(as.raw(unlist(result))),
+    error = function(e) as.character(result)
+  )
+}
+
+#' Fetch file content from GitHub API
+#'
+#' Internal function to retrieve file contents for a specific path/ref.
+#'
+#' @param owner Repository owner (GitHub username or organization)
+#' @param repo Repository name
+#' @param path Repository-relative file path
+#' @param ref Git ref (branch name, tag, or SHA)
+#' @param token GitHub personal access token (optional)
+#' @return List response from GitHub contents API, or NULL on failure
+#' @keywords internal
+#' @noRd
+fetch_repo_file_content <- function(owner, repo, path, ref, token) {
+  safe_gh(
+    gh::gh,
+    "GET /repos/{owner}/{repo}/contents/{path}",
+    owner = owner,
+    repo = repo,
+    path = path,
+    ref = ref,
+    .token = token
   )
 }
 

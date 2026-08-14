@@ -4,7 +4,12 @@
 \alias{summarize_github_repos}
 \title{Summarize GitHub repository status}
 \usage{
-summarize_github_repos(repos, token = NULL, qualification_registry = NULL)
+summarize_github_repos(
+  repos,
+  token = NULL,
+  qualification_registry = NULL,
+  releases_cache = NULL
+)
 }
 \arguments{
 \item{repos}{Character vector of repositories in the form \code{owner/repo}.}
@@ -15,6 +20,10 @@ discovered automatically by the gh package when \code{NULL}.}
 \item{qualification_registry}{Optional data frame of qualification metadata
 with columns \code{org}, \code{repo}, \code{version}, \code{release.url}, \code{release.date},
 \code{qualification.url}, and \code{qualification.date}.}
+
+\item{releases_cache}{Optional named list of pre-fetched releases, keyed by
+\code{"owner/repo"}. When an entry is present for a repo, the internal
+\code{fetch_releases()} call is skipped.}
 }
 \value{
 A data frame with columns \code{repo}, \code{latest_release}, \code{upcoming_milestones},
