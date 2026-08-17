@@ -1,6 +1,6 @@
 Package: gh.dash
 Title: Dashboards for tracking GitHub releases and milestones
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: c(
     person("Jeremy", "Wildfire", , "jwildfire@gmail.com", role = c("aut", "cre")),
     person("Laura", "Maxwell", , "laura.maxwell@atorusresearch.com", role = "aut"),
@@ -29,5 +29,6 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
